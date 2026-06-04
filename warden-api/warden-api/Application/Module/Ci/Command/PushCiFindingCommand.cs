@@ -153,6 +153,12 @@ public class PushCiFindingCommand(IServiceProvider serviceProvider)
             .Where(x => x.IsSuccess)
             .Select(x => x.Value)
             .ToList();
+        // upsert semantic-search embeddings for new findings (no-op when AI is disabled)
+        var vectorStore = serviceProvider.GetRequiredService<Ai.Vector.FindingVectorStore>();
+        foreach (var newFinding in newBranchFindings)
+        {
+            await vectorStore.UpsertFindingAsync(newFinding);
+        }
         // fixed branch findings
         var fixedBranchFindings = lastScanFindings
             .Where(finding => 
