@@ -103,3 +103,42 @@ cd warden
 cp .env.example .env   # then edit secrets
 docker compose up -d --build
 ```
+
+## Container image reference
+
+Two images are produced from the repository; both are built automatically by `docker compose up -d --build`.
+
+### warden (API) — root `Dockerfile`
+
+| Stage | Purpose |
+|---|---|
+| `base` | `mcr.microsoft.com/dotnet/aspnet:10.0`, non-root user, exposes 8080/8081 |
+| `build_api_deps` | restores NuGet packages from `warden-api.csproj` (cached layer) |
+| `build_api` / `publish_api` | builds and publishes the API in `Release` configuration |
+| `final` | runtime image, entrypoint `dotnet warden-api.dll` |
+
+The API image is backend-only: it serves `/api/*`, `/openapi/v1.json`, `/mcp`, and `/healthz`.
+
+### warden-web — `warden-web/Dockerfile`
+
+| Stage | Purpose |
+|---|---|
+| `deps` | `oven/bun:1`, installs dependencies with `bun install --frozen-lockfile` |
+| `build` | `bun run build` producing the Next.js standalone output |
+| `runtime` | `oven/bun:1-slim` running `bun server.js` on port 3000 |
+
+Build argument:
+
+| Argument | Default | Description |
+|---|---|---|
+| `API_INTERNAL_URL` | `http://warden:8080` | Baked into the Next.js proxy rewrites at build time. Set it to the API service URL reachable from the web container; the compose file passes it automatically. |
+
+### Service wiring
+
+| Service | Port mapping | Role |
+|---|---|---|
+| `web` | `8080:3000` | User entry point; proxies `/api`, `/openapi`, `/mcp`, `/healthz` to the API same-origin |
+| `warden` | `5272:8080` | Direct API access for CI tokens, MCP clients, and `bun run gen-api` |
+| `db` | `54321:5432` | PostgreSQL with pgvector |
+
+Integrations (Jira, Redmine, Microsoft Teams, Mail) require no container or environment configuration: they are stored in the database and managed in the UI under **Setting > Integration** and per project under **Project > Setting > Integration**. The only related environment variables are the optional AI settings (`AI_ENDPOINT`, `AI_MODEL`, `WARDEN_AI_API_KEY`), which seed the AI configuration; SMTP for outbound mail is configured in the UI under **Setting > General**.
