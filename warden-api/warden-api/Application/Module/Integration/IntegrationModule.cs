@@ -1,3 +1,4 @@
+using Warden.Application.Module.Integration.GitHub;
 using Warden.Application.Module.Integration.Jira;
 using Warden.Application.Module.Integration.JiraWebhook;
 using Warden.Application.Module.Integration.Mail;
@@ -40,7 +41,15 @@ public class IntegrationModule : IModule
         // redmine
         builder.AddScoped<IRedmineSettingService, RedmineSettingService>();
         builder.AddScoped<RedmineTicketTracker>();
-        // 
+        // github
+        builder.AddScoped<IGitHubSettingService, GitHubSettingService>();
+        builder.AddScoped<GitHubTicketTracker>();
+        builder.AddScoped<GitHubSetting>(sp =>
+        {
+            var context = sp.GetRequiredService<AppDbContext>();
+            return context.GetGitHubSettingAsync().Result;
+        });
+        //
         builder.AddScoped<ITicketTrackerManager, TicketTrackerManager>();
         builder.AddScoped<IGlobalAlertManager, GlobalAlertManager>();
         return builder;

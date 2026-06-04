@@ -1,6 +1,7 @@
 using System.Net.Mime;
 using Warden.Application;
 using Warden.Application.Module.Finding.Model;
+using Warden.Application.Module.Integration.GitHub;
 using Warden.Application.Module.Integration.Jira;
 using Warden.Application.Module.Integration.Redmine;
 using Warden.Application.Module.Project;
@@ -78,12 +79,15 @@ public class ProjectController(
         var projectSetting = (await context.GetProjectSettingsAsync(projectId)).GetResult();
         var jiraGlobalSetting = await context.GetJiraSettingAsync();
         var redmineGlobalSetting = await context.GetRedmineSettingAsync();
+        var gitHubGlobalSetting = await context.GetGitHubSettingAsync();
         return new ProjectIntegration
         {
             Mail = projectSetting.GetMailAlertSetting().Active,
             Jira = projectSetting.GetJiraSetting(jiraGlobalSetting).Active,
             Teams = projectSetting.GetTeamsAlertSetting().Active,
+            Webhook = projectSetting.GetWebhookAlertSetting().Active,
             Redmine = projectSetting.GetRedmineSetting(redmineGlobalSetting).Active,
+            GitHub = projectSetting.GetGitHubSetting(gitHubGlobalSetting).Active,
         };
 
     }

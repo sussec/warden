@@ -1,3 +1,4 @@
+using Warden.Application.Module.Project.Integration.GitHub;
 using Warden.Application.Module.Project.Integration.Jira;
 using Warden.Application.Module.Project.Integration.Mail;
 using Warden.Application.Module.Project.Integration.Redmine;
@@ -18,6 +19,8 @@ public class ProjectIntegrationModule : IModule
         builder.AddScoped<IMailProjectIntegrationSetting, MailProjectIntegrationSetting>();
         // redmine
         builder.AddScoped<IRedmineProjectIntegrationSetting, RedmineProjectIntegrationSetting>();
+        // github
+        builder.AddScoped<IGitHubProjectIntegrationSetting, GitHubProjectIntegrationSetting>();
         return builder;
     }
 }

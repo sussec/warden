@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Warden.Api.Integration;
 
-[Microsoft.AspNetCore.Components.Route("api/integration/teams")]
+[Route("api/integration/teams")]
 [ApiExplorerSettings(GroupName = "Integration")]
 public class TeamsIntegrationController(ITeamsAlertSettingService teamsAlertSettingService) : BaseController
 {

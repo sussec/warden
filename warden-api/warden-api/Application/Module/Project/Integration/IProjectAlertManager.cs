@@ -1,8 +1,10 @@
 using Warden.Application.Module.Integration;
 using Warden.Application.Module.Integration.Mail;
 using Warden.Application.Module.Integration.Teams;
+using Warden.Application.Module.Integration.Webhook;
 using Warden.Application.Module.Project.Integration.Mail;
 using Warden.Application.Module.Project.Integration.Teams;
+using Warden.Application.Module.Project.Integration.Webhook;
 using Warden.Application.Services;
 using Warden.Core.Entity;
 using Warden.Core.Enum;
@@ -23,6 +25,7 @@ public class ProjectAlertManager : IProjectAlertManager
 {
     private readonly MailProjectAlertSetting mailAlertSetting;
     private readonly TeamsProjectSetting teamsSetting;
+    private readonly WebhookProjectSetting webhookSetting;
     private readonly List<ProjectUsers> projectUsers;
     private readonly ISmtpService smtpService;
     private readonly IRazorRender render;
@@ -34,6 +37,7 @@ public class ProjectAlertManager : IProjectAlertManager
         var projectSetting = context.ProjectSettings.First(x => x.ProjectId == projectId);
         mailAlertSetting = projectSetting.GetMailAlertSetting();
         teamsSetting = projectSetting.GetTeamsAlertSetting();
+        webhookSetting = projectSetting.GetWebhookAlertSetting();
         projectUsers = context.ProjectUsers
             .Include(x => x.User)
             .Where(x => x.ProjectId == projectId)
@@ -57,6 +61,13 @@ public class ProjectAlertManager : IProjectAlertManager
             await new AlertNewFindingTeams(teamsSetting.Webhook)
                 .AlertAsync([], model);
         }
+
+        // webhook
+        if (webhookSetting is { Active: true, NewFindingEvent: true })
+        {
+            await new AlertNewFindingWebhook(webhookSetting.Url, webhookSetting.Format)
+                .AlertAsync([], model);
+        }
     }
 
     public async Task AlertFixedFinding(AlertStatusFindingModel model)
@@ -74,6 +85,12 @@ public class ProjectAlertManager : IProjectAlertManager
         if (teamsSetting is { Active: true, FixedFindingEvent: true })
         {
             await new AlertFixedFindingTeams(teamsSetting.Webhook).AlertAsync([], model);
+        }
+
+        // webhook
+        if (webhookSetting is { Active: true, FixedFindingEvent: true })
+        {
+            await new AlertFixedFindingWebhook(webhookSetting.Url, webhookSetting.Format).AlertAsync([], model);
         }
     }
 
@@ -95,6 +112,12 @@ public class ProjectAlertManager : IProjectAlertManager
         {
             await new AlertNeedTriageFindingTeams(teamsSetting.Webhook).AlertAsync([], model);
         }
+
+        // webhook
+        if (webhookSetting is { Active: true, NeedTriageFindingEvent: true })
+        {
+            await new AlertNeedTriageFindingWebhook(webhookSetting.Url, webhookSetting.Format).AlertAsync([], model);
+        }
     }
 
     public async Task AlertConfirmedFinding(AlertConfirmedFindingModel model)
@@ -115,6 +138,12 @@ public class ProjectAlertManager : IProjectAlertManager
         {
             await new AlertConfirmedFindingTeams(teamsSetting.Webhook).AlertAsync([], model);
         }
+
+        // webhook
+        if (webhookSetting is { Active: true, SecurityAlertEvent: true })
+        {
+            await new AlertConfirmedFindingWebhook(webhookSetting.Url, webhookSetting.Format).AlertAsync([], model);
+        }
     }
 
     public async Task AlertVulnerableProjectPackage(AlertVulnerableProjectPackageModel model)
@@ -131,6 +160,12 @@ public class ProjectAlertManager : IProjectAlertManager
         if (teamsSetting is { Active: true, SecurityAlertEvent: true })
         {
             await new AlertVulnerableProjectPackageTeams(teamsSetting.Webhook).AlertAsync([], model);
+        }
+
+        // webhook
+        if (webhookSetting is { Active: true, SecurityAlertEvent: true })
+        {
+            await new AlertVulnerableProjectPackageWebhook(webhookSetting.Url, webhookSetting.Format).AlertAsync([], model);
         }
     }
 }

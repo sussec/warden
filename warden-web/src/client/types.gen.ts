@@ -314,6 +314,31 @@ export type GitCommits = {
     project?: Projects;
 };
 
+export type GitHubMetadata = {
+    repositories: Array<GitHubRepository> | null;
+};
+
+export type GitHubProjectSetting = {
+    active?: boolean;
+    owner?: string | null;
+    repo?: string | null;
+    labels?: Array<string> | null;
+};
+
+export type GitHubRepository = {
+    owner: string | null;
+    name: string | null;
+    fullName: string | null;
+};
+
+export type GitHubSetting = {
+    active?: boolean;
+    apiUrl?: string | null;
+    token?: string | null;
+    owner?: string | null;
+    repo?: string | null;
+};
+
 export type IdName = {
     id: number;
     name: string | null;
@@ -499,7 +524,9 @@ export type ProjectIntegration = {
     mail: boolean;
     jira: boolean;
     teams: boolean;
+    webhook: boolean;
     redmine: boolean;
+    gitHub: boolean;
 };
 
 export type ProjectMember = {
@@ -1022,7 +1049,7 @@ export type TicketTrackerStatus = {
     redmine: boolean;
 };
 
-export type TicketType = 'Jira' | 'Redmine';
+export type TicketType = 'Jira' | 'Redmine' | 'GitHub';
 
 export type Tickets = {
     id?: string;
@@ -1204,6 +1231,33 @@ export type VulnerabilityInfo = {
     severity: FindingSeverity;
     fixedVersion: string | null;
     publishedAt?: string | null;
+};
+
+export type WebhookFormat = 'Generic' | 'Slack';
+
+export type WebhookProjectSetting = {
+    active: boolean;
+    securityAlertEvent: boolean;
+    newFindingEvent: boolean;
+    fixedFindingEvent: boolean;
+    needTriageFindingEvent: boolean;
+    scanCompletedEvent: boolean;
+    scanFailedEvent: boolean;
+    url?: string | null;
+    format?: WebhookFormat;
+};
+
+export type WebhookSetting = {
+    active: boolean;
+    securityAlertEvent: boolean;
+    newFindingEvent: boolean;
+    fixedFindingEvent: boolean;
+    needTriageFindingEvent: boolean;
+    scanCompletedEvent: boolean;
+    scanFailedEvent: boolean;
+    projectWithoutMemberEvent: boolean;
+    url?: string | null;
+    format?: WebhookFormat;
 };
 
 export type SearchData = {
@@ -1672,6 +1726,72 @@ export type ListFindingCategoryResponses = {
 
 export type ListFindingCategoryResponse = ListFindingCategoryResponses[keyof ListFindingCategoryResponses];
 
+export type GetGitHubIntegrationSettingData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/integration/github';
+};
+
+export type GetGitHubIntegrationSettingResponses = {
+    /**
+     * OK
+     */
+    200: GitHubSetting;
+};
+
+export type GetGitHubIntegrationSettingResponse = GetGitHubIntegrationSettingResponses[keyof GetGitHubIntegrationSettingResponses];
+
+export type UpdateGitHubIntegrationSettingData = {
+    body?: GitHubSetting;
+    path?: never;
+    query?: never;
+    url: '/api/integration/github';
+};
+
+export type UpdateGitHubIntegrationSettingResponses = {
+    /**
+     * OK
+     */
+    200: boolean;
+};
+
+export type UpdateGitHubIntegrationSettingResponse = UpdateGitHubIntegrationSettingResponses[keyof UpdateGitHubIntegrationSettingResponses];
+
+export type TestGitHubIntegrationSettingData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/integration/github/test';
+};
+
+export type TestGitHubIntegrationSettingResponses = {
+    /**
+     * OK
+     */
+    200: boolean;
+};
+
+export type TestGitHubIntegrationSettingResponse = TestGitHubIntegrationSettingResponses[keyof TestGitHubIntegrationSettingResponses];
+
+export type GetGitHubMetadataIntegrationData = {
+    body?: GitHubSetting;
+    path?: never;
+    query?: {
+        reload?: boolean;
+    };
+    url: '/api/integration/github/metadata';
+};
+
+export type GetGitHubMetadataIntegrationResponses = {
+    /**
+     * OK
+     */
+    200: GitHubMetadata;
+};
+
+export type GetGitHubMetadataIntegrationResponse = GetGitHubMetadataIntegrationResponses[keyof GetGitHubMetadataIntegrationResponses];
+
 export type GetIntegrationSettingData = {
     body?: never;
     path?: never;
@@ -1920,7 +2040,7 @@ export type GetTeamsIntegrationSettingData = {
     body?: never;
     path?: never;
     query?: never;
-    url: '/api/teams-integration';
+    url: '/api/integration/teams';
 };
 
 export type GetTeamsIntegrationSettingResponses = {
@@ -1936,7 +2056,7 @@ export type UpdateTeamsIntegrationSettingData = {
     body?: TeamsAlertSetting;
     path?: never;
     query?: never;
-    url: '/api/teams-integration';
+    url: '/api/integration/teams';
 };
 
 export type UpdateTeamsIntegrationSettingResponses = {
@@ -1952,7 +2072,7 @@ export type TestTeamsIntegrationSettingData = {
     body?: never;
     path?: never;
     query?: never;
-    url: '/api/teams-integration/test';
+    url: '/api/integration/teams/test';
 };
 
 export type TestTeamsIntegrationSettingResponses = {
@@ -1963,6 +2083,54 @@ export type TestTeamsIntegrationSettingResponses = {
 };
 
 export type TestTeamsIntegrationSettingResponse = TestTeamsIntegrationSettingResponses[keyof TestTeamsIntegrationSettingResponses];
+
+export type GetWebhookIntegrationSettingData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/integration/webhook';
+};
+
+export type GetWebhookIntegrationSettingResponses = {
+    /**
+     * OK
+     */
+    200: WebhookSetting;
+};
+
+export type GetWebhookIntegrationSettingResponse = GetWebhookIntegrationSettingResponses[keyof GetWebhookIntegrationSettingResponses];
+
+export type UpdateWebhookIntegrationSettingData = {
+    body?: WebhookSetting;
+    path?: never;
+    query?: never;
+    url: '/api/integration/webhook';
+};
+
+export type UpdateWebhookIntegrationSettingResponses = {
+    /**
+     * OK
+     */
+    200: boolean;
+};
+
+export type UpdateWebhookIntegrationSettingResponse = UpdateWebhookIntegrationSettingResponses[keyof UpdateWebhookIntegrationSettingResponses];
+
+export type TestWebhookIntegrationSettingData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/integration/webhook/test';
+};
+
+export type TestWebhookIntegrationSettingResponses = {
+    /**
+     * OK
+     */
+    200: boolean;
+};
+
+export type TestWebhookIntegrationSettingResponse = TestWebhookIntegrationSettingResponses[keyof TestWebhookIntegrationSettingResponses];
 
 export type LoginOidcData = {
     body?: never;
@@ -2241,6 +2409,62 @@ export type ExportResponses = {
 };
 
 export type ExportResponse = ExportResponses[keyof ExportResponses];
+
+export type GetGitHubIntegrationProjectData = {
+    body?: never;
+    path: {
+        projectId: string;
+    };
+    query?: never;
+    url: '/api/project/{projectId}/integration/github';
+};
+
+export type GetGitHubIntegrationProjectResponses = {
+    /**
+     * OK
+     */
+    200: GitHubProjectSetting;
+};
+
+export type GetGitHubIntegrationProjectResponse = GetGitHubIntegrationProjectResponses[keyof GetGitHubIntegrationProjectResponses];
+
+export type UpdateGitHubIntegrationProjectData = {
+    body?: GitHubProjectSetting;
+    path: {
+        projectId: string;
+    };
+    query?: never;
+    url: '/api/project/{projectId}/integration/github';
+};
+
+export type UpdateGitHubIntegrationProjectResponses = {
+    /**
+     * OK
+     */
+    200: boolean;
+};
+
+export type UpdateGitHubIntegrationProjectResponse = UpdateGitHubIntegrationProjectResponses[keyof UpdateGitHubIntegrationProjectResponses];
+
+export type GetGitHubMetadataData = {
+    body?: never;
+    path: {
+        projectId: string;
+    };
+    query?: {
+        reload?: boolean;
+    };
+    url: '/api/project/{projectId}/integration/github/metadata';
+};
+
+export type GetGitHubMetadataResponses = {
+    /**
+     * OK
+     */
+    200: GitHubMetadata;
+};
+
+export type GetGitHubMetadataResponse = GetGitHubMetadataResponses[keyof GetGitHubMetadataResponses];
 
 export type GetJiraIntegrationProjectData = {
     body?: never;
@@ -2596,6 +2820,27 @@ export type GetRedmineMetadataResponses = {
 
 export type GetRedmineMetadataResponse = GetRedmineMetadataResponses[keyof GetRedmineMetadataResponses];
 
+export type GetSbomData = {
+    body?: never;
+    path: {
+        projectId: string;
+    };
+    query?: {
+        branch?: string;
+        commitId?: string;
+    };
+    url: '/api/project/{projectId}/sbom';
+};
+
+export type GetSbomResponses = {
+    /**
+     * OK
+     */
+    200: Blob | File;
+};
+
+export type GetSbomResponse = GetSbomResponses[keyof GetSbomResponses];
+
 export type GetTeamsIntegrationProjectData = {
     body?: never;
     path: {
@@ -2649,6 +2894,60 @@ export type TestTeamsIntegrationProjectResponses = {
 };
 
 export type TestTeamsIntegrationProjectResponse = TestTeamsIntegrationProjectResponses[keyof TestTeamsIntegrationProjectResponses];
+
+export type GetWebhookIntegrationProjectData = {
+    body?: never;
+    path: {
+        projectId: string;
+    };
+    query?: never;
+    url: '/api/project/{projectId}/integration/webhook';
+};
+
+export type GetWebhookIntegrationProjectResponses = {
+    /**
+     * OK
+     */
+    200: WebhookProjectSetting;
+};
+
+export type GetWebhookIntegrationProjectResponse = GetWebhookIntegrationProjectResponses[keyof GetWebhookIntegrationProjectResponses];
+
+export type UpdateWebhookIntegrationProjectData = {
+    body?: WebhookProjectSetting;
+    path: {
+        projectId: string;
+    };
+    query?: never;
+    url: '/api/project/{projectId}/integration/webhook';
+};
+
+export type UpdateWebhookIntegrationProjectResponses = {
+    /**
+     * OK
+     */
+    200: boolean;
+};
+
+export type UpdateWebhookIntegrationProjectResponse = UpdateWebhookIntegrationProjectResponses[keyof UpdateWebhookIntegrationProjectResponses];
+
+export type TestWebhookIntegrationProjectData = {
+    body?: never;
+    path: {
+        projectId: string;
+    };
+    query?: never;
+    url: '/api/project/{projectId}/integration/webhook/test';
+};
+
+export type TestWebhookIntegrationProjectResponses = {
+    /**
+     * OK
+     */
+    200: boolean;
+};
+
+export type TestWebhookIntegrationProjectResponse = TestWebhookIntegrationProjectResponses[keyof TestWebhookIntegrationProjectResponses];
 
 export type GetRolesData = {
     body?: never;

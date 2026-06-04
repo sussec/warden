@@ -1,4 +1,5 @@
 using Warden.Application.Module.Integration;
+using Warden.Application.Module.Integration.GitHub;
 using Warden.Application.Module.Integration.Jira;
 using Warden.Application.Module.Integration.Redmine;
 using Warden.Core.Entity;
@@ -42,6 +43,12 @@ public class CreateFindingTicketCommand(AppDbContext context)
         {
             var redmineTicketTracker = new RedmineTicketTracker(context);
             return await redmineTicketTracker.CreateTicketAsync(ticket);
+        }
+
+        if (ticketType == TicketType.GitHub)
+        {
+            var gitHubTicketTracker = new GitHubTicketTracker(context);
+            return await gitHubTicketTracker.CreateTicketAsync(ticket);
         }
 
         return Result.Fail("Not implement ticket type");

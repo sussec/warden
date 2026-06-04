@@ -3,8 +3,8 @@
 import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { addComment, addMember, backfill, changePassword, confirmEmail, createCiToken, createProjectPackageTicket, createTicket, createUser, deleteCiToken, deleteProjectMember, deleteProjectTicket, deleteTicket, export_, exportFinding, forgotPassword, getAiSetting, getAiSuggestion, getAuthConfig, getAuthSetting, getCiTokens, getDefaultBranchesProject, getFindingActivities, getFindingById, getFindingRules, getFindings, getIntegrationProject, getIntegrationSetting, getJiraIntegrationProject, getJiraIntegrationSetting, getJiraIssueTypes, getJiraProjects, getJiraWebhookIntegrationSetting, getMailIntegrationProject, getMailIntegrationSetting, getPackageById, getPackagesByFilter, getProfile, getProjectByFilter, getProjectCommitScanSummary, getProjectInfo, getProjectPackageDetail, getProjectPackages, getProjectScans, getProjectStatistic, getProjectUsers, getRedmineIntegrationProject, getRedmineIntegrationSetting, getRedmineMetadata, getRedmineMetadataIntegration, getRoles, getRuleByFilter, getRuleScanners, getScanners, getSlaSetting, getSmtpSetting, getSourceControlSystem, getTeamsIntegrationProject, getTeamsIntegrationSetting, getThresholdProject, getTicketTrackerStatus, getUserById, getUserDetailByFilter, getUserSummaryByFilter, initCiScan, listFindingCategory, listJiraProjects, listPackageDependency, listProjectCommit, listProjectManagerUser, login, loginOidc, logout, type Options, ping, refreshToken, resetPassword, sastStatistic, scaStatistic, search, sendConfirmEmail, syncRules, testAiSetting, testJiraIntegrationSetting, testRedmineIntegrationSetting, testSmtpSetting, testTeamsIntegrationProject, testTeamsIntegrationSetting, updateAiSetting, updateAuthSetting, updateCiScan, updateDefaultBranchesProject, updateFinding, updateJiraIntegrationProject, updateJiraIntegrationSetting, updateJiraWebhookIntegrationSetting, updateMailIntegrationProject, updateMailIntegrationSetting, updateProjectMember, updateProjectPackage, updateRedmineIntegrationProject, updateRedmineIntegrationSetting, updateRule, updateSlaSetting, updateSmtpSetting, updateStatusScanFinding, updateTeamsIntegrationProject, updateTeamsIntegrationSetting, updateThresholdProject, updateUser, uploadCiDependency, uploadCiFinding, uploadSarif } from '../sdk.gen';
-import type { AddCommentData, AddCommentResponse, AddMemberData, AddMemberResponse, BackfillData, BackfillResponse2, ChangePasswordData, ChangePasswordResponse, ConfirmEmailData, ConfirmEmailResponse, CreateCiTokenData, CreateCiTokenResponse, CreateProjectPackageTicketData, CreateProjectPackageTicketResponse, CreateTicketData, CreateTicketResponse, CreateUserData, CreateUserResponse, DeleteCiTokenData, DeleteCiTokenResponse, DeleteProjectMemberData, DeleteProjectMemberResponse, DeleteProjectTicketData, DeleteProjectTicketResponse, DeleteTicketData, DeleteTicketResponse, ExportData, ExportFindingData, ExportFindingResponse, ExportResponse, ForgotPasswordData, ForgotPasswordResponse, GetAiSettingData, GetAiSettingResponse, GetAiSuggestionData, GetAiSuggestionResponse, GetAuthConfigData, GetAuthConfigResponse, GetAuthSettingData, GetAuthSettingResponse, GetCiTokensData, GetCiTokensResponse, GetDefaultBranchesProjectData, GetDefaultBranchesProjectResponse, GetFindingActivitiesData, GetFindingActivitiesResponse, GetFindingByIdData, GetFindingByIdResponse, GetFindingRulesData, GetFindingRulesResponse, GetFindingsData, GetFindingsResponse, GetIntegrationProjectData, GetIntegrationProjectResponse, GetIntegrationSettingData, GetIntegrationSettingResponse, GetJiraIntegrationProjectData, GetJiraIntegrationProjectResponse, GetJiraIntegrationSettingData, GetJiraIntegrationSettingResponse, GetJiraIssueTypesData, GetJiraIssueTypesResponse, GetJiraProjectsData, GetJiraProjectsResponse, GetJiraWebhookIntegrationSettingData, GetJiraWebhookIntegrationSettingResponse, GetMailIntegrationProjectData, GetMailIntegrationProjectResponse, GetMailIntegrationSettingData, GetMailIntegrationSettingResponse, GetPackageByIdData, GetPackageByIdResponse, GetPackagesByFilterData, GetPackagesByFilterResponse, GetProfileData, GetProfileResponse, GetProjectByFilterData, GetProjectByFilterResponse, GetProjectCommitScanSummaryData, GetProjectCommitScanSummaryResponse, GetProjectInfoData, GetProjectInfoResponse, GetProjectPackageDetailData, GetProjectPackageDetailResponse, GetProjectPackagesData, GetProjectPackagesResponse, GetProjectScansData, GetProjectScansResponse, GetProjectStatisticData, GetProjectStatisticResponse, GetProjectUsersData, GetProjectUsersResponse, GetRedmineIntegrationProjectData, GetRedmineIntegrationProjectResponse, GetRedmineIntegrationSettingData, GetRedmineIntegrationSettingResponse, GetRedmineMetadataData, GetRedmineMetadataIntegrationData, GetRedmineMetadataIntegrationResponse, GetRedmineMetadataResponse, GetRolesData, GetRolesResponse, GetRuleByFilterData, GetRuleByFilterResponse, GetRuleScannersData, GetRuleScannersResponse, GetScannersData, GetScannersResponse, GetSlaSettingData, GetSlaSettingResponse, GetSmtpSettingData, GetSmtpSettingResponse, GetSourceControlSystemData, GetSourceControlSystemResponse, GetTeamsIntegrationProjectData, GetTeamsIntegrationProjectResponse, GetTeamsIntegrationSettingData, GetTeamsIntegrationSettingResponse, GetThresholdProjectData, GetThresholdProjectResponse, GetTicketTrackerStatusData, GetTicketTrackerStatusResponse, GetUserByIdData, GetUserByIdResponse, GetUserDetailByFilterData, GetUserDetailByFilterResponse, GetUserSummaryByFilterData, GetUserSummaryByFilterResponse, InitCiScanData, InitCiScanResponse, ListFindingCategoryData, ListFindingCategoryResponse, ListJiraProjectsData, ListJiraProjectsResponse, ListPackageDependencyData, ListPackageDependencyResponse, ListProjectCommitData, ListProjectCommitResponse, ListProjectManagerUserData, ListProjectManagerUserResponse, LoginData, LoginOidcData, LoginResponse, LogoutData, LogoutResponse, PingData, PingResponse, RefreshTokenData, RefreshTokenResponse, ResetPasswordData, ResetPasswordResponse, SastStatisticData, SastStatisticResponse, ScaStatisticData, ScaStatisticResponse, SearchData, SearchResponse, SendConfirmEmailData, SyncRulesData, SyncRulesResponse, TestAiSettingData, TestAiSettingResponse, TestJiraIntegrationSettingData, TestJiraIntegrationSettingResponse, TestRedmineIntegrationSettingData, TestRedmineIntegrationSettingResponse, TestSmtpSettingData, TestSmtpSettingResponse, TestTeamsIntegrationProjectData, TestTeamsIntegrationProjectResponse, TestTeamsIntegrationSettingData, TestTeamsIntegrationSettingResponse, UpdateAiSettingData, UpdateAuthSettingData, UpdateCiScanData, UpdateDefaultBranchesProjectData, UpdateDefaultBranchesProjectResponse, UpdateFindingData, UpdateFindingResponse, UpdateJiraIntegrationProjectData, UpdateJiraIntegrationProjectResponse, UpdateJiraIntegrationSettingData, UpdateJiraIntegrationSettingResponse, UpdateJiraWebhookIntegrationSettingData, UpdateJiraWebhookIntegrationSettingResponse, UpdateMailIntegrationProjectData, UpdateMailIntegrationProjectResponse, UpdateMailIntegrationSettingData, UpdateProjectMemberData, UpdateProjectMemberResponse, UpdateProjectPackageData, UpdateProjectPackageResponse, UpdateRedmineIntegrationProjectData, UpdateRedmineIntegrationProjectResponse, UpdateRedmineIntegrationSettingData, UpdateRedmineIntegrationSettingResponse, UpdateRuleData, UpdateSlaSettingData, UpdateSmtpSettingData, UpdateStatusScanFindingData, UpdateStatusScanFindingResponse, UpdateTeamsIntegrationProjectData, UpdateTeamsIntegrationProjectResponse, UpdateTeamsIntegrationSettingData, UpdateTeamsIntegrationSettingResponse, UpdateThresholdProjectData, UpdateThresholdProjectResponse, UpdateUserData, UpdateUserResponse, UploadCiDependencyData, UploadCiDependencyResponse, UploadCiFindingData, UploadCiFindingResponse2, UploadSarifData, UploadSarifResponse } from '../types.gen';
+import { addComment, addMember, backfill, changePassword, confirmEmail, createCiToken, createProjectPackageTicket, createTicket, createUser, deleteCiToken, deleteProjectMember, deleteProjectTicket, deleteTicket, export_, exportFinding, forgotPassword, getAiSetting, getAiSuggestion, getAuthConfig, getAuthSetting, getCiTokens, getDefaultBranchesProject, getFindingActivities, getFindingById, getFindingRules, getFindings, getGitHubIntegrationProject, getGitHubIntegrationSetting, getGitHubMetadata, getGitHubMetadataIntegration, getIntegrationProject, getIntegrationSetting, getJiraIntegrationProject, getJiraIntegrationSetting, getJiraIssueTypes, getJiraProjects, getJiraWebhookIntegrationSetting, getMailIntegrationProject, getMailIntegrationSetting, getPackageById, getPackagesByFilter, getProfile, getProjectByFilter, getProjectCommitScanSummary, getProjectInfo, getProjectPackageDetail, getProjectPackages, getProjectScans, getProjectStatistic, getProjectUsers, getRedmineIntegrationProject, getRedmineIntegrationSetting, getRedmineMetadata, getRedmineMetadataIntegration, getRoles, getRuleByFilter, getRuleScanners, getSbom, getScanners, getSlaSetting, getSmtpSetting, getSourceControlSystem, getTeamsIntegrationProject, getTeamsIntegrationSetting, getThresholdProject, getTicketTrackerStatus, getUserById, getUserDetailByFilter, getUserSummaryByFilter, getWebhookIntegrationProject, getWebhookIntegrationSetting, initCiScan, listFindingCategory, listJiraProjects, listPackageDependency, listProjectCommit, listProjectManagerUser, login, loginOidc, logout, type Options, ping, refreshToken, resetPassword, sastStatistic, scaStatistic, search, sendConfirmEmail, syncRules, testAiSetting, testGitHubIntegrationSetting, testJiraIntegrationSetting, testRedmineIntegrationSetting, testSmtpSetting, testTeamsIntegrationProject, testTeamsIntegrationSetting, testWebhookIntegrationProject, testWebhookIntegrationSetting, updateAiSetting, updateAuthSetting, updateCiScan, updateDefaultBranchesProject, updateFinding, updateGitHubIntegrationProject, updateGitHubIntegrationSetting, updateJiraIntegrationProject, updateJiraIntegrationSetting, updateJiraWebhookIntegrationSetting, updateMailIntegrationProject, updateMailIntegrationSetting, updateProjectMember, updateProjectPackage, updateRedmineIntegrationProject, updateRedmineIntegrationSetting, updateRule, updateSlaSetting, updateSmtpSetting, updateStatusScanFinding, updateTeamsIntegrationProject, updateTeamsIntegrationSetting, updateThresholdProject, updateUser, updateWebhookIntegrationProject, updateWebhookIntegrationSetting, uploadCiDependency, uploadCiFinding, uploadSarif } from '../sdk.gen';
+import type { AddCommentData, AddCommentResponse, AddMemberData, AddMemberResponse, BackfillData, BackfillResponse2, ChangePasswordData, ChangePasswordResponse, ConfirmEmailData, ConfirmEmailResponse, CreateCiTokenData, CreateCiTokenResponse, CreateProjectPackageTicketData, CreateProjectPackageTicketResponse, CreateTicketData, CreateTicketResponse, CreateUserData, CreateUserResponse, DeleteCiTokenData, DeleteCiTokenResponse, DeleteProjectMemberData, DeleteProjectMemberResponse, DeleteProjectTicketData, DeleteProjectTicketResponse, DeleteTicketData, DeleteTicketResponse, ExportData, ExportFindingData, ExportFindingResponse, ExportResponse, ForgotPasswordData, ForgotPasswordResponse, GetAiSettingData, GetAiSettingResponse, GetAiSuggestionData, GetAiSuggestionResponse, GetAuthConfigData, GetAuthConfigResponse, GetAuthSettingData, GetAuthSettingResponse, GetCiTokensData, GetCiTokensResponse, GetDefaultBranchesProjectData, GetDefaultBranchesProjectResponse, GetFindingActivitiesData, GetFindingActivitiesResponse, GetFindingByIdData, GetFindingByIdResponse, GetFindingRulesData, GetFindingRulesResponse, GetFindingsData, GetFindingsResponse, GetGitHubIntegrationProjectData, GetGitHubIntegrationProjectResponse, GetGitHubIntegrationSettingData, GetGitHubIntegrationSettingResponse, GetGitHubMetadataData, GetGitHubMetadataIntegrationData, GetGitHubMetadataIntegrationResponse, GetGitHubMetadataResponse, GetIntegrationProjectData, GetIntegrationProjectResponse, GetIntegrationSettingData, GetIntegrationSettingResponse, GetJiraIntegrationProjectData, GetJiraIntegrationProjectResponse, GetJiraIntegrationSettingData, GetJiraIntegrationSettingResponse, GetJiraIssueTypesData, GetJiraIssueTypesResponse, GetJiraProjectsData, GetJiraProjectsResponse, GetJiraWebhookIntegrationSettingData, GetJiraWebhookIntegrationSettingResponse, GetMailIntegrationProjectData, GetMailIntegrationProjectResponse, GetMailIntegrationSettingData, GetMailIntegrationSettingResponse, GetPackageByIdData, GetPackageByIdResponse, GetPackagesByFilterData, GetPackagesByFilterResponse, GetProfileData, GetProfileResponse, GetProjectByFilterData, GetProjectByFilterResponse, GetProjectCommitScanSummaryData, GetProjectCommitScanSummaryResponse, GetProjectInfoData, GetProjectInfoResponse, GetProjectPackageDetailData, GetProjectPackageDetailResponse, GetProjectPackagesData, GetProjectPackagesResponse, GetProjectScansData, GetProjectScansResponse, GetProjectStatisticData, GetProjectStatisticResponse, GetProjectUsersData, GetProjectUsersResponse, GetRedmineIntegrationProjectData, GetRedmineIntegrationProjectResponse, GetRedmineIntegrationSettingData, GetRedmineIntegrationSettingResponse, GetRedmineMetadataData, GetRedmineMetadataIntegrationData, GetRedmineMetadataIntegrationResponse, GetRedmineMetadataResponse, GetRolesData, GetRolesResponse, GetRuleByFilterData, GetRuleByFilterResponse, GetRuleScannersData, GetRuleScannersResponse, GetSbomData, GetSbomResponse, GetScannersData, GetScannersResponse, GetSlaSettingData, GetSlaSettingResponse, GetSmtpSettingData, GetSmtpSettingResponse, GetSourceControlSystemData, GetSourceControlSystemResponse, GetTeamsIntegrationProjectData, GetTeamsIntegrationProjectResponse, GetTeamsIntegrationSettingData, GetTeamsIntegrationSettingResponse, GetThresholdProjectData, GetThresholdProjectResponse, GetTicketTrackerStatusData, GetTicketTrackerStatusResponse, GetUserByIdData, GetUserByIdResponse, GetUserDetailByFilterData, GetUserDetailByFilterResponse, GetUserSummaryByFilterData, GetUserSummaryByFilterResponse, GetWebhookIntegrationProjectData, GetWebhookIntegrationProjectResponse, GetWebhookIntegrationSettingData, GetWebhookIntegrationSettingResponse, InitCiScanData, InitCiScanResponse, ListFindingCategoryData, ListFindingCategoryResponse, ListJiraProjectsData, ListJiraProjectsResponse, ListPackageDependencyData, ListPackageDependencyResponse, ListProjectCommitData, ListProjectCommitResponse, ListProjectManagerUserData, ListProjectManagerUserResponse, LoginData, LoginOidcData, LoginResponse, LogoutData, LogoutResponse, PingData, PingResponse, RefreshTokenData, RefreshTokenResponse, ResetPasswordData, ResetPasswordResponse, SastStatisticData, SastStatisticResponse, ScaStatisticData, ScaStatisticResponse, SearchData, SearchResponse, SendConfirmEmailData, SyncRulesData, SyncRulesResponse, TestAiSettingData, TestAiSettingResponse, TestGitHubIntegrationSettingData, TestGitHubIntegrationSettingResponse, TestJiraIntegrationSettingData, TestJiraIntegrationSettingResponse, TestRedmineIntegrationSettingData, TestRedmineIntegrationSettingResponse, TestSmtpSettingData, TestSmtpSettingResponse, TestTeamsIntegrationProjectData, TestTeamsIntegrationProjectResponse, TestTeamsIntegrationSettingData, TestTeamsIntegrationSettingResponse, TestWebhookIntegrationProjectData, TestWebhookIntegrationProjectResponse, TestWebhookIntegrationSettingData, TestWebhookIntegrationSettingResponse, UpdateAiSettingData, UpdateAuthSettingData, UpdateCiScanData, UpdateDefaultBranchesProjectData, UpdateDefaultBranchesProjectResponse, UpdateFindingData, UpdateFindingResponse, UpdateGitHubIntegrationProjectData, UpdateGitHubIntegrationProjectResponse, UpdateGitHubIntegrationSettingData, UpdateGitHubIntegrationSettingResponse, UpdateJiraIntegrationProjectData, UpdateJiraIntegrationProjectResponse, UpdateJiraIntegrationSettingData, UpdateJiraIntegrationSettingResponse, UpdateJiraWebhookIntegrationSettingData, UpdateJiraWebhookIntegrationSettingResponse, UpdateMailIntegrationProjectData, UpdateMailIntegrationProjectResponse, UpdateMailIntegrationSettingData, UpdateProjectMemberData, UpdateProjectMemberResponse, UpdateProjectPackageData, UpdateProjectPackageResponse, UpdateRedmineIntegrationProjectData, UpdateRedmineIntegrationProjectResponse, UpdateRedmineIntegrationSettingData, UpdateRedmineIntegrationSettingResponse, UpdateRuleData, UpdateSlaSettingData, UpdateSmtpSettingData, UpdateStatusScanFindingData, UpdateStatusScanFindingResponse, UpdateTeamsIntegrationProjectData, UpdateTeamsIntegrationProjectResponse, UpdateTeamsIntegrationSettingData, UpdateTeamsIntegrationSettingResponse, UpdateThresholdProjectData, UpdateThresholdProjectResponse, UpdateUserData, UpdateUserResponse, UpdateWebhookIntegrationProjectData, UpdateWebhookIntegrationProjectResponse, UpdateWebhookIntegrationSettingData, UpdateWebhookIntegrationSettingResponse, UploadCiDependencyData, UploadCiDependencyResponse, UploadCiFindingData, UploadCiFindingResponse2, UploadSarifData, UploadSarifResponse } from '../types.gen';
 
 export const searchMutation = (options?: Partial<Options<SearchData>>): UseMutationOptions<SearchResponse, DefaultError, Options<SearchData>> => {
     const mutationOptions: UseMutationOptions<SearchResponse, DefaultError, Options<SearchData>> = {
@@ -434,6 +434,63 @@ export const listFindingCategoryMutation = (options?: Partial<Options<ListFindin
     return mutationOptions;
 };
 
+export const getGitHubIntegrationSettingQueryKey = (options?: Options<GetGitHubIntegrationSettingData>) => createQueryKey('getGitHubIntegrationSetting', options);
+
+export const getGitHubIntegrationSettingOptions = (options?: Options<GetGitHubIntegrationSettingData>) => queryOptions<GetGitHubIntegrationSettingResponse, DefaultError, GetGitHubIntegrationSettingResponse, ReturnType<typeof getGitHubIntegrationSettingQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getGitHubIntegrationSetting({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getGitHubIntegrationSettingQueryKey(options)
+});
+
+export const updateGitHubIntegrationSettingMutation = (options?: Partial<Options<UpdateGitHubIntegrationSettingData>>): UseMutationOptions<UpdateGitHubIntegrationSettingResponse, DefaultError, Options<UpdateGitHubIntegrationSettingData>> => {
+    const mutationOptions: UseMutationOptions<UpdateGitHubIntegrationSettingResponse, DefaultError, Options<UpdateGitHubIntegrationSettingData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updateGitHubIntegrationSetting({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const testGitHubIntegrationSettingMutation = (options?: Partial<Options<TestGitHubIntegrationSettingData>>): UseMutationOptions<TestGitHubIntegrationSettingResponse, DefaultError, Options<TestGitHubIntegrationSettingData>> => {
+    const mutationOptions: UseMutationOptions<TestGitHubIntegrationSettingResponse, DefaultError, Options<TestGitHubIntegrationSettingData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await testGitHubIntegrationSetting({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getGitHubMetadataIntegrationMutation = (options?: Partial<Options<GetGitHubMetadataIntegrationData>>): UseMutationOptions<GetGitHubMetadataIntegrationResponse, DefaultError, Options<GetGitHubMetadataIntegrationData>> => {
+    const mutationOptions: UseMutationOptions<GetGitHubMetadataIntegrationResponse, DefaultError, Options<GetGitHubMetadataIntegrationData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await getGitHubMetadataIntegration({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
 export const getIntegrationSettingQueryKey = (options?: Options<GetIntegrationSettingData>) => createQueryKey('getIntegrationSetting', options);
 
 export const getIntegrationSettingOptions = (options?: Options<GetIntegrationSettingData>) => queryOptions<GetIntegrationSettingResponse, DefaultError, GetIntegrationSettingResponse, ReturnType<typeof getIntegrationSettingQueryKey>>({
@@ -693,6 +750,49 @@ export const testTeamsIntegrationSettingMutation = (options?: Partial<Options<Te
     return mutationOptions;
 };
 
+export const getWebhookIntegrationSettingQueryKey = (options?: Options<GetWebhookIntegrationSettingData>) => createQueryKey('getWebhookIntegrationSetting', options);
+
+export const getWebhookIntegrationSettingOptions = (options?: Options<GetWebhookIntegrationSettingData>) => queryOptions<GetWebhookIntegrationSettingResponse, DefaultError, GetWebhookIntegrationSettingResponse, ReturnType<typeof getWebhookIntegrationSettingQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getWebhookIntegrationSetting({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getWebhookIntegrationSettingQueryKey(options)
+});
+
+export const updateWebhookIntegrationSettingMutation = (options?: Partial<Options<UpdateWebhookIntegrationSettingData>>): UseMutationOptions<UpdateWebhookIntegrationSettingResponse, DefaultError, Options<UpdateWebhookIntegrationSettingData>> => {
+    const mutationOptions: UseMutationOptions<UpdateWebhookIntegrationSettingResponse, DefaultError, Options<UpdateWebhookIntegrationSettingData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updateWebhookIntegrationSetting({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const testWebhookIntegrationSettingMutation = (options?: Partial<Options<TestWebhookIntegrationSettingData>>): UseMutationOptions<TestWebhookIntegrationSettingResponse, DefaultError, Options<TestWebhookIntegrationSettingData>> => {
+    const mutationOptions: UseMutationOptions<TestWebhookIntegrationSettingResponse, DefaultError, Options<TestWebhookIntegrationSettingData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await testWebhookIntegrationSetting({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
 export const loginOidcQueryKey = (options?: Options<LoginOidcData>) => createQueryKey('loginOidc', options);
 
 export const loginOidcOptions = (options?: Options<LoginOidcData>) => queryOptions<unknown, DefaultError, unknown, ReturnType<typeof loginOidcQueryKey>>({
@@ -925,6 +1025,50 @@ export const exportMutation = (options?: Partial<Options<ExportData>>): UseMutat
     };
     return mutationOptions;
 };
+
+export const getGitHubIntegrationProjectQueryKey = (options: Options<GetGitHubIntegrationProjectData>) => createQueryKey('getGitHubIntegrationProject', options);
+
+export const getGitHubIntegrationProjectOptions = (options: Options<GetGitHubIntegrationProjectData>) => queryOptions<GetGitHubIntegrationProjectResponse, DefaultError, GetGitHubIntegrationProjectResponse, ReturnType<typeof getGitHubIntegrationProjectQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getGitHubIntegrationProject({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getGitHubIntegrationProjectQueryKey(options)
+});
+
+export const updateGitHubIntegrationProjectMutation = (options?: Partial<Options<UpdateGitHubIntegrationProjectData>>): UseMutationOptions<UpdateGitHubIntegrationProjectResponse, DefaultError, Options<UpdateGitHubIntegrationProjectData>> => {
+    const mutationOptions: UseMutationOptions<UpdateGitHubIntegrationProjectResponse, DefaultError, Options<UpdateGitHubIntegrationProjectData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updateGitHubIntegrationProject({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getGitHubMetadataQueryKey = (options: Options<GetGitHubMetadataData>) => createQueryKey('getGitHubMetadata', options);
+
+export const getGitHubMetadataOptions = (options: Options<GetGitHubMetadataData>) => queryOptions<GetGitHubMetadataResponse, DefaultError, GetGitHubMetadataResponse, ReturnType<typeof getGitHubMetadataQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getGitHubMetadata({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getGitHubMetadataQueryKey(options)
+});
 
 export const getJiraIntegrationProjectQueryKey = (options: Options<GetJiraIntegrationProjectData>) => createQueryKey('getJiraIntegrationProject', options);
 
@@ -1199,6 +1343,21 @@ export const getRedmineMetadataOptions = (options: Options<GetRedmineMetadataDat
     queryKey: getRedmineMetadataQueryKey(options)
 });
 
+export const getSbomQueryKey = (options: Options<GetSbomData>) => createQueryKey('getSbom', options);
+
+export const getSbomOptions = (options: Options<GetSbomData>) => queryOptions<GetSbomResponse, DefaultError, GetSbomResponse, ReturnType<typeof getSbomQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getSbom({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getSbomQueryKey(options)
+});
+
 export const getTeamsIntegrationProjectQueryKey = (options: Options<GetTeamsIntegrationProjectData>) => createQueryKey('getTeamsIntegrationProject', options);
 
 export const getTeamsIntegrationProjectOptions = (options: Options<GetTeamsIntegrationProjectData>) => queryOptions<GetTeamsIntegrationProjectResponse, DefaultError, GetTeamsIntegrationProjectResponse, ReturnType<typeof getTeamsIntegrationProjectQueryKey>>({
@@ -1232,6 +1391,49 @@ export const testTeamsIntegrationProjectMutation = (options?: Partial<Options<Te
     const mutationOptions: UseMutationOptions<TestTeamsIntegrationProjectResponse, DefaultError, Options<TestTeamsIntegrationProjectData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await testTeamsIntegrationProject({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getWebhookIntegrationProjectQueryKey = (options: Options<GetWebhookIntegrationProjectData>) => createQueryKey('getWebhookIntegrationProject', options);
+
+export const getWebhookIntegrationProjectOptions = (options: Options<GetWebhookIntegrationProjectData>) => queryOptions<GetWebhookIntegrationProjectResponse, DefaultError, GetWebhookIntegrationProjectResponse, ReturnType<typeof getWebhookIntegrationProjectQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getWebhookIntegrationProject({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getWebhookIntegrationProjectQueryKey(options)
+});
+
+export const updateWebhookIntegrationProjectMutation = (options?: Partial<Options<UpdateWebhookIntegrationProjectData>>): UseMutationOptions<UpdateWebhookIntegrationProjectResponse, DefaultError, Options<UpdateWebhookIntegrationProjectData>> => {
+    const mutationOptions: UseMutationOptions<UpdateWebhookIntegrationProjectResponse, DefaultError, Options<UpdateWebhookIntegrationProjectData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updateWebhookIntegrationProject({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const testWebhookIntegrationProjectMutation = (options?: Partial<Options<TestWebhookIntegrationProjectData>>): UseMutationOptions<TestWebhookIntegrationProjectResponse, DefaultError, Options<TestWebhookIntegrationProjectData>> => {
+    const mutationOptions: UseMutationOptions<TestWebhookIntegrationProjectResponse, DefaultError, Options<TestWebhookIntegrationProjectData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await testWebhookIntegrationProject({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

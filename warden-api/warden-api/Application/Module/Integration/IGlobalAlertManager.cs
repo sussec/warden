@@ -1,5 +1,6 @@
 using Warden.Application.Module.Integration.Mail;
 using Warden.Application.Module.Integration.Teams;
+using Warden.Application.Module.Integration.Webhook;
 using Warden.Application.Services;
 using Warden.Core.Extension;
 
@@ -17,6 +18,7 @@ public interface IGlobalAlertManager
 
 public class GlobalAlertManager(
     TeamsAlertSetting teamsAlertSetting,
+    WebhookSetting webhookSetting,
     MailAlertSetting mailAlertSetting,
     // mail
     ISmtpService smtpService,
@@ -48,6 +50,17 @@ public class GlobalAlertManager(
                 logger.LogError(result.ListErrors().First());
             }
         }
+
+        // webhook
+        if (webhookSetting is { Active: true, NewFindingEvent: true })
+        {
+            var result = await new AlertNewFindingWebhook(webhookSetting.Url, webhookSetting.Format)
+                .AlertAsync([], model);
+            if (result.IsFailed)
+            {
+                logger.LogError(result.ListErrors().First());
+            }
+        }
     }
 
     public async Task AlertFixedFinding(AlertStatusFindingModel model)
@@ -67,6 +80,17 @@ public class GlobalAlertManager(
         if (teamsAlertSetting is { Active: true, FixedFindingEvent: true })
         {
             var result = await new AlertNewFindingTeams(teamsAlertSetting.Webhook)
+                .AlertAsync([], model);
+            if (result.IsFailed)
+            {
+                logger.LogError(result.ListErrors().First());
+            }
+        }
+
+        // webhook
+        if (webhookSetting is { Active: true, FixedFindingEvent: true })
+        {
+            var result = await new AlertFixedFindingWebhook(webhookSetting.Url, webhookSetting.Format)
                 .AlertAsync([], model);
             if (result.IsFailed)
             {
@@ -98,6 +122,17 @@ public class GlobalAlertManager(
                 logger.LogError(result.ListErrors().First());
             }
         }
+
+        // webhook
+        if (webhookSetting is { Active: true, NeedTriageFindingEvent: true })
+        {
+            var result = await new AlertNeedTriageFindingWebhook(webhookSetting.Url, webhookSetting.Format)
+                .AlertAsync([], model);
+            if (result.IsFailed)
+            {
+                logger.LogError(result.ListErrors().First());
+            }
+        }
     }
 
     public async Task AlertConfirmedFinding(AlertConfirmedFindingModel model)
@@ -117,6 +152,17 @@ public class GlobalAlertManager(
         if (teamsAlertSetting is { Active: true, SecurityAlertEvent: true })
         {
             var result = await new AlertConfirmedFindingTeams(teamsAlertSetting.Webhook)
+                .AlertAsync([], model);
+            if (result.IsFailed)
+            {
+                logger.LogError(result.ListErrors().First());
+            }
+        }
+
+        // webhook
+        if (webhookSetting is { Active: true, SecurityAlertEvent: true })
+        {
+            var result = await new AlertConfirmedFindingWebhook(webhookSetting.Url, webhookSetting.Format)
                 .AlertAsync([], model);
             if (result.IsFailed)
             {
@@ -148,6 +194,17 @@ public class GlobalAlertManager(
                 logger.LogError(result.ListErrors().First());
             }
         }
+
+        // webhook
+        if (webhookSetting is { Active: true, SecurityAlertEvent: true })
+        {
+            var result = await new AlertVulnerableProjectPackageWebhook(webhookSetting.Url, webhookSetting.Format)
+                .AlertAsync([], model);
+            if (result.IsFailed)
+            {
+                logger.LogError(result.ListErrors().First());
+            }
+        }
     }
 
     public async Task AlertProjectWithoutMember(AlertProjectWithoutMemberModel model)
@@ -167,6 +224,17 @@ public class GlobalAlertManager(
         if (teamsAlertSetting is { Active: true, ProjectWithoutMemberEvent: true })
         {
             var result = await new AlertProjectWithoutMemberTeams(teamsAlertSetting.Webhook)
+                .AlertAsync([], model);
+            if (result.IsFailed)
+            {
+                logger.LogError(result.ListErrors().First());
+            }
+        }
+
+        // webhook
+        if (webhookSetting is { Active: true, ProjectWithoutMemberEvent: true })
+        {
+            var result = await new AlertProjectWithoutMemberWebhook(webhookSetting.Url, webhookSetting.Format)
                 .AlertAsync([], model);
             if (result.IsFailed)
             {

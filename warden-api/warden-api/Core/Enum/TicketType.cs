@@ -6,5 +6,6 @@ namespace Warden.Core.Enum;
 public enum TicketType
 {
     Jira,
-    Redmine
+    Redmine,
+    GitHub
 }

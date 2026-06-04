@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddCommentData, AddCommentResponses, AddMemberData, AddMemberResponses, BackfillData, BackfillResponses, ChangePasswordData, ChangePasswordResponses, ConfirmEmailData, ConfirmEmailResponses, CreateCiTokenData, CreateCiTokenResponses, CreateProjectPackageTicketData, CreateProjectPackageTicketResponses, CreateTicketData, CreateTicketResponses, CreateUserData, CreateUserResponses, DeleteCiTokenData, DeleteCiTokenResponses, DeleteProjectMemberData, DeleteProjectMemberResponses, DeleteProjectTicketData, DeleteProjectTicketResponses, DeleteTicketData, DeleteTicketResponses, ExportData, ExportFindingData, ExportFindingResponses, ExportResponses, ForgotPasswordData, ForgotPasswordResponses, GetAiSettingData, GetAiSettingResponses, GetAiSuggestionData, GetAiSuggestionResponses, GetAuthConfigData, GetAuthConfigResponses, GetAuthSettingData, GetAuthSettingResponses, GetCiTokensData, GetCiTokensResponses, GetDefaultBranchesProjectData, GetDefaultBranchesProjectResponses, GetFindingActivitiesData, GetFindingActivitiesResponses, GetFindingByIdData, GetFindingByIdResponses, GetFindingRulesData, GetFindingRulesResponses, GetFindingsData, GetFindingsResponses, GetIntegrationProjectData, GetIntegrationProjectResponses, GetIntegrationSettingData, GetIntegrationSettingResponses, GetJiraIntegrationProjectData, GetJiraIntegrationProjectResponses, GetJiraIntegrationSettingData, GetJiraIntegrationSettingResponses, GetJiraIssueTypesData, GetJiraIssueTypesResponses, GetJiraProjectsData, GetJiraProjectsResponses, GetJiraWebhookIntegrationSettingData, GetJiraWebhookIntegrationSettingResponses, GetMailIntegrationProjectData, GetMailIntegrationProjectResponses, GetMailIntegrationSettingData, GetMailIntegrationSettingResponses, GetPackageByIdData, GetPackageByIdResponses, GetPackagesByFilterData, GetPackagesByFilterResponses, GetProfileData, GetProfileResponses, GetProjectByFilterData, GetProjectByFilterResponses, GetProjectCommitScanSummaryData, GetProjectCommitScanSummaryResponses, GetProjectInfoData, GetProjectInfoResponses, GetProjectPackageDetailData, GetProjectPackageDetailResponses, GetProjectPackagesData, GetProjectPackagesResponses, GetProjectScansData, GetProjectScansResponses, GetProjectStatisticData, GetProjectStatisticResponses, GetProjectUsersData, GetProjectUsersResponses, GetRedmineIntegrationProjectData, GetRedmineIntegrationProjectResponses, GetRedmineIntegrationSettingData, GetRedmineIntegrationSettingResponses, GetRedmineMetadataData, GetRedmineMetadataIntegrationData, GetRedmineMetadataIntegrationResponses, GetRedmineMetadataResponses, GetRolesData, GetRolesResponses, GetRuleByFilterData, GetRuleByFilterResponses, GetRuleScannersData, GetRuleScannersResponses, GetScannersData, GetScannersResponses, GetSlaSettingData, GetSlaSettingResponses, GetSmtpSettingData, GetSmtpSettingResponses, GetSourceControlSystemData, GetSourceControlSystemResponses, GetTeamsIntegrationProjectData, GetTeamsIntegrationProjectResponses, GetTeamsIntegrationSettingData, GetTeamsIntegrationSettingResponses, GetThresholdProjectData, GetThresholdProjectResponses, GetTicketTrackerStatusData, GetTicketTrackerStatusResponses, GetUserByIdData, GetUserByIdResponses, GetUserDetailByFilterData, GetUserDetailByFilterResponses, GetUserSummaryByFilterData, GetUserSummaryByFilterResponses, InitCiScanData, InitCiScanResponses, ListFindingCategoryData, ListFindingCategoryResponses, ListJiraProjectsData, ListJiraProjectsResponses, ListPackageDependencyData, ListPackageDependencyResponses, ListProjectCommitData, ListProjectCommitResponses, ListProjectManagerUserData, ListProjectManagerUserResponses, LoginData, LoginOidcData, LoginOidcResponses, LoginResponses, LogoutData, LogoutResponses, PingData, PingResponses, RefreshTokenData, RefreshTokenResponses, ResetPasswordData, ResetPasswordResponses, SastStatisticData, SastStatisticResponses, ScaStatisticData, ScaStatisticResponses, SearchData, SearchResponses, SendConfirmEmailData, SendConfirmEmailResponses, SyncRulesData, SyncRulesResponses, TestAiSettingData, TestAiSettingResponses, TestJiraIntegrationSettingData, TestJiraIntegrationSettingResponses, TestRedmineIntegrationSettingData, TestRedmineIntegrationSettingResponses, TestSmtpSettingData, TestSmtpSettingResponses, TestTeamsIntegrationProjectData, TestTeamsIntegrationProjectResponses, TestTeamsIntegrationSettingData, TestTeamsIntegrationSettingResponses, UpdateAiSettingData, UpdateAiSettingResponses, UpdateAuthSettingData, UpdateAuthSettingResponses, UpdateCiScanData, UpdateCiScanResponses, UpdateDefaultBranchesProjectData, UpdateDefaultBranchesProjectResponses, UpdateFindingData, UpdateFindingResponses, UpdateJiraIntegrationProjectData, UpdateJiraIntegrationProjectResponses, UpdateJiraIntegrationSettingData, UpdateJiraIntegrationSettingResponses, UpdateJiraWebhookIntegrationSettingData, UpdateJiraWebhookIntegrationSettingResponses, UpdateMailIntegrationProjectData, UpdateMailIntegrationProjectResponses, UpdateMailIntegrationSettingData, UpdateMailIntegrationSettingResponses, UpdateProjectMemberData, UpdateProjectMemberResponses, UpdateProjectPackageData, UpdateProjectPackageResponses, UpdateRedmineIntegrationProjectData, UpdateRedmineIntegrationProjectResponses, UpdateRedmineIntegrationSettingData, UpdateRedmineIntegrationSettingResponses, UpdateRuleData, UpdateRuleResponses, UpdateSlaSettingData, UpdateSlaSettingResponses, UpdateSmtpSettingData, UpdateSmtpSettingResponses, UpdateStatusScanFindingData, UpdateStatusScanFindingResponses, UpdateTeamsIntegrationProjectData, UpdateTeamsIntegrationProjectResponses, UpdateTeamsIntegrationSettingData, UpdateTeamsIntegrationSettingResponses, UpdateThresholdProjectData, UpdateThresholdProjectResponses, UpdateUserData, UpdateUserResponses, UploadCiDependencyData, UploadCiDependencyResponses, UploadCiFindingData, UploadCiFindingResponses, UploadSarifData, UploadSarifResponses } from './types.gen';
+import type { AddCommentData, AddCommentResponses, AddMemberData, AddMemberResponses, BackfillData, BackfillResponses, ChangePasswordData, ChangePasswordResponses, ConfirmEmailData, ConfirmEmailResponses, CreateCiTokenData, CreateCiTokenResponses, CreateProjectPackageTicketData, CreateProjectPackageTicketResponses, CreateTicketData, CreateTicketResponses, CreateUserData, CreateUserResponses, DeleteCiTokenData, DeleteCiTokenResponses, DeleteProjectMemberData, DeleteProjectMemberResponses, DeleteProjectTicketData, DeleteProjectTicketResponses, DeleteTicketData, DeleteTicketResponses, ExportData, ExportFindingData, ExportFindingResponses, ExportResponses, ForgotPasswordData, ForgotPasswordResponses, GetAiSettingData, GetAiSettingResponses, GetAiSuggestionData, GetAiSuggestionResponses, GetAuthConfigData, GetAuthConfigResponses, GetAuthSettingData, GetAuthSettingResponses, GetCiTokensData, GetCiTokensResponses, GetDefaultBranchesProjectData, GetDefaultBranchesProjectResponses, GetFindingActivitiesData, GetFindingActivitiesResponses, GetFindingByIdData, GetFindingByIdResponses, GetFindingRulesData, GetFindingRulesResponses, GetFindingsData, GetFindingsResponses, GetGitHubIntegrationProjectData, GetGitHubIntegrationProjectResponses, GetGitHubIntegrationSettingData, GetGitHubIntegrationSettingResponses, GetGitHubMetadataData, GetGitHubMetadataIntegrationData, GetGitHubMetadataIntegrationResponses, GetGitHubMetadataResponses, GetIntegrationProjectData, GetIntegrationProjectResponses, GetIntegrationSettingData, GetIntegrationSettingResponses, GetJiraIntegrationProjectData, GetJiraIntegrationProjectResponses, GetJiraIntegrationSettingData, GetJiraIntegrationSettingResponses, GetJiraIssueTypesData, GetJiraIssueTypesResponses, GetJiraProjectsData, GetJiraProjectsResponses, GetJiraWebhookIntegrationSettingData, GetJiraWebhookIntegrationSettingResponses, GetMailIntegrationProjectData, GetMailIntegrationProjectResponses, GetMailIntegrationSettingData, GetMailIntegrationSettingResponses, GetPackageByIdData, GetPackageByIdResponses, GetPackagesByFilterData, GetPackagesByFilterResponses, GetProfileData, GetProfileResponses, GetProjectByFilterData, GetProjectByFilterResponses, GetProjectCommitScanSummaryData, GetProjectCommitScanSummaryResponses, GetProjectInfoData, GetProjectInfoResponses, GetProjectPackageDetailData, GetProjectPackageDetailResponses, GetProjectPackagesData, GetProjectPackagesResponses, GetProjectScansData, GetProjectScansResponses, GetProjectStatisticData, GetProjectStatisticResponses, GetProjectUsersData, GetProjectUsersResponses, GetRedmineIntegrationProjectData, GetRedmineIntegrationProjectResponses, GetRedmineIntegrationSettingData, GetRedmineIntegrationSettingResponses, GetRedmineMetadataData, GetRedmineMetadataIntegrationData, GetRedmineMetadataIntegrationResponses, GetRedmineMetadataResponses, GetRolesData, GetRolesResponses, GetRuleByFilterData, GetRuleByFilterResponses, GetRuleScannersData, GetRuleScannersResponses, GetSbomData, GetSbomResponses, GetScannersData, GetScannersResponses, GetSlaSettingData, GetSlaSettingResponses, GetSmtpSettingData, GetSmtpSettingResponses, GetSourceControlSystemData, GetSourceControlSystemResponses, GetTeamsIntegrationProjectData, GetTeamsIntegrationProjectResponses, GetTeamsIntegrationSettingData, GetTeamsIntegrationSettingResponses, GetThresholdProjectData, GetThresholdProjectResponses, GetTicketTrackerStatusData, GetTicketTrackerStatusResponses, GetUserByIdData, GetUserByIdResponses, GetUserDetailByFilterData, GetUserDetailByFilterResponses, GetUserSummaryByFilterData, GetUserSummaryByFilterResponses, GetWebhookIntegrationProjectData, GetWebhookIntegrationProjectResponses, GetWebhookIntegrationSettingData, GetWebhookIntegrationSettingResponses, InitCiScanData, InitCiScanResponses, ListFindingCategoryData, ListFindingCategoryResponses, ListJiraProjectsData, ListJiraProjectsResponses, ListPackageDependencyData, ListPackageDependencyResponses, ListProjectCommitData, ListProjectCommitResponses, ListProjectManagerUserData, ListProjectManagerUserResponses, LoginData, LoginOidcData, LoginOidcResponses, LoginResponses, LogoutData, LogoutResponses, PingData, PingResponses, RefreshTokenData, RefreshTokenResponses, ResetPasswordData, ResetPasswordResponses, SastStatisticData, SastStatisticResponses, ScaStatisticData, ScaStatisticResponses, SearchData, SearchResponses, SendConfirmEmailData, SendConfirmEmailResponses, SyncRulesData, SyncRulesResponses, TestAiSettingData, TestAiSettingResponses, TestGitHubIntegrationSettingData, TestGitHubIntegrationSettingResponses, TestJiraIntegrationSettingData, TestJiraIntegrationSettingResponses, TestRedmineIntegrationSettingData, TestRedmineIntegrationSettingResponses, TestSmtpSettingData, TestSmtpSettingResponses, TestTeamsIntegrationProjectData, TestTeamsIntegrationProjectResponses, TestTeamsIntegrationSettingData, TestTeamsIntegrationSettingResponses, TestWebhookIntegrationProjectData, TestWebhookIntegrationProjectResponses, TestWebhookIntegrationSettingData, TestWebhookIntegrationSettingResponses, UpdateAiSettingData, UpdateAiSettingResponses, UpdateAuthSettingData, UpdateAuthSettingResponses, UpdateCiScanData, UpdateCiScanResponses, UpdateDefaultBranchesProjectData, UpdateDefaultBranchesProjectResponses, UpdateFindingData, UpdateFindingResponses, UpdateGitHubIntegrationProjectData, UpdateGitHubIntegrationProjectResponses, UpdateGitHubIntegrationSettingData, UpdateGitHubIntegrationSettingResponses, UpdateJiraIntegrationProjectData, UpdateJiraIntegrationProjectResponses, UpdateJiraIntegrationSettingData, UpdateJiraIntegrationSettingResponses, UpdateJiraWebhookIntegrationSettingData, UpdateJiraWebhookIntegrationSettingResponses, UpdateMailIntegrationProjectData, UpdateMailIntegrationProjectResponses, UpdateMailIntegrationSettingData, UpdateMailIntegrationSettingResponses, UpdateProjectMemberData, UpdateProjectMemberResponses, UpdateProjectPackageData, UpdateProjectPackageResponses, UpdateRedmineIntegrationProjectData, UpdateRedmineIntegrationProjectResponses, UpdateRedmineIntegrationSettingData, UpdateRedmineIntegrationSettingResponses, UpdateRuleData, UpdateRuleResponses, UpdateSlaSettingData, UpdateSlaSettingResponses, UpdateSmtpSettingData, UpdateSmtpSettingResponses, UpdateStatusScanFindingData, UpdateStatusScanFindingResponses, UpdateTeamsIntegrationProjectData, UpdateTeamsIntegrationProjectResponses, UpdateTeamsIntegrationSettingData, UpdateTeamsIntegrationSettingResponses, UpdateThresholdProjectData, UpdateThresholdProjectResponses, UpdateUserData, UpdateUserResponses, UpdateWebhookIntegrationProjectData, UpdateWebhookIntegrationProjectResponses, UpdateWebhookIntegrationSettingData, UpdateWebhookIntegrationSettingResponses, UploadCiDependencyData, UploadCiDependencyResponses, UploadCiFindingData, UploadCiFindingResponses, UploadSarifData, UploadSarifResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -270,6 +270,38 @@ export const listFindingCategory = <ThrowOnError extends boolean = false>(option
     }
 });
 
+export const getGitHubIntegrationSetting = <ThrowOnError extends boolean = false>(options?: Options<GetGitHubIntegrationSettingData, ThrowOnError>): RequestResult<GetGitHubIntegrationSettingResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetGitHubIntegrationSettingResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/integration/github',
+    ...options
+});
+
+export const updateGitHubIntegrationSetting = <ThrowOnError extends boolean = false>(options?: Options<UpdateGitHubIntegrationSettingData, ThrowOnError>): RequestResult<UpdateGitHubIntegrationSettingResponses, unknown, ThrowOnError> => (options?.client ?? client).post<UpdateGitHubIntegrationSettingResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/integration/github',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers
+    }
+});
+
+export const testGitHubIntegrationSetting = <ThrowOnError extends boolean = false>(options?: Options<TestGitHubIntegrationSettingData, ThrowOnError>): RequestResult<TestGitHubIntegrationSettingResponses, unknown, ThrowOnError> => (options?.client ?? client).post<TestGitHubIntegrationSettingResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/integration/github/test',
+    ...options
+});
+
+export const getGitHubMetadataIntegration = <ThrowOnError extends boolean = false>(options?: Options<GetGitHubMetadataIntegrationData, ThrowOnError>): RequestResult<GetGitHubMetadataIntegrationResponses, unknown, ThrowOnError> => (options?.client ?? client).post<GetGitHubMetadataIntegrationResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/integration/github/metadata',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers
+    }
+});
+
 export const getIntegrationSetting = <ThrowOnError extends boolean = false>(options?: Options<GetIntegrationSettingData, ThrowOnError>): RequestResult<GetIntegrationSettingResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetIntegrationSettingResponses, unknown, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/integration',
@@ -386,13 +418,13 @@ export const getRedmineMetadataIntegration = <ThrowOnError extends boolean = fal
 
 export const getTeamsIntegrationSetting = <ThrowOnError extends boolean = false>(options?: Options<GetTeamsIntegrationSettingData, ThrowOnError>): RequestResult<GetTeamsIntegrationSettingResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetTeamsIntegrationSettingResponses, unknown, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/teams-integration',
+    url: '/api/integration/teams',
     ...options
 });
 
 export const updateTeamsIntegrationSetting = <ThrowOnError extends boolean = false>(options?: Options<UpdateTeamsIntegrationSettingData, ThrowOnError>): RequestResult<UpdateTeamsIntegrationSettingResponses, unknown, ThrowOnError> => (options?.client ?? client).post<UpdateTeamsIntegrationSettingResponses, unknown, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/teams-integration',
+    url: '/api/integration/teams',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -402,7 +434,29 @@ export const updateTeamsIntegrationSetting = <ThrowOnError extends boolean = fal
 
 export const testTeamsIntegrationSetting = <ThrowOnError extends boolean = false>(options?: Options<TestTeamsIntegrationSettingData, ThrowOnError>): RequestResult<TestTeamsIntegrationSettingResponses, unknown, ThrowOnError> => (options?.client ?? client).post<TestTeamsIntegrationSettingResponses, unknown, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/teams-integration/test',
+    url: '/api/integration/teams/test',
+    ...options
+});
+
+export const getWebhookIntegrationSetting = <ThrowOnError extends boolean = false>(options?: Options<GetWebhookIntegrationSettingData, ThrowOnError>): RequestResult<GetWebhookIntegrationSettingResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetWebhookIntegrationSettingResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/integration/webhook',
+    ...options
+});
+
+export const updateWebhookIntegrationSetting = <ThrowOnError extends boolean = false>(options?: Options<UpdateWebhookIntegrationSettingData, ThrowOnError>): RequestResult<UpdateWebhookIntegrationSettingResponses, unknown, ThrowOnError> => (options?.client ?? client).post<UpdateWebhookIntegrationSettingResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/integration/webhook',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers
+    }
+});
+
+export const testWebhookIntegrationSetting = <ThrowOnError extends boolean = false>(options?: Options<TestWebhookIntegrationSettingData, ThrowOnError>): RequestResult<TestWebhookIntegrationSettingResponses, unknown, ThrowOnError> => (options?.client ?? client).post<TestWebhookIntegrationSettingResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/integration/webhook/test',
     ...options
 });
 
@@ -528,6 +582,28 @@ export const export_ = <ThrowOnError extends boolean = false>(options: Options<E
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+export const getGitHubIntegrationProject = <ThrowOnError extends boolean = false>(options: Options<GetGitHubIntegrationProjectData, ThrowOnError>): RequestResult<GetGitHubIntegrationProjectResponses, unknown, ThrowOnError> => (options.client ?? client).get<GetGitHubIntegrationProjectResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/project/{projectId}/integration/github',
+    ...options
+});
+
+export const updateGitHubIntegrationProject = <ThrowOnError extends boolean = false>(options: Options<UpdateGitHubIntegrationProjectData, ThrowOnError>): RequestResult<UpdateGitHubIntegrationProjectResponses, unknown, ThrowOnError> => (options.client ?? client).post<UpdateGitHubIntegrationProjectResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/project/{projectId}/integration/github',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const getGitHubMetadata = <ThrowOnError extends boolean = false>(options: Options<GetGitHubMetadataData, ThrowOnError>): RequestResult<GetGitHubMetadataResponses, unknown, ThrowOnError> => (options.client ?? client).get<GetGitHubMetadataResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/project/{projectId}/integration/github/metadata',
+    ...options
 });
 
 export const getJiraIntegrationProject = <ThrowOnError extends boolean = false>(options: Options<GetJiraIntegrationProjectData, ThrowOnError>): RequestResult<GetJiraIntegrationProjectResponses, unknown, ThrowOnError> => (options.client ?? client).get<GetJiraIntegrationProjectResponses, unknown, ThrowOnError>({
@@ -680,6 +756,12 @@ export const getRedmineMetadata = <ThrowOnError extends boolean = false>(options
     ...options
 });
 
+export const getSbom = <ThrowOnError extends boolean = false>(options: Options<GetSbomData, ThrowOnError>): RequestResult<GetSbomResponses, unknown, ThrowOnError> => (options.client ?? client).get<GetSbomResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/project/{projectId}/sbom',
+    ...options
+});
+
 export const getTeamsIntegrationProject = <ThrowOnError extends boolean = false>(options: Options<GetTeamsIntegrationProjectData, ThrowOnError>): RequestResult<GetTeamsIntegrationProjectResponses, unknown, ThrowOnError> => (options.client ?? client).get<GetTeamsIntegrationProjectResponses, unknown, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/project/{projectId}/integration/teams',
@@ -699,6 +781,28 @@ export const updateTeamsIntegrationProject = <ThrowOnError extends boolean = fal
 export const testTeamsIntegrationProject = <ThrowOnError extends boolean = false>(options: Options<TestTeamsIntegrationProjectData, ThrowOnError>): RequestResult<TestTeamsIntegrationProjectResponses, unknown, ThrowOnError> => (options.client ?? client).post<TestTeamsIntegrationProjectResponses, unknown, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/project/{projectId}/integration/teams/test',
+    ...options
+});
+
+export const getWebhookIntegrationProject = <ThrowOnError extends boolean = false>(options: Options<GetWebhookIntegrationProjectData, ThrowOnError>): RequestResult<GetWebhookIntegrationProjectResponses, unknown, ThrowOnError> => (options.client ?? client).get<GetWebhookIntegrationProjectResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/project/{projectId}/integration/webhook',
+    ...options
+});
+
+export const updateWebhookIntegrationProject = <ThrowOnError extends boolean = false>(options: Options<UpdateWebhookIntegrationProjectData, ThrowOnError>): RequestResult<UpdateWebhookIntegrationProjectResponses, unknown, ThrowOnError> => (options.client ?? client).post<UpdateWebhookIntegrationProjectResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/project/{projectId}/integration/webhook',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const testWebhookIntegrationProject = <ThrowOnError extends boolean = false>(options: Options<TestWebhookIntegrationProjectData, ThrowOnError>): RequestResult<TestWebhookIntegrationProjectResponses, unknown, ThrowOnError> => (options.client ?? client).post<TestWebhookIntegrationProjectResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/project/{projectId}/integration/webhook/test',
     ...options
 });
 

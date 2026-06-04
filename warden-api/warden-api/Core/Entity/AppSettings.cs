@@ -12,8 +12,10 @@ public class AppSettings
     public string? MailSetting { get; set; }
     public string? MailAlertSetting { get; set; }
     public string? TeamsSetting { get; set; }
+    public string? WebhookSetting { get; set; }
     public string? JiraSetting { get; set; }
     public string? JiraWebhookSetting { get; set; }
     public string? RedmineSetting { get; set; }
+    public string? GitHubSetting { get; set; }
     public string? AiSetting { get; set; }
 }

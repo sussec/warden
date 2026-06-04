@@ -8,6 +8,8 @@
         <RootNamespace>Warden</RootNamespace>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <RazorLangVersion>latest</RazorLangVersion>
+        <!-- workaround for .NET 10 SDK prune-package-data quirk so build/ef tooling runs cleanly -->
+        <AllowMissingPrunePackageData>true</AllowMissingPrunePackageData>
     </PropertyGroup>
 
     <ItemGroup>

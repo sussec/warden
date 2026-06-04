@@ -1,8 +1,11 @@
+using Warden.Application.Module.Integration.GitHub;
 using Warden.Application.Module.Integration.Jira;
 using Warden.Application.Module.Integration.Redmine;
+using Warden.Application.Module.Project.Integration.GitHub;
 using Warden.Application.Module.Project.Integration.Mail;
 using Warden.Application.Module.Project.Integration.Redmine;
 using Warden.Application.Module.Project.Integration.Teams;
+using Warden.Application.Module.Project.Integration.Webhook;
 using Warden.Application.Module.Project.Model;
 using Warden.Core.Entity;
 using Warden.Core.Utils;
@@ -37,6 +40,11 @@ public static class ProjectSettingExtension
     public static TeamsProjectSetting GetTeamsAlertSetting(this ProjectSettings setting)
     {
         return JSONSerializer.DeserializeOrDefault(setting.TeamsSetting, new TeamsProjectSetting());
+    }
+
+    public static WebhookProjectSetting GetWebhookAlertSetting(this ProjectSettings setting)
+    {
+        return JSONSerializer.DeserializeOrDefault(setting.WebhookSetting, new WebhookProjectSetting());
     }
 
     public static JiraProjectSetting GetJiraSetting(this ProjectSettings setting, JiraSetting globalSetting)
@@ -82,6 +90,23 @@ public static class ProjectSettingExtension
 
         redmineSetting.Active = globalSetting.Active;
         return redmineSetting;
+    }
+
+    public static GitHubProjectSetting GetGitHubSetting(this ProjectSettings setting, GitHubSetting globalSetting)
+    {
+        var gitHubSetting = JSONSerializer.DeserializeOrDefault(setting.GitHubSetting, new GitHubProjectSetting());
+        if (string.IsNullOrEmpty(gitHubSetting.Owner))
+        {
+            gitHubSetting.Owner = globalSetting.Owner;
+        }
+
+        if (string.IsNullOrEmpty(gitHubSetting.Repo))
+        {
+            gitHubSetting.Repo = globalSetting.Repo;
+        }
+
+        gitHubSetting.Active = globalSetting.Active;
+        return gitHubSetting;
     }
 
 
