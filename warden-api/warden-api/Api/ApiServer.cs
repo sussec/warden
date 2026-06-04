@@ -3,6 +3,7 @@ using System.Net.Sockets;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Warden.Application;
+using Warden.Application.Module.Mcp;
 using Warden.Application.Schedulers;
 using Warden.Authentication;
 using Warden.Core;
@@ -35,6 +36,8 @@ public static class ApiServer
         builder.Services.AddMemoryCache();
         // App Module
         builder.Services.AddAppModules();
+        // MCP server (Model Context Protocol)
+        builder.Services.AddWardenMcp();
         // Authentication
         builder.Services.AddAppAuthentication();
         // Controller
@@ -91,6 +94,7 @@ public static class ApiServer
         app.UseAuthorization();
 
         app.MapControllers();
+        app.MapWardenMcp();
         app.LoadAuthenticationProviders();
         app.Run();
     }
