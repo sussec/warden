@@ -17,21 +17,36 @@ import {
 } from "@/components/ui/select";
 import { DataTable, type ColumnDef, type PageState } from "@/components/data-table/data-table";
 import { CountBar } from "@/components/severity";
-import { getProjectByFilter } from "@/client/sdk.gen";
+import { getProjectByFilter, getSourceControlSystem } from "@/client/sdk.gen";
 import type { ProjectSummary, ProjectSortField } from "@/client/types.gen";
+
+const ALL_SOURCE_CONTROLS = "__all__";
 
 export default function ProjectListPage() {
   const router = useRouter();
   const [page, setPage] = useState<PageState>({ page: 1, size: 20 });
   const [name, setName] = useState("");
   const [sortBy, setSortBy] = useState<ProjectSortField>("CreatedAt");
+  const [sourceControlId, setSourceControlId] = useState<string>(ALL_SOURCE_CONTROLS);
+
+  const { data: sourceControls } = useQuery({
+    queryKey: ["source-controls"],
+    queryFn: async () => (await getSourceControlSystem({ throwOnError: true })).data,
+  });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["projects", page, name, sortBy],
+    queryKey: ["projects", page, name, sortBy, sourceControlId],
     queryFn: async () =>
       (
         await getProjectByFilter({
-          body: { page: page.page, size: page.size, name: name || null, sortBy, desc: true },
+          body: {
+            page: page.page,
+            size: page.size,
+            name: name || null,
+            sortBy,
+            sourceControlId: sourceControlId === ALL_SOURCE_CONTROLS ? null : sourceControlId,
+            desc: true,
+          },
           throwOnError: true,
         })
       ).data,
@@ -114,6 +129,25 @@ export default function ProjectListPage() {
             <SelectItem value="CreatedAt">created</SelectItem>
             <SelectItem value="UpdatedAt">updated</SelectItem>
             <SelectItem value="Name">name</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select
+          value={sourceControlId}
+          onValueChange={(v) => {
+            setSourceControlId(v);
+            setPage((p) => ({ ...p, page: 1 }));
+          }}
+        >
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Source control" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_SOURCE_CONTROLS}>All source controls</SelectItem>
+            {sourceControls?.map((sc) => (
+              <SelectItem key={sc.id} value={sc.id}>
+                {sc.name ?? sc.type}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>

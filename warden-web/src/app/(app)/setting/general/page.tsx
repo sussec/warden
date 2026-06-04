@@ -21,6 +21,7 @@ import {
   getAiSetting,
   updateAiSetting,
   testAiSetting,
+  backfill,
 } from "@/client/sdk.gen";
 import type {
   SmtpSetting,
@@ -426,6 +427,13 @@ function AiCard() {
     onError: () => toast.error("AI test failed"),
   });
 
+  const rebuild = useMutation({
+    mutationFn: async () => (await backfill({ throwOnError: true })).data,
+    onSuccess: (res) =>
+      toast.success(`Search index rebuilt (${res?.processed ?? 0} findings)`),
+    onError: () => toast.error("Failed to rebuild search index"),
+  });
+
   return (
     <Card>
       <CardHeader>
@@ -494,6 +502,22 @@ function AiCard() {
               onClick={() => test.mutate()}
             >
               {test.isPending ? "Testing…" : "Test Connection"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={rebuild.isPending || !form.enabled}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    "Rebuild the AI semantic-search index over all existing findings? This may take a while.",
+                  )
+                ) {
+                  rebuild.mutate();
+                }
+              }}
+            >
+              {rebuild.isPending ? "Rebuilding…" : "Rebuild search index"}
             </Button>
             <Button type="submit" disabled={save.isPending} className="ml-auto">
               {save.isPending ? "Saving…" : "Save"}

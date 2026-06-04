@@ -21,6 +21,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { DataTable, type ColumnDef, type PageState } from "@/components/data-table/data-table";
 import { ReportExportMenu } from "@/components/findings/report-export-menu";
 import { SbomButton } from "@/components/findings/sbom-button";
+import { SarifUpload } from "@/components/findings/sarif-upload";
+import { ProjectStats } from "@/components/project/project-stats";
 import { CountBar } from "@/components/severity";
 import { cn } from "@/lib/utils";
 import { getProjectCommitScanSummary } from "@/client/sdk.gen";
@@ -195,9 +197,13 @@ export default function ProjectOverviewPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <ProjectStats projectId={id} />
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Scan History</h2>
-        <SbomButton projectId={id} />
+        <div className="flex items-center gap-2">
+          <SarifUpload projectId={id} />
+          <SbomButton projectId={id} />
+        </div>
       </div>
       <div className="relative w-64">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />

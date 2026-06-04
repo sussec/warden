@@ -26,12 +26,14 @@ import {
   updateRedmineIntegrationProject,
   getTeamsIntegrationProject,
   updateTeamsIntegrationProject,
+  testTeamsIntegrationProject,
   getMailIntegrationProject,
   updateMailIntegrationProject,
   getGitHubIntegrationProject,
   updateGitHubIntegrationProject,
   getWebhookIntegrationProject,
   updateWebhookIntegrationProject,
+  testWebhookIntegrationProject,
 } from "@/client/sdk.gen";
 import type {
   JiraProjectSetting,
@@ -274,6 +276,17 @@ function WebhookDialog({
     onError: () => toast.error("Could not save webhook settings."),
   });
 
+  const test = useMutation({
+    // the test endpoint checks the SAVED settings — persist the form first
+    mutationFn: async () => {
+      await updateWebhookIntegrationProject({ path: { projectId }, body: form, throwOnError: true });
+      onSaved();
+      return (await testWebhookIntegrationProject({ path: { projectId }, throwOnError: true })).data;
+    },
+    onSuccess: (ok) => (ok ? toast.success("Webhook delivered") : toast.error("Webhook test failed")),
+    onError: () => toast.error("Webhook test failed"),
+  });
+
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
@@ -305,6 +318,13 @@ function WebhookDialog({
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Cancel
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => test.mutate()}
+            disabled={test.isPending || mut.isPending}
+          >
+            {test.isPending ? "Testing…" : "Test"}
           </Button>
           <Button onClick={() => mut.mutate()} disabled={mut.isPending}>
             {mut.isPending ? "Saving…" : "Save"}
@@ -482,6 +502,17 @@ function TeamsDialog({
     onError: () => toast.error("Could not save Teams settings."),
   });
 
+  const test = useMutation({
+    // the test endpoint checks the SAVED settings — persist the form first
+    mutationFn: async () => {
+      await updateTeamsIntegrationProject({ path: { projectId }, body: form, throwOnError: true });
+      onSaved();
+      return (await testTeamsIntegrationProject({ path: { projectId }, throwOnError: true })).data;
+    },
+    onSuccess: (ok) => (ok ? toast.success("Teams webhook OK") : toast.error("Teams test failed")),
+    onError: () => toast.error("Teams test failed"),
+  });
+
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
@@ -518,6 +549,13 @@ function TeamsDialog({
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Cancel
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => test.mutate()}
+            disabled={test.isPending || mut.isPending}
+          >
+            {test.isPending ? "Testing…" : "Test"}
           </Button>
           <Button onClick={() => mut.mutate()} disabled={mut.isPending}>
             {mut.isPending ? "Saving…" : "Save"}

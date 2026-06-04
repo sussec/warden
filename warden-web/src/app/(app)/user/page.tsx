@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, keepPreviousData, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, UserPlus } from "lucide-react";
+import { Search, UserPlus, MoreHorizontal } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
@@ -27,8 +27,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { DataTable, type ColumnDef, type PageState } from "@/components/data-table/data-table";
-import { getUserDetailByFilter, getRoles, createUser, updateUser } from "@/client/sdk.gen";
+import {
+  getUserDetailByFilter,
+  getRoles,
+  createUser,
+  updateUser,
+  sendConfirmEmail,
+} from "@/client/sdk.gen";
 import type { UserDetail, UserStatus } from "@/client/types.gen";
 
 const ALL = "__all__";
@@ -147,6 +159,14 @@ export default function UserListPage() {
     onError: () => toast.error("Failed to update status"),
   });
 
+  const resendConfirmMut = useMutation({
+    mutationFn: async (user: UserDetail) => {
+      await sendConfirmEmail({ path: { userId: user.id }, throwOnError: true });
+    },
+    onSuccess: () => toast.success("Confirmation email sent"),
+    onError: () => toast.error("Failed to send confirmation email"),
+  });
+
   const columns: ColumnDef<UserDetail>[] = [
     {
       key: "user",
@@ -218,6 +238,24 @@ export default function UserListPage() {
           >
             {u.status === "Active" ? "Deactivate" : "Activate"}
           </Button>
+          {!u.verified && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="px-2">
+                  <MoreHorizontal className="size-4" />
+                  <span className="sr-only">More actions</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  disabled={resendConfirmMut.isPending}
+                  onClick={() => resendConfirmMut.mutate(u)}
+                >
+                  Resend confirmation
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       ),
     },

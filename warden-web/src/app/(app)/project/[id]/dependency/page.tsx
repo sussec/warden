@@ -15,6 +15,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type ColumnDef, type PageState } from "@/components/data-table/data-table";
 import { SeverityBadge } from "@/components/severity";
+import {
+  PackageDetailDrawer,
+  type PackageDrawerTarget,
+} from "@/components/package/package-detail-drawer";
+import { PackageStatusMenu } from "@/components/package/package-status-menu";
 import { getProjectPackages } from "@/client/sdk.gen";
 import type { ProjectPackage, PackageStatus, RiskLevel } from "@/client/types.gen";
 
@@ -33,6 +38,7 @@ export default function ProjectDependencyPage() {
   const [name, setName] = useState("");
   const [status, setStatus] = useState<PackageStatus | "all">("all");
   const [severity, setSeverity] = useState<RiskLevel | "all">("all");
+  const [drawerTarget, setDrawerTarget] = useState<PackageDrawerTarget | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["project-packages", id, page, name, status, severity],
@@ -89,6 +95,17 @@ export default function ProjectDependencyPage() {
       header: "Fixed Version",
       cell: (p) => (
         <span className="text-muted-foreground">{p.fixedVersion ?? "—"}</span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      className: "text-right",
+      cell: (p) => (
+        // Stop row-click from also opening the drawer when using the menu.
+        <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
+          <PackageStatusMenu projectId={id} packageId={p.packageId} buttonSize="sm" />
+        </div>
       ),
     },
   ];
@@ -157,6 +174,21 @@ export default function ProjectDependencyPage() {
         page={page}
         onPageChange={setPage}
         emptyMessage="No dependencies found"
+        onRowClick={(p) =>
+          setDrawerTarget({
+            packageId: p.packageId,
+            projectId: id,
+            group: p.group,
+            name: p.name,
+            version: p.version,
+          })
+        }
+      />
+      <PackageDetailDrawer
+        target={drawerTarget}
+        onOpenChange={(open) => {
+          if (!open) setDrawerTarget(null);
+        }}
       />
     </div>
   );

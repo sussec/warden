@@ -25,6 +25,7 @@ import { SeverityBadge } from "@/components/severity";
 import { MarkdownView } from "@/components/markdown/markdown-view";
 import { FindingStatusBadge } from "@/components/findings/finding-status-badge";
 import { FindingStatusMenu } from "@/components/findings/finding-status-menu";
+import { TicketMenu } from "@/components/findings/ticket-menu";
 import { FindingActivityTimeline } from "@/components/findings/finding-activity-timeline";
 import { findingStatusMeta } from "@/components/findings/finding-status";
 import {
@@ -150,11 +151,14 @@ export default function FindingDetailPage() {
               <FindingStatusBadge status={finding.status} />
             </div>
           </div>
-          <FindingStatusMenu
-            label={findingStatusMeta(finding.status).label}
-            loading={changeStatus.isPending}
-            onSelect={(s) => changeStatus.mutate(s)}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <TicketMenu findingId={findingId} ticket={finding.ticket} />
+            <FindingStatusMenu
+              label={findingStatusMeta(finding.status).label}
+              loading={changeStatus.isPending}
+              onSelect={(s) => changeStatus.mutate(s)}
+            />
+          </div>
         </div>
 
         <Separator />

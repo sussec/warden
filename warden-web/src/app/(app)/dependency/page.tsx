@@ -15,6 +15,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type ColumnDef, type PageState } from "@/components/data-table/data-table";
 import { SeverityBadge } from "@/components/severity";
+import {
+  PackageDetailDrawer,
+  type PackageDrawerTarget,
+} from "@/components/package/package-detail-drawer";
 import { getPackagesByFilter } from "@/client/sdk.gen";
 import type { ProjectPackage, RiskLevel, PackageStatus } from "@/client/types.gen";
 
@@ -28,6 +32,7 @@ export default function DependencyListPage() {
   const [name, setName] = useState("");
   const [severity, setSeverity] = useState<string>(ALL);
   const [status, setStatus] = useState<string>(ALL);
+  const [drawerTarget, setDrawerTarget] = useState<PackageDrawerTarget | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["packages", page, name, severity, status],
@@ -166,6 +171,22 @@ export default function DependencyListPage() {
         pageCount={data?.pageCount}
         page={page}
         onPageChange={setPage}
+        onRowClick={(p) =>
+          setDrawerTarget({
+            packageId: p.packageId,
+            // Global rows carry a projectId; pass it so status/ticket actions stay enabled.
+            projectId: p.projectId || null,
+            group: p.group,
+            name: p.name,
+            version: p.version,
+          })
+        }
+      />
+      <PackageDetailDrawer
+        target={drawerTarget}
+        onOpenChange={(open) => {
+          if (!open) setDrawerTarget(null);
+        }}
       />
     </Card>
   );

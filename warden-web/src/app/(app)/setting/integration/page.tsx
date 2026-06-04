@@ -37,6 +37,10 @@ import {
   getWebhookIntegrationSetting,
   updateWebhookIntegrationSetting,
   testWebhookIntegrationSetting,
+  getJiraProjects,
+  getJiraIssueTypes,
+  getRedmineMetadataIntegration,
+  getGitHubMetadataIntegration,
 } from "@/client/sdk.gen";
 import {
   Select,
@@ -59,6 +63,95 @@ import type {
 function num(v: string): number {
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
+}
+
+/**
+ * Renders a metadata-driven Select when `options` are available, otherwise
+ * falls back to a free-text Input so the form never breaks when the metadata
+ * endpoint is unreachable (e.g. credentials not yet configured).
+ */
+function SelectOrInput({
+  id,
+  value,
+  onChange,
+  options,
+  placeholder,
+  inputProps,
+}: {
+  id: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[] | undefined;
+  placeholder?: string;
+  inputProps?: React.ComponentProps<typeof Input>;
+}) {
+  // Use a Select only when we have at least one option to choose from.
+  if (options && options.length > 0) {
+    return (
+      <Select value={value || undefined} onValueChange={onChange}>
+        <SelectTrigger id={id} className="w-full">
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((o) => (
+            <SelectItem key={o.value} value={o.value}>
+              {o.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
+  }
+  return (
+    <Input
+      id={id}
+      value={value}
+      placeholder={placeholder}
+      onChange={(e) => onChange(e.target.value)}
+      {...inputProps}
+    />
+  );
+}
+
+/** Same idea as SelectOrInput, but for numeric IDs (Redmine fields). */
+function SelectOrNumberInput({
+  id,
+  value,
+  onChange,
+  options,
+}: {
+  id: string;
+  value: number | undefined;
+  onChange: (v: number) => void;
+  options: { id: number; name: string | null }[] | undefined;
+}) {
+  if (options && options.length > 0) {
+    return (
+      <Select
+        value={value != null && value !== 0 ? String(value) : undefined}
+        onValueChange={(v) => onChange(num(v))}
+      >
+        <SelectTrigger id={id} className="w-full">
+          <SelectValue placeholder="Select…" />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((o) => (
+            <SelectItem key={o.id} value={String(o.id)}>
+              {o.name ?? String(o.id)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
+  }
+  return (
+    <Input
+      id={id}
+      type="number"
+      value={value ?? 0}
+      onChange={(e) => onChange(num(e.target.value))}
+    />
+  );
 }
 
 const ALERT_EVENTS: { key: keyof TeamsAlertSetting & keyof MailAlertSetting; label: string }[] = [
@@ -106,6 +199,39 @@ function JiraCard() {
     onSuccess: (ok) => (ok ? toast.success("Jira connection OK") : toast.error("Jira test failed")),
     onError: () => toast.error("Jira test failed"),
   });
+
+  // Metadata-driven dropdowns. We pass the current (possibly unsaved) form as
+  // the body so credentials don't have to be persisted first. Failures (e.g.
+  // bad creds / not configured) fall back to free-text inputs — never block.
+  const hasCreds = Boolean(form.apiUrl && form.userName && form.password);
+  const projectsQuery = useQuery({
+    queryKey: ["integration-jira-projects", form.apiUrl, form.userName],
+    enabled: open && hasCreds,
+    retry: false,
+    queryFn: async () => {
+      const res = await getJiraProjects({ body: form, throwOnError: false });
+      return res.data ?? [];
+    },
+  });
+  const issueTypesQuery = useQuery({
+    queryKey: ["integration-jira-issue-types", form.projectKey],
+    enabled: open && hasCreds && Boolean(form.projectKey),
+    retry: false,
+    queryFn: async () => {
+      const res = await getJiraIssueTypes({
+        query: { projectKey: form.projectKey ?? undefined },
+        throwOnError: false,
+      });
+      return res.data ?? [];
+    },
+  });
+
+  const projectOptions = projectsQuery.data
+    ?.filter((p): p is { key: string; name: string | null } => Boolean(p.key))
+    .map((p) => ({ value: p.key, label: p.name ? `${p.name} (${p.key})` : p.key }));
+  const issueTypeOptions = issueTypesQuery.data
+    ?.filter((t): t is string => Boolean(t))
+    .map((t) => ({ value: t, label: t }));
 
   return (
     <Card>
@@ -179,18 +305,22 @@ function JiraCard() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="jira-projectkey">Project Key</Label>
-                <Input
+                <SelectOrInput
                   id="jira-projectkey"
                   value={form.projectKey ?? ""}
-                  onChange={(e) => setForm((f) => ({ ...f, projectKey: e.target.value }))}
+                  options={projectOptions}
+                  placeholder="Select a project"
+                  onChange={(v) => setForm((f) => ({ ...f, projectKey: v }))}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="jira-issuetype">Issue Type</Label>
-                <Input
+                <SelectOrInput
                   id="jira-issuetype"
                   value={form.issueType ?? ""}
-                  onChange={(e) => setForm((f) => ({ ...f, issueType: e.target.value }))}
+                  options={issueTypeOptions}
+                  placeholder="Select an issue type"
+                  onChange={(v) => setForm((f) => ({ ...f, issueType: v }))}
                 />
               </div>
             </div>
@@ -251,11 +381,29 @@ function RedmineCard() {
     onError: () => toast.error("Redmine test failed"),
   });
 
-  const numFields: { key: keyof RedmineSetting; label: string }[] = [
-    { key: "projectId", label: "Project ID" },
-    { key: "statusId", label: "Status ID" },
-    { key: "trackerId", label: "Tracker ID" },
-    { key: "priorityId", label: "Priority ID" },
+  // Metadata-driven dropdowns; pass the current form so unsaved creds work.
+  // Failure falls back to numeric inputs — never blocks the form.
+  const hasCreds = Boolean(form.url && form.token);
+  const metadataQuery = useQuery({
+    queryKey: ["integration-redmine-metadata", form.url],
+    enabled: open && hasCreds,
+    retry: false,
+    queryFn: async () => {
+      const res = await getRedmineMetadataIntegration({ body: form, throwOnError: false });
+      return res.data ?? null;
+    },
+  });
+  const meta = metadataQuery.data;
+
+  const numFields: {
+    key: keyof RedmineSetting;
+    label: string;
+    options: { id: number; name: string | null }[] | undefined;
+  }[] = [
+    { key: "projectId", label: "Project ID", options: meta?.projects ?? undefined },
+    { key: "statusId", label: "Status ID", options: meta?.statuses ?? undefined },
+    { key: "trackerId", label: "Tracker ID", options: meta?.trackers ?? undefined },
+    { key: "priorityId", label: "Priority ID", options: meta?.priorities ?? undefined },
   ];
 
   return (
@@ -315,11 +463,11 @@ function RedmineCard() {
               {numFields.map((nf) => (
                 <div key={nf.key} className="space-y-2">
                   <Label htmlFor={`redmine-${nf.key}`}>{nf.label}</Label>
-                  <Input
+                  <SelectOrNumberInput
                     id={`redmine-${nf.key}`}
-                    type="number"
-                    value={(form[nf.key] as number | undefined) ?? 0}
-                    onChange={(e) => setForm((f) => ({ ...f, [nf.key]: num(e.target.value) }))}
+                    value={form[nf.key] as number | undefined}
+                    options={nf.options}
+                    onChange={(v) => setForm((f) => ({ ...f, [nf.key]: v }))}
                   />
                 </div>
               ))}
@@ -614,6 +762,27 @@ function GitHubCard() {
     onError: () => toast.error("GitHub test failed"),
   });
 
+  // Repo picker fed by metadata; pass form so unsaved token works. Falls back
+  // to free-text owner/repo inputs when the listing can't be fetched.
+  const hasToken = Boolean(form.token);
+  const metadataQuery = useQuery({
+    queryKey: ["integration-github-metadata", form.apiUrl],
+    enabled: open && hasToken,
+    retry: false,
+    queryFn: async () => {
+      const res = await getGitHubMetadataIntegration({ body: form, throwOnError: false });
+      return res.data ?? null;
+    },
+  });
+  const repos = metadataQuery.data?.repositories ?? undefined;
+  const repoOptions = repos
+    ?.filter((r): r is { owner: string | null; name: string | null; fullName: string } =>
+      Boolean(r.fullName),
+    )
+    .map((r) => ({ value: r.fullName, label: r.fullName }));
+  // Selecting a repo sets owner + repo together (fullName = "owner/name").
+  const selectedFullName = form.owner && form.repo ? `${form.owner}/${form.repo}` : "";
+
   return (
     <Card>
       <CardHeader>
@@ -668,24 +837,48 @@ function GitHubCard() {
                 onChange={(e) => setForm((f) => ({ ...f, token: e.target.value }))}
               />
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
+            {repoOptions && repoOptions.length > 0 ? (
               <div className="space-y-2">
-                <Label htmlFor="github-owner">Owner</Label>
-                <Input
-                  id="github-owner"
-                  value={form.owner ?? ""}
-                  onChange={(e) => setForm((f) => ({ ...f, owner: e.target.value }))}
-                />
+                <Label htmlFor="github-repo-picker">Repository</Label>
+                <Select
+                  value={selectedFullName || undefined}
+                  onValueChange={(v) => {
+                    const [owner, ...rest] = v.split("/");
+                    setForm((f) => ({ ...f, owner, repo: rest.join("/") }));
+                  }}
+                >
+                  <SelectTrigger id="github-repo-picker" className="w-full">
+                    <SelectValue placeholder="Select a repository" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {repoOptions.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="github-repo">Repository</Label>
-                <Input
-                  id="github-repo"
-                  value={form.repo ?? ""}
-                  onChange={(e) => setForm((f) => ({ ...f, repo: e.target.value }))}
-                />
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="github-owner">Owner</Label>
+                  <Input
+                    id="github-owner"
+                    value={form.owner ?? ""}
+                    onChange={(e) => setForm((f) => ({ ...f, owner: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="github-repo">Repository</Label>
+                  <Input
+                    id="github-repo"
+                    value={form.repo ?? ""}
+                    onChange={(e) => setForm((f) => ({ ...f, repo: e.target.value }))}
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </form>
           <DialogFooter>
             <Button
