@@ -14,6 +14,13 @@
                  [(ngModel)]="filter.name"
                  (keyup.enter)="onSearchChange()"/>
         </p-icon-field>
+        <!--AI SEARCH-->
+        <p-button severity="secondary"
+                  pTooltip="AI semantic search" tooltipPosition="top"
+                  (click)="openAiSearch()">
+          <ng-icon name="heroSparkles"></ng-icon>
+          <span>AI Search</span>
+        </p-button>
         <!--Created At Filter-->
         <range-date styleClassInput="text-sm" labelType="text" label="Created At"
                     [showClear]="true"
@@ -153,4 +160,47 @@
       (close)="showFinding = false">
     </finding-detail>
   </p-drawer>
+
+  <!--AI SEMANTIC SEARCH DIALOG-->
+  <p-dialog header="AI Search" [modal]="true" [(visible)]="showAiSearch" styleClass="w-full md:w-[640px]">
+    <div class="flex flex-col gap-4 w-full">
+      <div class="flex flex-row gap-2 items-center w-full">
+        <input pInputText type="text" class="w-full text-sm"
+               placeholder="Describe what you're looking for… e.g. 'sql injection in login code'"
+               [(ngModel)]="aiSearchQuery"
+               (keyup.enter)="runAiSearch()"/>
+        <p-button severity="primary" label="Search"
+                  [loading]="aiSearchLoading"
+                  [disabled]="aiSearchLoading"
+                  (click)="runAiSearch()"/>
+      </div>
+      @if (aiSearchSearched && !aiSearchLoading) {
+        @if (aiSearchResults().length === 0) {
+          <div class="text-muted-color text-sm py-4 text-center">
+            No semantic matches — is AI enabled and the index built?
+          </div>
+        } @else {
+          <div class="flex flex-col divide-y divide-surface">
+            @for (result of aiSearchResults(); track result.id) {
+              <div class="flex flex-row items-center gap-3 py-2">
+                <finding-severity [severity]="result.severity!"></finding-severity>
+                <div class="flex flex-col gap-1 min-w-0 flex-1">
+                  <a [routerLink]="['/finding', result.id]"
+                     class="text-sm text-primary hover:underline truncate">
+                    {{ result.name }}
+                  </a>
+                  @if (result.location) {
+                    <span class="text-xs text-muted-color truncate">{{ result.location }}</span>
+                  }
+                </div>
+                <span class="text-xs text-muted-color whitespace-nowrap">
+                  {{ (result.score * 100) | number:'1.0-0' }}%
+                </span>
+              </div>
+            }
+          </div>
+        }
+      }
+    </div>
+  </p-dialog>
 </p-panel>

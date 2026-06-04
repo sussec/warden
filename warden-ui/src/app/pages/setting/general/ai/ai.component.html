@@ -7,6 +7,18 @@
       </div>
     </div>
     <div class="flex flex-row gap-2 w-full items-center">
+      <span class="w-36 md:w-48">Provider</span>
+      <div class="w-full max-w-md flex flex-col gap-1">
+        <p-select styleClass="w-full"
+                  [options]="providerPresets"
+                  optionValue="value"
+                  optionLabel="label"
+                  [ngModel]="selectedProvider"
+                  (ngModelChange)="onProviderChange($event)"/>
+        <small class="text-muted-color">Any OpenAI-compatible API works.</small>
+      </div>
+    </div>
+    <div class="flex flex-row gap-2 w-full items-center">
       <span class="w-36 md:w-48">Endpoint</span>
       <div class="w-full max-w-md">
         <input pInputText type="text" class="w-full" [(ngModel)]="aiSetting.endpoint"
@@ -25,14 +37,14 @@
       <span class="w-36 md:w-48">Model</span>
       <div class="w-full max-w-md">
         <input pInputText type="text" class="w-full" [(ngModel)]="aiSetting.model"
-               placeholder="gpt-4.1-mini / llama3.3">
+               [placeholder]="currentPreset.modelPlaceholder">
       </div>
     </div>
     <div class="flex flex-row gap-2 w-full items-center">
       <span class="w-36 md:w-48">Embedding Model</span>
       <div class="w-full max-w-md">
         <input pInputText type="text" class="w-full" [(ngModel)]="aiSetting.embeddingModel"
-               placeholder="text-embedding-3-small / nomic-embed-text">
+               [placeholder]="currentPreset.embeddingPlaceholder">
       </div>
     </div>
   </div>
@@ -45,5 +57,19 @@
               [loading]="loadingTest"
               [disabled]="loadingTest"
               (click)="testConnection()"/>
+  </div>
+
+  <!--SEMANTIC SEARCH-->
+  <div class="flex flex-col gap-2 w-full border-t border-surface pt-4">
+    <div class="font-semibold text-foreground">Semantic search</div>
+    <small class="text-muted-color">
+      Generates embeddings for existing findings. New findings are indexed automatically.
+    </small>
+    <div class="flex flex-row gap-2 items-center">
+      <p-button severity="secondary" label="Build search index"
+                [loading]="loadingBackfill"
+                [disabled]="loadingBackfill"
+                (click)="buildSearchIndex()"/>
+    </div>
   </div>
 </div>

@@ -45,7 +45,7 @@ import {
   FindingExportMenuComponent
 } from '../../../shared/components/finding/finding-export-menu/finding-export-menu.component';
 import {ExportType, FindingFilter, FindingSortField, ScannerType} from '../../../api/models';
-import {formatDate} from '@angular/common';
+import {DecimalPipe, formatDate} from '@angular/common';
 import {toArray} from '../../../core/transform';
 import {SourceControlService} from '../../../api/services/source-control.service';
 import {
@@ -59,6 +59,9 @@ import {RangeDateState} from '../../../shared/ui/range-date/range-date.model';
 import {Drawer} from 'primeng/drawer';
 import {Divider} from 'primeng/divider';
 import {FindingStatusComponent} from '../../../shared/components/finding/finding-status/finding-status.component';
+import {Dialog} from 'primeng/dialog';
+import {HttpErrorResponse} from '@angular/common/http';
+import {AiService, SemanticSearchResult} from '../../../core/ai/ai.service';
 
 @Component({
   selector: 'page-list-finding',
@@ -91,7 +94,9 @@ import {FindingStatusComponent} from '../../../shared/components/finding/finding
     Drawer,
     Divider,
     RouterLink,
-    FindingStatusComponent
+    FindingStatusComponent,
+    Dialog,
+    DecimalPipe
   ],
   templateUrl: './list-finding.component.html',
   standalone: true
@@ -129,6 +134,12 @@ export class ListFindingComponent implements OnInit {
   loadingExport = false;
   showFinding = false;
   checkAll = false;
+  // AI semantic search
+  showAiSearch = false;
+  aiSearchQuery = '';
+  aiSearchLoading = false;
+  aiSearchSearched = false;
+  aiSearchResults = signal<SemanticSearchResult[]>([]);
 
   constructor(
     public store: ListFindingStore,
@@ -139,6 +150,7 @@ export class ListFindingComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private toastr: ToastrService,
+    private aiService: AiService,
     @Inject(LOCALE_ID) private locale: string
   ) {
   }
@@ -400,5 +412,38 @@ export class ListFindingComponent implements OnInit {
   onChangeCreatedAtRangeDate($event: RangeDateState) {
     this.filter.createdAtRange = JSON.stringify($event);
     updateQueryParams(this.router, this.filter);
+  }
+
+  openAiSearch() {
+    this.showAiSearch = true;
+  }
+
+  runAiSearch() {
+    const query = this.aiSearchQuery.trim();
+    if (!query) {
+      return;
+    }
+    this.aiSearchLoading = true;
+    this.aiService.semanticSearch(query).pipe(
+      finalize(() => {
+        this.aiSearchLoading = false;
+        this.aiSearchSearched = true;
+      })
+    ).subscribe({
+      next: results => {
+        this.aiSearchResults.set(results);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.aiSearchResults.set([]);
+        // The interceptor already toasts 400 responses that carry an `errors` array.
+        // Only surface a toast here for other error shapes (e.g. a plain `message`).
+        const body = error.error;
+        if (body && Array.isArray(body.errors) && body.errors.length > 0) {
+          return;
+        }
+        const message = body?.message || (typeof body === 'string' ? body : null) || 'Semantic search failed.';
+        this.toastr.error({message});
+      }
+    });
   }
 }

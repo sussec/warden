@@ -1,6 +1,7 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
+import {FindingSeverity} from '../../api/models/finding-severity';
 
 export interface AiSetting {
   enabled: boolean;
@@ -13,6 +14,16 @@ export interface AiSetting {
 export interface AiSuggestion {
   content: string;
   model: string;
+}
+
+export interface SemanticSearchResult {
+  id: string;
+  name: string;
+  location?: string;
+  severity: FindingSeverity;
+  status: string;
+  projectId: string;
+  score: number;
 }
 
 @Injectable({
@@ -37,5 +48,17 @@ export class AiService {
 
   getAiSuggestion(findingId: string): Observable<AiSuggestion> {
     return this.http.post<AiSuggestion>(`/api/finding/${findingId}/ai-suggestion`, {});
+  }
+
+  backfillEmbeddings(): Observable<{ processed: number }> {
+    return this.http.post<{ processed: number }>('/api/ai/semantic-search/backfill', {});
+  }
+
+  semanticSearch(query: string, projectId?: string, top?: number): Observable<SemanticSearchResult[]> {
+    return this.http.post<SemanticSearchResult[]>('/api/ai/semantic-search', {
+      query,
+      projectId,
+      top
+    });
   }
 }
