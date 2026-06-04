@@ -15,7 +15,13 @@
   @tailwind utilities;
 }
 
+html {
+  font-family: var(--font-sans);
+}
+
 body {
+  font-family: var(--font-sans);
+
   .splash-screen {
     display: flex;
     flex-direction: column;
@@ -26,8 +32,8 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #111827;
-    color: #F9FAFB;
+    background-color: #121113; /* brand dark background */
+    color: #c1c1c1;
     z-index: 999999;
     pointer-events: none;
     opacity: 1;
@@ -49,7 +55,7 @@ body {
       > div {
         width: 12px;
         height: 12px;
-        background-color: #1E96F7;
+        background-color: #d87943; /* brand copper */
         border-radius: 100%;
         display: inline-block;
         -webkit-animation: bouncedelay 1s infinite ease-in-out both;

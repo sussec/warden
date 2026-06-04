@@ -153,7 +153,7 @@
             }
             <div class="flex flex-col justify-between items-center">
               @for (location of findingFlow(finding); track $index; let isLast = $last) {
-                <a class="flex items-center justify-center bg-blue-100 px-2 py-1 dark:bg-blue-900 cursor-pointer"
+                <a class="flex items-center justify-center bg-copper-100 px-2 py-1 dark:bg-copper-900 cursor-pointer"
                    target="_blank" [href]="findingLocation(location)">
                   {{ location.snippet }}
                 </a>

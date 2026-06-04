@@ -27,7 +27,7 @@ const mFindingStatusLabel: Map<FindingStatus, string> = new Map<FindingStatus, s
 
 const mFindingStatusColor: Map<FindingStatus, string> = new Map<FindingStatus, string>([
   [FindingStatus.Open, ''],
-  [FindingStatus.Confirmed, 'text-blue-500'],
+  [FindingStatus.Confirmed, 'text-teal-500'],
   [FindingStatus.Incorrect, ''],
   [FindingStatus.AcceptedRisk, 'text-orange-500'],
   [FindingStatus.Fixed, 'text-green-500'],

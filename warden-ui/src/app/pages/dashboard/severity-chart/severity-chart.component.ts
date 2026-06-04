@@ -83,13 +83,13 @@ export class SeverityChartComponent {
             documentStyle.getPropertyValue('--p-red-500'),
             documentStyle.getPropertyValue('--p-orange-500'),
             documentStyle.getPropertyValue('--p-yellow-500'),
-            documentStyle.getPropertyValue('--p-sky-500')
+            documentStyle.getPropertyValue('--p-indigo-500')
           ],
           hoverBackgroundColor: [
             documentStyle.getPropertyValue('--p-red-400'),
             documentStyle.getPropertyValue('--p-orange-400'),
             documentStyle.getPropertyValue('--p-yellow-400'),
-            documentStyle.getPropertyValue('--p-sky-400')
+            documentStyle.getPropertyValue('--p-indigo-400')
           ]
         }
       ]

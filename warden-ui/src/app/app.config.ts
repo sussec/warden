@@ -10,6 +10,7 @@ import {environment} from '../environments/environment';
 import {provideMarkdown} from 'ngx-markdown';
 import {provideAnimationsAsync} from '@angular/platform-browser/animations/async';
 import {providePrimeNG} from 'primeng/config';
+import {WardenPreset} from './warden.preset';
 import {MessageService} from 'primeng/api';
 import {ToastrService} from './shared/services/toastr.service';
 import 'prismjs';
@@ -41,6 +42,7 @@ export const appConfig: ApplicationConfig = {
     provideAnimationsAsync(),
     providePrimeNG({
       theme: {
+        preset: WardenPreset,
         options: {
           darkModeSelector: ".dark",
           cssLayer: {

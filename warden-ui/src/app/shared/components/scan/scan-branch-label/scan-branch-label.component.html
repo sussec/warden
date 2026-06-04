@@ -2,11 +2,11 @@
   <ng-icon [name]="getGitActionIcon(commitType())"></ng-icon>
   <span>{{commitBranch()}}</span>
   @if(commitType() == CommitType.CommitTag){
-    <div class="border border-surface px-2 py-0.5 rounded-lg w-fit text-[#0B5CAD] bg-[#CBE2F9] dark:bg-[#0B5CAD] dark:text-[#CBE2F9]">tag</div>
+    <div class="border border-surface px-2 py-0.5 rounded-lg w-fit text-teal-700 bg-teal-100 dark:bg-teal-800 dark:text-teal-100">tag</div>
   }
   @if(commitType() == CommitType.MergeRequest) {
     <span class="text-primary">to</span>
     <span>{{targetBranch()}}</span>
-    <div class="border border-surface px-2 py-0.5 rounded-lg w-fit text-[#0B5CAD] bg-[#CBE2F9] dark:bg-[#0B5CAD] dark:text-[#CBE2F9] text-nowrap">merge request</div>
+    <div class="border border-surface px-2 py-0.5 rounded-lg w-fit text-teal-700 bg-teal-100 dark:bg-teal-800 dark:text-teal-100 text-nowrap">merge request</div>
   }
 </div>

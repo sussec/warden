@@ -40,10 +40,10 @@ h6 {
 }
 
 mark {
-    background: #fff8e1;
+    background: color-mix(in srgb, var(--p-primary-color), transparent 85%);
     padding: 0.25rem 0.4rem;
     border-radius: var(--content-border-radius);
-    font-family: monospace;
+    font-family: var(--font-mono);
 }
 
 blockquote {

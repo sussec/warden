@@ -82,13 +82,13 @@ export class FindingStatusChartComponent {
           data: [status.open, status.confirmed, status.acceptedRisk, status.fixed],
           backgroundColor: [
             documentStyle.getPropertyValue('--p-gray-500'),
-            documentStyle.getPropertyValue('--p-sky-500'),
+            documentStyle.getPropertyValue('--p-teal-500'),
             documentStyle.getPropertyValue('--p-orange-500'),
             documentStyle.getPropertyValue('--p-green-500')
           ],
           hoverBackgroundColor: [
             documentStyle.getPropertyValue('--p-gray-400'),
-            documentStyle.getPropertyValue('--p-sky-400'),
+            documentStyle.getPropertyValue('--p-teal-400'),
             documentStyle.getPropertyValue('--p-orange-400'),
             documentStyle.getPropertyValue('--p-green-400')
           ]

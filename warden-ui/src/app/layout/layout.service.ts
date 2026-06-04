@@ -26,11 +26,11 @@ interface MenuChangeEvent {
   providedIn: 'root'
 })
 export class LayoutService {
-  LOCAL_STORE_KEY = "_theme";
+  LOCAL_STORE_KEY = "_theme_v2"; // v2: theme locked to Warden brand preset
   _config: layoutConfig = {
-    preset: 'Aura',
-    primary: 'noir',
-    surface: 'zinc',
+    preset: 'Warden',
+    primary: 'copper',
+    surface: null,
     darkTheme: true,
     menuMode: 'static'
   };

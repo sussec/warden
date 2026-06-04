@@ -25,7 +25,7 @@ export class ScanStatusComponent {
 
   private mStyle: Map<ScanStatus, string> = new Map<ScanStatus, string>([
     [ScanStatus.Queue, 'pi pi-pause-circle text-orange-500'],
-    [ScanStatus.Running, 'pi pi-spin pi-spinner text-blue-500'],
+    [ScanStatus.Running, 'pi pi-spin pi-spinner text-teal-500'],
     [ScanStatus.Completed, 'pi pi-check-circle text-green-500'],
     [ScanStatus.Error, 'pi pi-minus-circle text-red-500'],
   ])

@@ -5,7 +5,7 @@ import {FindingStatusChartComponent} from './finding-status-chart/finding-status
 import {SeverityChartComponent} from './severity-chart/severity-chart.component';
 import {DashboardService} from '../../api/services/dashboard.service';
 import {TopFindingChartComponent} from './top-finding-chart/top-finding-chart.component';
-import {Subject, takeUntil} from 'rxjs';
+import {debounceTime, Subject, takeUntil} from 'rxjs';
 import {TopDependencyChartComponent} from './top-dependency-chart/top-dependency-chart.component';
 import {Fluid} from 'primeng/fluid';
 import {LayoutService} from '../../layout/layout.service';
@@ -73,6 +73,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ) {
     Chart.register(ChartDataLabels);
     this.layoutService.configUpdate$.pipe(
+      // configUpdate$ fires before the .dark class is toggled on <html>;
+      // debounce so getComputedStyle reads the post-transition CSS variables
+      debounceTime(150),
       takeUntil(this.destroy$),
     ).subscribe(() => {
       this.initCharts();
