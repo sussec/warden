@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "warden-api", "warden-api\warden-api.csproj", "{9141FF6C-FB85-4463-A177-39254CA887C1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Warden.Tests", "Warden.Tests\Warden.Tests.csproj", "{6630ACC9-C29A-4364-8B86-FFDFDEB3EC17}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9141FF6C-FB85-4463-A177-39254CA887C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9141FF6C-FB85-4463-A177-39254CA887C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9141FF6C-FB85-4463-A177-39254CA887C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9141FF6C-FB85-4463-A177-39254CA887C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6630ACC9-C29A-4364-8B86-FFDFDEB3EC17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6630ACC9-C29A-4364-8B86-FFDFDEB3EC17}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6630ACC9-C29A-4364-8B86-FFDFDEB3EC17}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6630ACC9-C29A-4364-8B86-FFDFDEB3EC17}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

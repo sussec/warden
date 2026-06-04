@@ -1,0 +1,26 @@
+using Warden.Application.Services;
+using FluentResults;
+
+namespace Warden.Application.Module.Integration.Mail;
+
+public class AlertNewFindingMail(ISmtpService smtpService, IRazorRender render) : IAlertNewFinding
+{
+    public async Task<Result<bool>> AlertAsync(List<string> receivers, AlertStatusFindingModel model)
+    {
+        try
+        {
+            var content = await render.RenderAsync(Path.Combine("Resources", "Templates", "AlertNewFinding.cshtml"), model);
+            return await smtpService.SendAsync(new MailMessage
+            {
+                Subject =
+                    $"Security Alert: Found new finding on \"{model.Project.Name}\" project by {model.Scanner.Name}",
+                Receivers = receivers,
+                Content = content,
+            });
+        }
+        catch (Exception e)
+        {
+            return Result.Fail(e.Message);
+        }
+    }
+}

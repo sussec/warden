@@ -1,0 +1,22 @@
+using Warden.Core.Enum;
+
+namespace Warden.Application.Module.Project.Model;
+
+public record ProjectSummary
+{
+    public required Guid Id { get; set; }
+    public required string Name { get; set; }
+    public required SourceType SourceType { get; set; }
+    public required int SeverityCritical { get; set; }
+    public required int SeverityHigh { get; set; }
+    public required int SeverityMedium { get; set; }
+    public required int SeverityLow { get; set; }
+    public required int SeverityInfo { get; set; }
+    // status
+    public required int Open { get; set; }
+    public required int Confirmed { get; set; }
+    public required int Ignore { get; set; }
+    public required int Fixed { get; set; }
+    public required DateTime CreatedAt { get; set; }
+    public required DateTime? UpdatedAt { get; set; }
+}

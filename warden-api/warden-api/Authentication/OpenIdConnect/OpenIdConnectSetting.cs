@@ -1,0 +1,41 @@
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Microsoft.IdentityModel.Tokens;
+
+namespace Warden.Authentication.OpenIdConnect;
+
+public class OpenIdConnectSetting
+{
+    public string DisplayName { get; set; } = "Open ID Connect";
+    public string Authority { get; set; } = string.Empty;
+    public string ClientId { get; set; } = string.Empty;
+    public string ClientSecret { get; set; } = string.Empty;
+    public bool Enable { get; set; } = false;
+    /// <summary>
+    /// Override the scheme used in the redirect_uri sent to the OIDC provider (e.g. "https").
+    /// Useful when running behind a reverse proxy that terminates TLS.
+    /// </summary>
+    public string SchemeOverride { get; set; } = string.Empty;
+
+    public OpenIdConnectOptions ToOpenIdConnectOptions()
+    {
+        var options = new OpenIdConnectOptions
+        {
+            Authority = Authority,
+            ClientId = ClientId,
+            ClientSecret = ClientSecret,
+            CallbackPath = "/auth/oidc/callback",
+            RequireHttpsMetadata = false,
+            ResponseType = OpenIdConnectResponseType.Code,
+            SaveTokens = true,
+            GetClaimsFromUserInfoEndpoint = true,
+            Scope = { OpenIdConnectScope.OpenIdProfile, OpenIdConnectScope.Email },
+            TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateLifetime = true
+            }
+        };
+        return options;
+    }
+}

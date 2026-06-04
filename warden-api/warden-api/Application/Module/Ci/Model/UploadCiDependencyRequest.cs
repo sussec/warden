@@ -1,0 +1,14 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace Warden.Application.Module.Ci.Model;
+
+public record UploadCiDependencyRequest
+{
+    [Required] 
+    public required Guid ScanId { get; set; }
+
+    public List<CiPackage>? Packages { get; set; }
+
+    public List<CiPackageDependency>? PackageDependencies { get; set; }
+    public List<CiVulnerability>? Vulnerabilities { get; set; }
+}

@@ -1,0 +1,25 @@
+using Warden.Application.Module.Integration.JiraWebhook;
+using Warden.Authentication;
+using Microsoft.AspNetCore.Mvc;
+
+namespace Warden.Api.Integration;
+
+[Route("api/integration/jira-webhook")]
+[ApiExplorerSettings(GroupName = "Integration")]
+public class JiraWebhookIntegrationController(IJiraWebhookSettingService jiraWebhookSettingService) : BaseController
+{
+    [HttpGet]
+    [Permission(PermissionType.Config, PermissionAction.Read)]
+    public async Task<JiraWebhookSetting> GetJiraWebhookIntegrationSetting()
+    {
+        var setting = await jiraWebhookSettingService.GetSettingAsync();
+        return setting with { Token = string.Empty };
+    }
+
+    [HttpPost]
+    [Permission(PermissionType.Config, PermissionAction.Update)]
+    public Task<bool> UpdateJiraWebhookIntegrationSetting([FromBody] JiraWebhookSetting request)
+    {
+        return jiraWebhookSettingService.UpdateSettingAsync(request);
+    }
+}

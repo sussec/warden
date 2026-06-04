@@ -1,0 +1,27 @@
+using Warden.Application.Services;
+using FluentResults;
+
+namespace Warden.Application.Module.Integration.Mail;
+
+public class AlertVulnerableProjectPackageMail(ISmtpService smtpService, IRazorRender render)
+    : IAlertVulnerableProjectPackage
+{
+    public async Task<Result<bool>> AlertAsync(List<string> receivers, AlertVulnerableProjectPackageModel model)
+    {
+        try
+        {
+            var content =
+                await render.RenderAsync(Path.Combine("Resources", "Templates", "AlertVulnerableProjectPackage.cshtml"), model);
+            return await smtpService.SendAsync(new MailMessage
+            {
+                Subject = $"Security Alert: Vulnerability found in dependencies of \"{model.Project.Name}\"",
+                Receivers = receivers,
+                Content = content,
+            });
+        }
+        catch (Exception e)
+        {
+            return Result.Fail(e.Message);
+        }
+    }
+}
