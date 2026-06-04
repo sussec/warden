@@ -1,19 +1,31 @@
 using System.Net.Mime;
+using Warden.Application.Module.Ai;
 using Warden.Application.Module.Finding;
 using Warden.Application.Module.Finding.Model;
 using Warden.Authentication;
 using Warden.Core.Entity;
 using Warden.Core.EntityFramework;
 using Warden.Core.Enum;
+using Warden.Core.Extension;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Warden.Api.Finding;
 
 public class FindingController(
     IFindingService findingService,
-    IFindingAuthorize findingAuthorize
+    IFindingAuthorize findingAuthorize,
+    IFindingAiService findingAiService
 ) : BaseController
 {
+    [HttpPost]
+    [Route("{findingId:guid}/ai-suggestion")]
+    public async Task<AiSuggestion> GetAiSuggestion(Guid findingId)
+    {
+        findingAuthorize.Authorize(findingId, CurrentUser, PermissionAction.Read);
+        var result = await findingAiService.GenerateRemediationAsync(findingId);
+        return result.GetResult();
+    }
+
     [HttpPost]
     [Route("filter")]
     public async Task<Page<FindingSummary>> GetFindings(FindingFilter filter)
