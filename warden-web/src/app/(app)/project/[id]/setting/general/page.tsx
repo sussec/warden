@@ -142,7 +142,11 @@ export default function ProjectGeneralSettingPage() {
       (
         await updateThresholdProject({
           path: { projectId: id },
-          body: { sast, sca },
+          // mode is non-nullable server-side — never serialize it missing
+          body: {
+            sast: { mode: "MonitorOnly", ...sast },
+            sca: { mode: "MonitorOnly", ...sca },
+          },
           throwOnError: true,
         })
       ).data,

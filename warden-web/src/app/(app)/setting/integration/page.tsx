@@ -78,8 +78,12 @@ function JiraCard() {
   });
 
   const test = useMutation({
-    mutationFn: async () =>
-      (await testJiraIntegrationSetting({ throwOnError: true })).data,
+    // the test endpoint checks the SAVED settings — persist the form first
+    mutationFn: async (body: JiraSetting) => {
+      await updateJiraIntegrationSetting({ body, throwOnError: true });
+      queryClient.invalidateQueries({ queryKey: ["integration-jira"] });
+      return (await testJiraIntegrationSetting({ throwOnError: true })).data;
+    },
     onSuccess: (ok) => (ok ? toast.success("Jira connection OK") : toast.error("Jira test failed")),
     onError: () => toast.error("Jira test failed"),
   });
@@ -177,7 +181,7 @@ function JiraCard() {
               variant="outline"
               type="button"
               disabled={test.isPending}
-              onClick={() => test.mutate()}
+              onClick={() => test.mutate(form)}
             >
               {test.isPending ? "Testing…" : "Test"}
             </Button>
@@ -217,8 +221,12 @@ function RedmineCard() {
   });
 
   const test = useMutation({
-    mutationFn: async () =>
-      (await testRedmineIntegrationSetting({ throwOnError: true })).data,
+    // the test endpoint checks the SAVED settings — persist the form first
+    mutationFn: async (body: RedmineSetting) => {
+      await updateRedmineIntegrationSetting({ body, throwOnError: true });
+      queryClient.invalidateQueries({ queryKey: ["integration-redmine"] });
+      return (await testRedmineIntegrationSetting({ throwOnError: true })).data;
+    },
     onSuccess: (ok) =>
       ok ? toast.success("Redmine connection OK") : toast.error("Redmine test failed"),
     onError: () => toast.error("Redmine test failed"),
@@ -303,7 +311,7 @@ function RedmineCard() {
               variant="outline"
               type="button"
               disabled={test.isPending}
-              onClick={() => test.mutate()}
+              onClick={() => test.mutate(form)}
             >
               {test.isPending ? "Testing…" : "Test"}
             </Button>
@@ -352,7 +360,12 @@ function TeamsCard() {
   });
 
   const test = useMutation({
-    mutationFn: async () => (await testTeamsIntegrationSetting({ throwOnError: true })).data,
+    // the test endpoint checks the SAVED settings — persist the form first
+    mutationFn: async (body: TeamsAlertSetting) => {
+      await updateTeamsIntegrationSetting({ body, throwOnError: true });
+      queryClient.invalidateQueries({ queryKey: ["integration-teams"] });
+      return (await testTeamsIntegrationSetting({ throwOnError: true })).data;
+    },
     onSuccess: (ok) =>
       ok ? toast.success("Teams webhook OK") : toast.error("Teams test failed"),
     onError: () => toast.error("Teams test failed"),
@@ -420,7 +433,7 @@ function TeamsCard() {
               variant="outline"
               type="button"
               disabled={test.isPending}
-              onClick={() => test.mutate()}
+              onClick={() => test.mutate(form)}
             >
               {test.isPending ? "Testing…" : "Test"}
             </Button>

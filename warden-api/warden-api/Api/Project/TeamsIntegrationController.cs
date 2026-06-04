@@ -19,7 +19,8 @@ public class TeamsIntegrationController(
     {
         projectAuthorize.Authorize(projectId, CurrentUser, PermissionAction.Update);
         var result = await teamsProjectIntegrationSetting.GetSettingAsync(projectId);
-        return result.GetResult();
+        // webhook is a secret — blank it like the global Teams endpoint does
+        return result.GetResult() with { Webhook = string.Empty };
     }
 
     [HttpPost]

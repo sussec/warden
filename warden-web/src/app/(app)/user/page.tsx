@@ -258,7 +258,7 @@ export default function UserListPage() {
           <SelectContent>
             <SelectItem value={ALL}>All roles</SelectItem>
             {roles?.map((r) => (
-              <SelectItem key={r.name ?? ""} value={r.name ?? ""}>
+              <SelectItem key={r.id} value={r.id}>
                 {r.name}
               </SelectItem>
             ))}

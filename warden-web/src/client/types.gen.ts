@@ -726,6 +726,7 @@ export type RiskImpact = 'None' | 'Indirect' | 'Direct';
 export type RiskLevel = 'None' | 'Low' | 'Medium' | 'High' | 'Critical';
 
 export type RoleSummary = {
+    id: string;
     isDefault: boolean;
     name: string | null;
 };

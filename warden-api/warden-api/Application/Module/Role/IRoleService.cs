@@ -14,6 +14,7 @@ public class RoleService(AppDbContext context) : IRoleService
     {
         return await context.Roles.Select(record => new RoleSummary
         {
+            Id = record.Id,
             IsDefault = record.IsDefault,
             Name = record.Name
         }).ToListAsync();

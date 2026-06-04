@@ -34,7 +34,7 @@ export function FindingExportMenu({ filter }: { filter: FindingFilter }) {
       const res = await fetch("/api/finding/export", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...filter, exportType }),
+        body: JSON.stringify(filter),
       });
       if (!res.ok) {
         throw new Error(`Export failed (${res.status})`);
