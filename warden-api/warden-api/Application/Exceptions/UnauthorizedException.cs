@@ -6,7 +6,7 @@ public class UnauthorizedException : WebException
     {
     }
     
-    public UnauthorizedException(IEnumerable<string> errors) : base(404, errors)
+    public UnauthorizedException(IEnumerable<string> errors) : base(401, errors)
     {
     }
 
