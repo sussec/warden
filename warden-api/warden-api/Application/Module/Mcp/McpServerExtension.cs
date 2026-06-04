@@ -1,4 +1,5 @@
 using System.Reflection;
+using Warden.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -19,6 +20,11 @@ public static class McpServerExtension
     /// Warden tool type. Server identity is "warden" with the version taken from
     /// the executing assembly.
     /// </summary>
+    /// <summary>Authorization policy gating the MCP endpoint. Requires the global
+    /// finding-read claim, so only privileged users (admins/managers) can reach the
+    /// cross-project MCP tools at all — the first line of defense for C1.</summary>
+    public const string McpPolicy = "WardenMcp";
+
     public static IServiceCollection AddWardenMcp(this IServiceCollection services)
     {
         var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.0.0";
@@ -35,6 +41,11 @@ public static class McpServerExtension
             .WithHttpTransport()
             .WithTools(typeof(WardenMcpTools));
 
+        services.AddAuthorizationBuilder()
+            .AddPolicy(McpPolicy, policy => policy
+                .RequireAuthenticatedUser()
+                .RequireClaim(PermissionType.Finding, PermissionAction.Read));
+
         return services;
     }
 
@@ -44,6 +55,6 @@ public static class McpServerExtension
     /// </summary>
     public static void MapWardenMcp(this WebApplication app)
     {
-        app.MapMcp("/mcp").RequireAuthorization();
+        app.MapMcp("/mcp").RequireAuthorization(McpPolicy);
     }
 }

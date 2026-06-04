@@ -1,3 +1,4 @@
+using Warden.Authentication.Jwt;
 using Warden.Core.Enum;
 
 namespace Warden.Application.Module.Ai.Vector;
@@ -18,8 +19,9 @@ public interface ISemanticSearchService
 {
     /// <summary>
     /// Runs a semantic search over finding embeddings and returns matching findings ordered by score.
-    /// Returns an empty list when AI is disabled or pgvector is unavailable.
+    /// Results are scoped to projects the user may read; returns an empty list when AI is disabled
+    /// or pgvector is unavailable.
     /// </summary>
     Task<List<SemanticSearchResult>> SearchFindingsAsync(
-        string query, Guid? projectId, int top, CancellationToken cancellationToken = default);
+        JwtUserClaims currentUser, string query, Guid? projectId, int top, CancellationToken cancellationToken = default);
 }

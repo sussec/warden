@@ -72,8 +72,10 @@ public class FindingAiService(AppDbContext context, IAiClientFactory aiClientFac
         }
         catch (Exception e)
         {
+            // Log full detail server-side; return a generic message so provider/internal
+            // diagnostics (endpoints, auth errors, rate-limit headers) never reach the client.
             logger.LogError(e, "AI remediation suggestion failed for finding {FindingId}", findingId);
-            return Result.Fail($"AI request failed: {e.Message}");
+            return Result.Fail("AI request failed. Check the AI configuration and provider availability.");
         }
     }
 }

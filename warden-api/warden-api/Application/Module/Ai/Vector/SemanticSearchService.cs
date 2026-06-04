@@ -1,3 +1,6 @@
+using Warden.Authentication;
+using Warden.Authentication.Jwt;
+using Warden.Core.Enum;
 using Microsoft.EntityFrameworkCore;
 
 namespace Warden.Application.Module.Ai.Vector;
@@ -6,14 +9,16 @@ public sealed class SemanticSearchService(AppDbContext context, FindingVectorSto
     : ISemanticSearchService
 {
     public async Task<List<SemanticSearchResult>> SearchFindingsAsync(
-        string query, Guid? projectId, int top, CancellationToken cancellationToken = default)
+        JwtUserClaims currentUser, string query, Guid? projectId, int top, CancellationToken cancellationToken = default)
     {
         if (top <= 0)
         {
             top = 20;
         }
 
-        var hits = await vectorStore.SearchAsync(query, projectId, top, cancellationToken);
+        // Over-fetch from the vector store so that, after authorization filtering on the SQL
+        // join below, we can still return up to `top` results the user is allowed to see.
+        var hits = await vectorStore.SearchAsync(query, projectId, top * 4, cancellationToken);
         if (hits.Count == 0)
         {
             return [];
@@ -34,8 +39,14 @@ public sealed class SemanticSearchService(AppDbContext context, FindingVectorSto
         }
 
         var ids = scoreById.Keys.ToList();
+        // Authorization: users without the global Finding.Read claim only see findings in
+        // projects they belong to — mirrors FindingFilterQueryable so search cannot leak
+        // finding names/locations across tenant boundaries.
+        var canReadAllFinding = currentUser.HasClaim(PermissionType.Finding, PermissionAction.Read);
         var findings = await context.Findings
             .Where(f => ids.Contains(f.Id))
+            .Where(f => canReadAllFinding || context.ProjectUsers.Any(projectUser =>
+                projectUser.ProjectId == f.ProjectId && projectUser.UserId == currentUser.Id))
             .Select(f => new
             {
                 f.Id,
@@ -59,6 +70,7 @@ public sealed class SemanticSearchService(AppDbContext context, FindingVectorSto
                 Score = scoreById[f.Id]
             })
             .OrderBy(r => rankById[r.Id])
+            .Take(top)
             .ToList();
     }
 }

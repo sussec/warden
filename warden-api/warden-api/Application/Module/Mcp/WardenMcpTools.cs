@@ -2,8 +2,11 @@ using System.ComponentModel;
 using System.Text.Json;
 using ModelContextProtocol.Server;
 using Warden.Application;
+using Warden.Authentication;
+using Warden.Authentication.Jwt;
 using Warden.Core.Entity;
 using Warden.Core.Enum;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 namespace Warden.Application.Module.Mcp;
@@ -155,6 +158,7 @@ public static class WardenMcpTools
         "describing the change.")]
     public static async Task<string> UpdateFindingStatus(
         AppDbContext context,
+        IHttpContextAccessor httpContextAccessor,
         [Description("The GUID id of the finding to update.")]
         string findingId,
         [Description("The new status: Open, Confirmed, AcceptedRisk, Fixed or Incorrect.")]
@@ -163,6 +167,15 @@ public static class WardenMcpTools
         string? comment = null,
         CancellationToken cancellationToken = default)
     {
+        // Authorization: mutating a finding requires the Finding.Update claim, mirroring the
+        // REST layer (FindingAuthorize). The endpoint policy already requires Finding.Read.
+        var user = httpContextAccessor.HttpContext?.User.UserClaims();
+        if (user == null || !user.HasClaim(PermissionType.Finding, PermissionAction.Update))
+        {
+            return JsonSerializer.Serialize(
+                new { error = "You do not have permission to update finding status." }, JsonOptions);
+        }
+
         if (!Guid.TryParse(findingId, out var id))
         {
             return JsonSerializer.Serialize(
@@ -198,13 +211,13 @@ public static class WardenMcpTools
                 }, JsonOptions);
         }
 
-        // Record the status change as a FindingActivities row. The MCP transport
-        // is not tied to an interactive user, so UserId is left null (system actor).
+        // Record the status change as a FindingActivities row, attributed to the
+        // authenticated MCP user for audit traceability.
         // CreatedAt/UpdatedAt are stamped automatically by AppDbContext.SaveChangesAsync.
         var activity = new FindingActivities
         {
             Id = Guid.NewGuid(),
-            UserId = null,
+            UserId = user.Id,
             Type = FindingActivityType.ChangeStatus,
             OldState = oldStatus.ToString(),
             NewState = newStatus.ToString(),

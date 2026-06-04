@@ -4,14 +4,14 @@ namespace Warden.Application.Module.Setting;
 
 public static class AiSettingExtension
 {
-    private static AiSetting? aiSetting;
-
+    // No process-static cache: the Enabled flag is a security kill switch (when off, no
+    // finding data leaves the system). A static cache would let disabled/rotated config
+    // keep being used on other replicas until restart. AppSettings is a single indexed
+    // row, so reading it per call is cheap.
     public static async Task<AiSetting> GetAiSettingAsync(this AppDbContext context)
     {
-        if (aiSetting != null) return aiSetting;
         var setting = await context.GetAppSettingsAsync();
-        aiSetting = JSONSerializer.DeserializeOrDefault(setting.AiSetting, new AiSetting());
-        return aiSetting with { };
+        return JSONSerializer.DeserializeOrDefault(setting.AiSetting, new AiSetting());
     }
 
     public static async Task UpdateAiSettingAsync(this AppDbContext context, AiSetting request)
@@ -26,6 +26,5 @@ public static class AiSettingExtension
         setting.AiSetting = JSONSerializer.Serialize(request);
         context.AppSettings.Update(setting);
         await context.SaveChangesAsync();
-        aiSetting = request;
     }
 }

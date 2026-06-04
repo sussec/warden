@@ -29,14 +29,28 @@ public class AiSettingController(AppDbContext context, IAiClientFactory aiClient
     [HttpPost]
     [Route("test")]
     [Permission(PermissionType.Config, PermissionAction.Update)]
-    public async Task<bool> TestAiSetting()
+    public async Task<bool> TestAiSetting([FromBody] AiSetting request)
     {
-        var chatClient = await aiClientFactory.CreateChatClientAsync();
+        // Test what the user typed, not the saved config. A blank key means "keep current",
+        // so merge in the stored key the same way UpdateAiSettingAsync does.
+        if (string.IsNullOrEmpty(request.ApiKey))
+        {
+            var saved = await context.GetAiSettingAsync();
+            request.ApiKey = saved.ApiKey;
+        }
+        var chatClient = aiClientFactory.CreateChatClient(request);
         if (chatClient == null)
         {
             return false;
         }
-        var response = await chatClient.GetResponseAsync([new ChatMessage(ChatRole.User, "Reply with the single word: ok")]);
-        return !string.IsNullOrEmpty(response.Text);
+        try
+        {
+            var response = await chatClient.GetResponseAsync([new ChatMessage(ChatRole.User, "Reply with the single word: ok")]);
+            return !string.IsNullOrEmpty(response.Text);
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

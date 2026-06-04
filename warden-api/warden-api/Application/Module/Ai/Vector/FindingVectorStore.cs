@@ -48,6 +48,23 @@ public sealed class FindingVectorStore(
 
     private static NpgsqlDataSource? _dataSource;
     private static readonly object DataSourceLock = new();
+    private static volatile bool _collectionEnsured;
+
+    /// <summary>
+    /// Ensures the collection/table exists, but only issues the round-trip once per process
+    /// (the schema is stable). Keeps the hot path — especially the per-finding backfill loop —
+    /// from re-running CREATE TABLE IF NOT EXISTS on every operation.
+    /// </summary>
+    private static async Task EnsureCollectionOnceAsync(
+        VectorStoreCollection<Guid, FindingEmbedding> collection, CancellationToken cancellationToken)
+    {
+        if (_collectionEnsured)
+        {
+            return;
+        }
+        await collection.EnsureCollectionExistsAsync(cancellationToken);
+        _collectionEnsured = true;
+    }
 
     private static NpgsqlDataSource GetDataSource()
     {
@@ -99,7 +116,7 @@ public sealed class FindingVectorStore(
         try
         {
             var collection = CreateCollection();
-            await collection.EnsureCollectionExistsAsync(cancellationToken);
+            await EnsureCollectionOnceAsync(collection, cancellationToken);
 
             var input = BuildInputText(finding);
             var embedding = await generator.GenerateAsync(input, cancellationToken: cancellationToken);
@@ -145,7 +162,7 @@ public sealed class FindingVectorStore(
         try
         {
             var collection = CreateCollection();
-            await collection.EnsureCollectionExistsAsync(cancellationToken);
+            await EnsureCollectionOnceAsync(collection, cancellationToken);
 
             var queryEmbedding = await generator.GenerateAsync(query, cancellationToken: cancellationToken);
 
@@ -187,7 +204,7 @@ public sealed class FindingVectorStore(
         try
         {
             var collection = CreateCollection();
-            await collection.EnsureCollectionExistsAsync(cancellationToken);
+            await EnsureCollectionOnceAsync(collection, cancellationToken);
             await collection.DeleteAsync(findingId, cancellationToken);
         }
         catch (Exception e) when (IsPgVectorMissing(e))

@@ -17,6 +17,15 @@ public class AiClientFactory(AppDbContext context) : IAiClientFactory
         return CreateOpenAiClient(setting).GetChatClient(setting.Model).AsIChatClient();
     }
 
+    public IChatClient? CreateChatClient(AiSetting setting)
+    {
+        if (string.IsNullOrEmpty(setting.Model))
+        {
+            return null;
+        }
+        return CreateOpenAiClient(setting).GetChatClient(setting.Model).AsIChatClient();
+    }
+
     public async Task<IEmbeddingGenerator<string, Embedding<float>>?> CreateEmbeddingGeneratorAsync()
     {
         var setting = await context.GetAiSettingAsync();

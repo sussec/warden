@@ -26,7 +26,7 @@ public class SemanticSearchController(
     public async Task<List<SemanticSearchResult>> Search([FromBody] SemanticSearchRequest request)
     {
         var top = request.Top is > 0 ? request.Top.Value : 20;
-        return await semanticSearchService.SearchFindingsAsync(request.Query, request.ProjectId, top);
+        return await semanticSearchService.SearchFindingsAsync(CurrentUser, request.Query, request.ProjectId, top);
     }
 
     [HttpPost]
