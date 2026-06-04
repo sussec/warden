@@ -1,9 +1,101 @@
 "use client";
 
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { changePassword } from "@/client/sdk.gen";
 import { useProfile } from "@/lib/auth/use-session";
+
+function ChangePasswordCard() {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+
+  const change = useMutation({
+    mutationFn: async () =>
+      (
+        await changePassword({
+          body: { currentPassword, newPassword },
+          throwOnError: true,
+        })
+      ).data,
+    onSuccess: () => {
+      toast.success("Password updated.");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirm("");
+    },
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Change password</CardTitle>
+        <CardDescription>
+          Minimum 8 characters with upper, lower, digit and symbol.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (newPassword !== confirm) {
+              toast.error("Passwords do not match.");
+              return;
+            }
+            change.mutate();
+          }}
+        >
+          <div className="space-y-2">
+            <Label htmlFor="current">Current password</Label>
+            <Input
+              id="current"
+              type="password"
+              autoComplete="current-password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              required
+            />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="new">New password</Label>
+              <Input
+                id="new"
+                type="password"
+                autoComplete="new-password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm">Confirm new password</Label>
+              <Input
+                id="confirm"
+                type="password"
+                autoComplete="new-password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+          <Button type="submit" disabled={change.isPending}>
+            {change.isPending ? "Updating…" : "Update password"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function ProfilePage() {
   const { data: profile, isLoading } = useProfile();
@@ -48,6 +140,7 @@ export default function ProfilePage() {
           )}
         </CardContent>
       </Card>
+      <ChangePasswordCard />
     </div>
   );
 }

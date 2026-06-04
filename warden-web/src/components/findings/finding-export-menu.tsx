@@ -12,7 +12,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { ExportType, FindingFilter } from "@/client/types.gen";
-import { session } from "@/lib/auth/session";
 
 const EXPORT_OPTIONS: { type: ExportType; label: string; ext: string }[] = [
   { type: "Excel", label: "Excel (.xlsx)", ext: "xlsx" },
@@ -31,13 +30,10 @@ export function FindingExportMenu({ filter }: { filter: FindingFilter }) {
   async function onExport(exportType: ExportType, ext: string) {
     setLoading(true);
     try {
-      const token = session.getAccess();
+      // session travels in httpOnly cookies (same-origin)
       const res = await fetch("/api/finding/export", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...filter, exportType }),
       });
       if (!res.ok) {

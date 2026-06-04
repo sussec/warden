@@ -19,6 +19,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DataTable, type ColumnDef, type PageState } from "@/components/data-table/data-table";
+import { ReportExportMenu } from "@/components/findings/report-export-menu";
 import { CountBar } from "@/components/severity";
 import { cn } from "@/lib/utils";
 import { getProjectCommitScanSummary } from "@/client/sdk.gen";
@@ -175,15 +176,18 @@ export default function ProjectOverviewPage() {
     {
       key: "action",
       header: "",
-      className: "w-10",
+      className: "w-20",
       cell: (c) => (
-        <Link
-          href={`/project/${id}/finding?commitId=${encodeURIComponent(c.commitId)}`}
-          className={cn("text-muted-foreground hover:text-foreground")}
-          aria-label="View findings for commit"
-        >
-          <ExternalLink className="size-4" />
-        </Link>
+        <span className="flex items-center gap-1">
+          <ReportExportMenu projectId={id} commitId={c.commitId} />
+          <Link
+            href={`/project/${id}/finding?commitId=${encodeURIComponent(c.commitId)}`}
+            className={cn("text-muted-foreground hover:text-foreground")}
+            aria-label="View findings for commit"
+          >
+            <ExternalLink className="size-4" />
+          </Link>
+        </span>
       ),
     },
   ];

@@ -78,12 +78,22 @@ export default function UserListPage() {
   const [newEmail, setNewEmail] = useState("");
   const [newRole, setNewRole] = useState("");
   const [newVerified, setNewVerified] = useState(false);
+  const [newUserName, setNewUserName] = useState("");
+  const [newFullName, setNewFullName] = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
   const createMut = useMutation({
     mutationFn: async () =>
       (
         await createUser({
-          body: { email: newEmail, role: newRole, verified: newVerified },
+          body: {
+            email: newEmail,
+            role: newRole,
+            verified: newVerified,
+            userName: newUserName || null,
+            fullName: newFullName || null,
+            password: newPassword || null,
+          },
           throwOnError: true,
         })
       ).data,
@@ -93,6 +103,9 @@ export default function UserListPage() {
       setNewEmail("");
       setNewRole("");
       setNewVerified(false);
+      setNewUserName("");
+      setNewFullName("");
+      setNewPassword("");
       refresh();
     },
     onError: () => toast.error("Failed to create user"),
@@ -288,6 +301,37 @@ export default function UserListPage() {
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
                 required
+              />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="new-username">Username (optional)</Label>
+                <Input
+                  id="new-username"
+                  placeholder="defaults to email prefix"
+                  value={newUserName}
+                  onChange={(e) => setNewUserName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-fullname">Full name (optional)</Label>
+                <Input
+                  id="new-fullname"
+                  placeholder="defaults to username"
+                  value={newFullName}
+                  onChange={(e) => setNewFullName(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-password">Password (optional)</Label>
+              <Input
+                id="new-password"
+                type="password"
+                autoComplete="new-password"
+                placeholder="leave empty to send an invite email"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
               />
             </div>
             <div className="space-y-2">
