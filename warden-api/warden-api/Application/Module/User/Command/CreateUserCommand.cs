@@ -12,7 +12,9 @@ public class CreateUserCommand(JwtUserManager userManager, IMailInviteUser mailI
 {
     public async Task<Result<Users>> ExecuteAsync(CreateUserRequest request)
     {
-        var username = request.Email.Split('@')[0];
+        var username = string.IsNullOrWhiteSpace(request.UserName)
+            ? request.Email.Split('@')[0]
+            : request.UserName.Trim();
         var user = new Users
         {
             Id = Guid.NewGuid(),
@@ -20,13 +22,16 @@ public class CreateUserCommand(JwtUserManager userManager, IMailInviteUser mailI
             Email = request.Email,
             EmailConfirmed = request.Verified,
             TwoFactorEnabled = false,
-            FullName = username,
+            FullName = string.IsNullOrWhiteSpace(request.FullName) ? username : request.FullName.Trim(),
             Status = UserStatus.Active,
             Avatar = null,
             IsDefault = false,
             CreatedAt = DateTime.UtcNow
         };
-        var result = await userManager.CreateAsync(user, PasswordGenerator.GeneratePassword(32));
+        var password = string.IsNullOrEmpty(request.Password)
+            ? PasswordGenerator.GeneratePassword(32)
+            : request.Password;
+        var result = await userManager.CreateAsync(user, password);
         if (!result.Succeeded) return Result.Fail(result.Errors.First().Description);
         await userManager.AddToRoleAsync(user, request.Role);
         _ = mailInviteUser.SendAsync(user.Email!, new MailInviteUserModel
