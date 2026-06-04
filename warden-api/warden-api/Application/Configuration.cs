@@ -9,6 +9,9 @@ public static class Configuration
     public static string FrontendUrl => Config.FrontendUrl;
     public static string TrustedProxies => Config.TrustedProxies;
 
+    public static bool OpenApiEnabled =>
+        !string.Equals(Config.OpenApiEnabled, "false", StringComparison.OrdinalIgnoreCase);
+
     public static string DbConnectionString =>
         $"Host={Config.DbServer};Database={Config.DbName};Username={Config.DbUsername};Password={Config.DbPassword}";
     

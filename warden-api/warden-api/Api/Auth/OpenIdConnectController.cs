@@ -47,7 +47,10 @@ public class OpenIdConnectController(
         if (result.AuthResponse != null)
             queryParams +=
                 $"&accessToken={result.AuthResponse.AccessToken}&refreshToken={result.AuthResponse.RefreshToken}";
-        var frontendUrl = $"{Configuration.FrontendUrl}/#/auth/login?{queryParams}";
+        // warden-web (Next.js) handles the SSO return at /auth/callback (no hash routing).
+        // FRONTEND_URL may be a comma-separated allowlist (CORS); redirect targets the first entry.
+        var baseUrl = Configuration.FrontendUrl.Split(',')[0].Trim().TrimEnd('/');
+        var frontendUrl = $"{baseUrl}/auth/callback?{queryParams}";
         return Redirect(frontendUrl);
     }
 }

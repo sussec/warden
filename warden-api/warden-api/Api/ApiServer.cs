@@ -63,13 +63,14 @@ public static class ApiServer
         {
             options.MultipartBodyLengthLimit = 26843545; // 25MB
         });
-        builder.Services.AddSpaStaticFiles(configuration => { configuration.RootPath = "wwwroot"; });
         builder.Services.AddHealthChecks().AddDbContextCheck<AppDbContext>();
         var app = builder.Build();
         app.MapHealthChecks("/healthz");
         app.InitApp();
         // Configure the HTTP request pipeline.
-        if (app.Environment.IsDevelopment())
+        // OpenAPI spec drives the typed client in warden-web (`bun run gen-api`).
+        // Served in all environments unless OPENAPI_ENABLED=false.
+        if (Configuration.OpenApiEnabled)
         {
             app.UseSwagger(options => { options.RouteTemplate = "/openapi/{documentName}.json"; });
 
@@ -78,16 +79,18 @@ public static class ApiServer
         }
 
         app.ConfigureExceptionHandler();
-        app.UseCors(x => x
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .SetIsOriginAllowed(_ => true)
-            .AllowCredentials()
-        );
+        // Backend-only API: the web app proxies same-origin requests; this allowlist
+        // covers direct cross-origin access (FRONTEND_URL, comma-separated).
+        var allowedOrigins = Configuration.FrontendUrl
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        app.UseCors(x =>
+        {
+            if (allowedOrigins.Length > 0)
+                x.WithOrigins(allowedOrigins).AllowAnyMethod().AllowAnyHeader().AllowCredentials();
+            else
+                x.AllowAnyMethod().AllowAnyHeader().SetIsOriginAllowed(_ => true).AllowCredentials();
+        });
         app.UseHttpsRedirection();
-        app.UseStaticFiles();
-        app.UseDefaultFiles();
-        app.UseSpaStaticFiles();
         app.UseRouting();
         app.UseForwardedHeaders();
         app.UseAuthentication();
