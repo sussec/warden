@@ -1,0 +1,81 @@
+<div class="mx-auto flex flex-col gap-2" style="height: calc(100vh - 19.5rem)">
+  <p-panel>
+    <ng-template #header>
+      <div class="font-semibold text-xl">Member Manager</div>
+    </ng-template>
+    <!--    FILTER-->
+    <div class="flex flex-row gap-3 items-center">
+      <p-iconfield>
+        <p-inputicon styleClass="pi pi-search"/>
+        <input type="text" [(ngModel)]="filter.name" (keyup.enter)="onSearchChange()" pInputText
+               placeholder="Search..."/>
+      </p-iconfield>
+      <p-button class="text-nowrap" type="primary" label="Add Member" (onClick)="showAddMemberPopup()"/>
+    </div>
+    <!--    TABLE-->
+    <p-table [loading]="store.loading()" [value]="store.members()" [scrollable]="true">
+      <ng-template #header>
+        <tr>
+          <th class="w-[50px] min-w-[50px] text-center">
+            <p-checkbox binary></p-checkbox>
+          </th>
+          <th class="min-w-[300px]">USER</th>
+          <th class="min-w-[180px]">ROLE</th>
+          <th class="min-w-[180px]">CREATED AT</th>
+          <th class="w-[80px]">
+            <div class="w-full flex flex-row items-center justify-center">
+              <span>ACTION</span>
+            </div>
+          </th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-user>
+        <tr>
+          <td class="text-center">
+            <p-checkbox binary></p-checkbox>
+          </td>
+          <td>
+            <user-info [username]="user.userName"
+                       [avatar]="user.avatar"
+                       [fullName]="user.fullName"
+                       [email]="user.email">
+            </user-info>
+          </td>
+          <td>
+            <p-chip [label]="user.role"/>
+          </td>
+          <td>
+            <span [pTooltip]="user.createdAt" tooltipPosition="top">{{ user.createdAt | timeago }}</span>
+          </td>
+          <td>
+            <div class="w-full flex flex-row items-center justify-center gap-2 text-lg">
+              <ng-icon name="pencilSquare" class="cursor-pointer"
+                       (click)="showUpdateMemberPopup(user)">
+              </ng-icon>
+              <ng-icon name="trash" class="cursor-pointer"
+                       (click)="showConfirmDeleteMemberDialog(user)">
+              </ng-icon>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+    <!--  FOOTER-->
+    <div class="flex flex-row justify-end">
+      <p-paginator class="sticky bottom-0"
+                   (onPageChange)="onPageChange($event)"
+                   [first]="store.firstRecord()"
+                   [rows]="filter.size"
+                   [totalRecords]="store.totalRecords()"
+                   [showCurrentPageReport]="isDesktop"
+                   currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+                   [rowsPerPageOptions]="[10, 20, 50, 100]"/>
+    </div>
+  </p-panel>
+</div>
+<!--confirm delete member-->
+<p-confirm-dialog></p-confirm-dialog>
+<!--update member-->
+<app-update-member-dialog></app-update-member-dialog>
+<!--add member-->
+<app-add-member-dialog></app-add-member-dialog>

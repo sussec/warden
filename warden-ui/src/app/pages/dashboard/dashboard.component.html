@@ -1,0 +1,48 @@
+<div class="mb-2">
+  <div class="flex flex-row items-center gap-2">
+    <range-date [type]="rangeDate.type" (onChange)="onRangeDateChange($event)"></range-date>
+    @if(store.sourceControls().length > 1) {
+      <source-control-select [options]="store.sourceControls()" (onChange)="onChangeSourceControl($event)"></source-control-select>
+    }
+  </div>
+</div>
+<p-fluid class="grid grid-cols-12 gap-4">
+  <!--  SAST-->
+  <div class="col-span-12">
+    <div class="text-xl font-semibold">Static Application Security Testing (SAST)</div>
+  </div>
+  <div class="col-span-12 xl:col-span-3 md:col-span-6 min-w-96">
+    <p-card styleClass="h-full">
+      <severity-chart [severity]="sastSeverity()" type="sast" [rangeDate]="rangeDate"></severity-chart>
+    </p-card>
+  </div>
+  <div class="col-span-12 xl:col-span-3 md:col-span-6 min-w-96">
+    <p-card styleClass="h-full">
+      <finding-status-chart [status]="sastStatus()" [rangeDate]="rangeDate"></finding-status-chart>
+    </p-card>
+  </div>
+  <div class="col-span-12 xl:col-span-6">
+    <p-card styleClass="h-full">
+      <top-finding-chart class="" [categories]="topFindings()" [rangeDate]="rangeDate"></top-finding-chart>
+    </p-card>
+  </div>
+  <!--  SCA-->
+  <div class="col-span-12">
+    <div class="text-xl font-semibold">Software Composition Analysis (SCA)</div>
+  </div>
+  <div class="col-span-12 xl:col-span-3 md:col-span-6 min-w-96">
+    <p-card styleClass="h-full">
+      <severity-chart [severity]="scaSeverity()" type="sca" [rangeDate]="rangeDate"></severity-chart>
+    </p-card>
+  </div>
+  <div class="col-span-12 xl:col-span-3 md:col-span-6 min-w-96">
+    <p-card styleClass="h-full">
+      <package-status-chart [status]="scaStatus()"/>
+    </p-card>
+  </div>
+  <div class="col-span-12 xl:col-span-6">
+    <p-card styleClass="h-full">
+      <top-dependency-chart [dependencies]="topDependencies()"></top-dependency-chart>
+    </p-card>
+  </div>
+</p-fluid>

@@ -1,0 +1,15 @@
+<p-panel styleClass="min-w-md overflow-x-auto px-1">
+  <ng-template #header>
+    <p-tabs class="w-full" [value]="activeTab">
+      <p-tablist>
+        @for (tab of tabs(); track $index) {
+          <p-tab [value]="$index" [routerLink]="tab.routerLink">
+            <ng-icon [name]="tab.icon" size="16"></ng-icon>
+            <span>{{ tab.label }}</span>
+          </p-tab>
+        }
+      </p-tablist>
+    </p-tabs>
+  </ng-template>
+  <router-outlet></router-outlet>
+</p-panel>

@@ -1,0 +1,45 @@
+table {
+  @apply border border-surface-200 dark:border-red-600;
+  tr {
+    @apply border border-surface-200 dark:border-red-600;
+  }
+}
+markdown-toolbar {
+  @apply flex flex-row items-baseline;
+  .btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: inline-block;
+    height: 24px;
+    padding: 3px 5px;
+    width: 28px;
+    color: #222;
+
+    i {
+      display: flex;
+    }
+
+    &:hover {
+      color: var(--primary-color);
+    }
+  }
+}
+
+.preview {
+  position: relative;
+  min-height: 32px;
+  .icon-edit {
+    @apply font-normal;
+    display: none;
+    position: absolute;
+    right: 3px;
+    top: 3px;
+  }
+  &:hover {
+    @apply bg-surface-100 dark:bg-surface-800;
+    .icon-edit {
+      display: block;
+    }
+  }
+}

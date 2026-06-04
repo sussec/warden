@@ -1,0 +1,162 @@
+<div class="flex flex-col gap-4 w-full">
+  <div class="flex flex-col gap-2 w-full">
+    <div class="flex flex-wrap gap-8">
+      <div class="flex flex-col gap-1">
+        <div class="font-semibold">Static Application Security Testing (SAST)</div>
+        <table class="border-none w-fit">
+          <tr>
+            <td class="py-2">
+              <div class="flex flex-col">
+                <div class="uppercase">Critical</div>
+                <span class="text-xs">duration frequency</span>
+              </div>
+            </td>
+            <td class="px-4">
+              <div class="flex flex-row gap-2 items-center">
+                <p-input-number inputStyleClass="max-w-20" min="0" [(ngModel)]="slaSetting.sast!.critical"/>
+                <span>days</span>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="py-2">
+              <div class="flex flex-col">
+                <div class="uppercase">High</div>
+                <span class="text-xs">duration frequency</span>
+              </div>
+            </td>
+            <td class="px-4">
+              <div class="flex flex-row gap-2 items-center">
+                <p-input-number inputStyleClass="max-w-20" min="0" [(ngModel)]="slaSetting.sast!.high"/>
+                <span>days</span>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="py-2">
+              <div class="flex flex-col">
+                <div class="uppercase">Medium</div>
+                <span class="text-xs">duration frequency</span>
+              </div>
+            </td>
+            <td class="px-4">
+              <div class="flex flex-row gap-2 items-center">
+                <p-input-number inputStyleClass="max-w-20" min="0" [(ngModel)]="slaSetting.sast!.medium"/>
+                <span>days</span>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="py-2">
+              <div class="flex flex-col">
+                <div class="uppercase">Low</div>
+                <span class="text-xs">duration frequency</span>
+              </div>
+            </td>
+            <td class="px-4">
+              <div class="flex flex-row gap-2 items-center">
+                <p-input-number inputStyleClass="max-w-20" min="0" [(ngModel)]="slaSetting.sast!.low"/>
+                <span>days</span>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="py-2">
+              <div class="flex flex-col">
+                <div class="uppercase">Info</div>
+                <span class="text-xs">duration frequency</span>
+              </div>
+            </td>
+            <td class="px-4">
+              <div class="flex flex-row gap-2 items-center">
+                <p-input-number inputStyleClass="max-w-20" min="0" [(ngModel)]="slaSetting.sast!.info"/>
+                <span>days</span>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div class="flex flex-col gap-1">
+        <div class="font-semibold">Software Composition Analysis (SCA)</div>
+        <table class="border-none w-fit">
+          <tr>
+            <td class="py-2">
+              <div class="flex flex-col">
+                <div class="uppercase">Critical</div>
+                <span class="text-xs">duration frequency</span>
+              </div>
+            </td>
+            <td class="px-4">
+              <div class="flex flex-row gap-2 items-center">
+                <p-input-number inputStyleClass="max-w-20" min="0" [(ngModel)]="slaSetting.sca!.critical"/>
+                <span>days</span>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="py-2">
+              <div class="flex flex-col">
+                <div class="uppercase">High</div>
+                <span class="text-xs">duration frequency</span>
+              </div>
+            </td>
+            <td class="px-4">
+              <div class="flex flex-row gap-2 items-center">
+                <p-input-number inputStyleClass="max-w-20" min="0" [(ngModel)]="slaSetting.sca!.high"/>
+                <span>days</span>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="py-2">
+              <div class="flex flex-col">
+                <div class="uppercase">Medium</div>
+                <span class="text-xs">duration frequency</span>
+              </div>
+            </td>
+            <td class="px-4">
+              <div class="flex flex-row gap-2 items-center">
+                <p-input-number inputStyleClass="max-w-20" min="0" [(ngModel)]="slaSetting.sca!.medium"/>
+                <span>days</span>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="py-2">
+              <div class="flex flex-col">
+                <div class="uppercase">Low</div>
+                <span class="text-xs">duration frequency</span>
+              </div>
+            </td>
+            <td class="px-4">
+              <div class="flex flex-row gap-2 items-center">
+                <p-input-number inputStyleClass="max-w-20" min="0" [(ngModel)]="slaSetting.sca!.low"/>
+                <span>days</span>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="py-2">
+              <div class="flex flex-col">
+                <div class="uppercase">Info</div>
+                <span class="text-xs">duration frequency</span>
+              </div>
+            </td>
+            <td class="px-4">
+              <div class="flex flex-row gap-2 items-center">
+                <p-input-number inputStyleClass="max-w-20" min="0" [(ngModel)]="slaSetting.sca!.info"/>
+                <span>days</span>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <p-button severity="primary" label="Update"
+            [loading]="loading"
+            [disabled]="loading"
+            (click)="saveSla()"/>
+</div>

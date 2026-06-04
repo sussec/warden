@@ -1,0 +1,68 @@
+<div class="flex flex-col gap-4 w-full">
+  <div class="flex flex-col gap-2 w-full">
+    <div class="flex flex-row gap-2 w-full items-center">
+      <div class="w-36 md:w-48">Auth Mode</div>
+      <div class="w-full max-w-md">
+        <p-select [options]="authOptions" [(ngModel)]="authMode"></p-select>
+      </div>
+    </div>
+    <div class="flex flex-row gap-2 w-full items-center">
+      <div class="w-36 md:w-48">Allow Register</div>
+      <div class="w-full max-w-md">
+        <p-toggle-switch [formControl]="form.controls.allowRegister!"/>
+      </div>
+    </div>
+    @if (authMode != 'local') {
+      <div class="flex flex-row gap-2 w-full items-center">
+        <div class="w-36 md:w-48">Disable Password Logon</div>
+        <div class="w-full max-w-md">
+          <p-toggle-switch [formControl]="form.controls.disablePasswordLogon!"/>
+        </div>
+      </div>
+    }
+    @if (authMode == 'oidc') {
+      <div class="flex flex-row gap-2 w-full items-center">
+        <div class="w-36 md:w-48">Enable OIDC</div>
+        <div class="w-full max-w-md">
+          <p-toggle-switch [formControl]="form.controls.openIdConnectSetting.controls.enable!"/>
+        </div>
+      </div>
+      <div class="flex flex-row gap-2 w-full items-center">
+        <div class="w-36 md:w-48">OIDC Provider</div>
+        <div class="w-full max-w-md">
+          <input pInputText class="w-full" [formControl]="form.controls.openIdConnectSetting.controls.displayName!">
+        </div>
+      </div>
+      <div class="flex flex-row gap-2 w-full items-center">
+        <div class="w-36 md:w-48">OIDC Authority</div>
+        <div class="w-full max-w-md">
+          <input pInputText class="w-full" [formControl]="form.controls.openIdConnectSetting.controls.authority!">
+        </div>
+      </div>
+      <div class="flex flex-row gap-2 w-full items-center">
+        <div class="w-36 md:w-48">OIDC Client ID</div>
+        <div class="w-full max-w-md">
+          <input pInputText class="w-full" [formControl]="form.controls.openIdConnectSetting.controls.clientId!">
+        </div>
+      </div>
+      <div class="flex flex-row gap-2 w-full items-center">
+        <div class="w-36 md:w-48">OIDC Client Secret</div>
+        <div class="w-full max-w-md">
+          <p-password [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full"
+                      [formControl]="form.controls.openIdConnectSetting.controls.clientSecret!"></p-password>
+        </div>
+      </div>
+      <div class="flex flex-row gap-2 w-full items-center">
+        <div class="w-36 md:w-48">Redirect URI Scheme</div>
+        <div class="w-full max-w-md">
+          <input pInputText class="w-full" placeholder="e.g. https"
+                 [formControl]="form.controls.openIdConnectSetting.controls.schemeOverride!">
+        </div>
+      </div>
+    }
+  </div>
+  <p-button severity="primary" label="Update"
+            [loading]="form.disabled"
+            [disabled]="form.disabled"
+            (click)="saveConfig()"/>
+</div>

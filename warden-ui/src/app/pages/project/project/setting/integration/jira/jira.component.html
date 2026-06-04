@@ -1,0 +1,49 @@
+<div class="flex flex-col">
+  @if (setting.projectKey) {
+    <div class="flex flex-col gap-2 w-full">
+      <div class="flex flex-row gap-2 w-full items-center">
+        <span class="w-36 md:w-48">Enable</span>
+        <div class="w-full max-w-md">
+          <p-toggle-switch [(ngModel)]="setting.active"/>
+        </div>
+      </div>
+      <div class="flex flex-row gap-2 w-full items-center">
+        <span class="w-36 md:w-48">Default Project</span>
+        <div class="flex flex-row items-center gap-2">
+          <p-select [options]="jiraProjects()" [filter]="true"
+                    [filterFields]="['key', 'name']"
+                    appendTo="body"
+                    optionLabel="name" optionValue="key"
+                    placeholder="Jira Project"
+                    [(ngModel)]="setting.projectKey"
+                    (onChange)="onChangeProject($event)">
+          </p-select>
+          <p-button severity="secondary" icon="pi pi-sync" (click)="loadJiraProjects()" [loading]="loading"></p-button>
+        </div>
+      </div>
+      <div class="flex flex-row gap-2 w-full items-center">
+        <span class="w-36 md:w-48">Issue Type</span>
+        <div class="flex flex-row items-center gap-2">
+          <p-select [options]="issueTypes()" [filter]="true"
+                    appendTo="body"
+                    optionValue="value"
+                    optionLabel="label"
+                    placeholder="Issue Type"
+                    [(ngModel)]="setting.issueType">
+          </p-select>
+        </div>
+      </div>
+    </div>
+    <div class="flex flex-row gap-2 items-center">
+      <button pButton severity="primary"
+              [loading]="loading"
+              [disabled]="loading"
+              (click)="saveJiraSetting()">Update
+      </button>
+    </div>
+  } @else {
+    <div>Not yet integrated with Jira. Go to <a routerLink="/setting/integration" class="font-semibold">Setting >
+      Integration</a> to configure Jira first.
+    </div>
+  }
+</div>

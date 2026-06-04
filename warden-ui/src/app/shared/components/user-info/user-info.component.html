@@ -1,0 +1,12 @@
+<div class="flex-row flex items-center gap-2">
+  <p-avatar
+    [shape]="avatarShape"
+    [size]="avatarSize"
+    [image]="avatar ?? undefined"
+    [label]="username | firstChar:'U' | uppercase">
+  </p-avatar>
+  <div class="flex flex-col font-semibold">
+    <span>{{ fullName || username }}</span>
+    <p class="truncate text-ellipsis text-sm">{{ email }}</p>
+  </div>
+</div>

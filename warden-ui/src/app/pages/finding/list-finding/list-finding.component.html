@@ -1,0 +1,156 @@
+<p-panel>
+  <ng-template #header>
+    <div class="font-semibold text-foreground text-xl">The Finding</div>
+  </ng-template>
+  <div class="flex flex-row w-full gap-4" style="height: calc(100vh - 13.5rem)">
+    <div class="flex flex-col">
+      <div class="flex flex-wrap p-4 gap-2 items-center border border-surface">
+        <!--SEARCH-->
+        <p-icon-field>
+          <p-inputicon styleClass="pi pi-search"/>
+          <input type="text"
+                 class="text-sm"
+                 pInputText placeholder="Search..."
+                 [(ngModel)]="filter.name"
+                 (keyup.enter)="onSearchChange()"/>
+        </p-icon-field>
+        <!--Created At Filter-->
+        <range-date styleClassInput="text-sm" labelType="text" label="Created At"
+                    [showClear]="true"
+                    [type]="store.createdAtRangeDate().type"
+                    [startDate]="store.createdAtRangeDate().startDate"
+                    [endDate]="store.createdAtRangeDate().endDate"
+                    (onChange)="onChangeCreatedAtRangeDate($event)"/>
+        <!--Fixed At Filter-->
+        <range-date styleClassInput="text-sm" labelType="text" label="Fixed At"
+                    [showClear]="true"
+                    [type]="store.fixedAtRangeDate().type"
+                    [startDate]="store.fixedAtRangeDate().startDate"
+                    [endDate]="store.fixedAtRangeDate().endDate"
+                    (onChange)="onChangeFixedAtRangeDate($event)"/>
+        @if(store.sourceControls().length > 1) {
+          <source-control-select [options]="store.sourceControls()" (onChange)="onChangeSourceControl($event)"/>
+        }
+        <!--Rule Filter-->
+        <finding-rule-filter [options]="store.rules()"
+                             [rule]="filter.ruleId"
+                             (onChange)="onChangeRule($event)"/>
+        <!--Category Filter-->
+        <finding-category-filter [options]="store.categories()"
+                             [category]="filter.category"
+                             (onChange)="onChangeCategory($event)"/>
+        <!--Project Manager Filter-->
+        <p-float-label variant="on">
+          <p-select id="on_project_manager_user"
+                    filter
+                    filterBy="userName"
+                    [showClear]="true"
+                    styleClass="min-w-28"
+                    [options]="store.users()"
+                    optionValue="id"
+                    optionLabel="userName"
+                    [ngModel]="filter.projectManagerId"
+                    (ngModelChange)="onChangeProjectManager($event)">
+          </p-select>
+          <label for="on_project_manager_user">Manager</label>
+        </p-float-label>
+        <!--Status Filter-->
+        <finding-status-filter [status]="filter.status"
+                               (statusChange)="onChangeStatus($event)"/>
+        <!--Severity Filter-->
+        <finding-severity-filter [severity]="filter.severity"
+                                 (onChange)="onChangeSeverity($event)"/>
+        <!--Scanner Filter-->
+        <finding-scanner-filter [selected]="filter.scanner"
+                                [scanners]="store.scanners()"
+                                (onChange)="onChangeScanners($event)"/>
+        <!--Sort By-->
+        <sort-by [sortBy]="filter.sortBy"
+                 [options]="store.sortOptions"
+                 (onChange)="onSortChange($event)"></sort-by>
+        <!--Reload-->
+        <p-button severity="secondary" icon="pi pi-sync" pTooltip="reload" tooltipPosition="top"
+                  (click)="onReload()" [loading]="store.loading()"/>
+        <!--Mark As-->
+        <finding-status-mark-as [badge]="selectedFindings.size" (onSelect)="onMarkAs($event)"/>
+        <finding-export-menu [exportTypes]="exportTypes"
+                             [loading]="loadingExport"
+                             (onSelect)="onExport($event)"></finding-export-menu>
+      </div>
+      <!--LIST FINDING-->
+      <p-table [loading]="store.loading()" [value]="store.findings()" [scrollable]="true"
+               class="w-full overflow-y-auto">
+        <ng-template #header>
+          <tr class="text-sm">
+            <th class="w-[50px] min-w-[50px] text-center">
+              <p-checkbox binary [(ngModel)]="checkAll" (onChange)="onSelectAllChange($event)"></p-checkbox>
+            </th>
+            <th>
+              <div class="flex flex-row items-center gap-1">
+                <span>SUMMARY</span>
+              </div>
+            </th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-finding>
+          <tr>
+            <td class="text-center">
+              <p-checkbox binary (onChange)="onSelectFinding(finding.id, $event)"
+                          [ngModel]="selectedFindings.has(finding.id)"></p-checkbox>
+            </td>
+            <td>
+              <div class="flex flex-col gap-1 w-full cursor-pointer" (click)="onOpenFinding(finding.id)">
+                <div>
+                  {{ finding.name }}
+                </div>
+                <div class="flex flex-row items-center justify-between w-full">
+                  <div class="flex flex-row items-center gap-2">
+                    <finding-severity [severity]="finding.severity!"></finding-severity>
+                    <finding-status styleClass="text-xs" [status]="finding.status"/>
+                  </div>
+                  <div class="flex flex-row items-center gap-2">
+                    <div class="flex flex-row items-center gap-1 text-[#00c869]">
+                      <div
+                        class="text-xs border border-surface px-2 py-0.5 rounded-lg w-fit text-[#0B5CAD] bg-[#CBE2F9] dark:bg-[#0B5CAD] dark:text-[#CBE2F9]">
+                        {{ finding.scanner }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+      <div class="flex flex-row justify-end">
+        <p-paginator class="sticky bottom-0"
+                     (onPageChange)="onPageChange($event)"
+                     [first]="store.firstRecord()"
+                     [rows]="filter.size"
+                     [totalRecords]="store.totalRecords()"
+                     [showCurrentPageReport]="isDesktop"
+                     currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+                     [rowsPerPageOptions]="[10, 20, 50, 100]"/>
+      </div>
+    </div>
+  </div>
+  <p-drawer [(visible)]="showFinding" [closable]="false" position="right" styleClass="w-full md:w-1/2">
+    <ng-template #header>
+      <div class="flex flex-row items-center w-full justify-end">
+        <a [routerLink]="['/finding', findingId()]">
+          <ng-icon name="arrowsPointingOut" size="18" class="cursor-pointer"></ng-icon>
+        </a>
+        <p-divider layout="vertical"></p-divider>
+        <ng-icon
+          (click)="showFinding = false"
+          name="x" size="18"
+          class="cursor-pointer"></ng-icon>
+      </div>
+    </ng-template>
+    <finding-detail
+      [findingId]="findingId()"
+      [isProjectPage]="true"
+      (close)="showFinding = false">
+    </finding-detail>
+  </p-drawer>
+</p-panel>

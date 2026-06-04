@@ -1,0 +1,57 @@
+<div class="flex flex-col gap-4 w-full">
+  <div class="flex flex-col gap-2 w-full">
+    <div class="flex flex-row gap-2 w-full items-center">
+      <span class="w-36 md:w-48">Server</span>
+      <div class="w-full max-w-md">
+        <input pInputText class="w-full" [(ngModel)]="smtpSetting.server" placeholder="smtp.example.com">
+      </div>
+    </div>
+    <div class="flex flex-row gap-2 w-full items-center">
+      <span class="w-36 md:w-48">Port</span>
+      <div class="w-full max-w-md">
+        <input pInputText type="text" class="w-full" [(ngModel)]="smtpSetting.port" placeholder="587">
+      </div>
+    </div>
+    <div class="flex flex-row gap-2 w-full items-center">
+      <span class="w-36 md:w-48">Name</span>
+      <div class="w-full max-w-md">
+        <input pInputText type="text" class="w-full" [(ngModel)]="smtpSetting.name" placeholder="Techanv Warden">
+      </div>
+    </div>
+    <div class="flex flex-row gap-2 w-full items-center">
+      <span class="w-36 md:w-48">UserName</span>
+      <div class="w-full max-w-md">
+        <input pInputText type="text" class="w-full" [(ngModel)]="smtpSetting.userName">
+      </div>
+    </div>
+    <div class="flex flex-row gap-2 w-full items-center">
+      <span class="w-36 md:w-48">Password</span>
+      <div class="w-full max-w-md">
+        <p-password [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full"
+                    [(ngModel)]="smtpSetting.password"/>
+      </div>
+    </div>
+    <div class="flex flex-row gap-2 w-full items-center">
+      <span class="w-36 md:w-48">SSL</span>
+      <div class="w-full max-w-md">
+        <p-toggle-switch [(ngModel)]="smtpSetting.useSsl"/>
+      </div>
+    </div>
+    <div class="flex flex-row gap-2 w-full items-center">
+      <span class="w-36 md:w-48">Ignore SSL</span>
+      <div class="w-full max-w-md">
+        <p-toggle-switch [(ngModel)]="smtpSetting.ignoreSsl"/>
+      </div>
+    </div>
+  </div>
+  <div class="flex flex-row gap-2 items-center">
+    <p-button severity="primary" label="Update"
+              [loading]="loading"
+              [disabled]="loading"
+              (click)="saveConfig()"/>
+    <p-button severity="secondary" label="Test Mail"
+              [loading]="loadingTestMail"
+              [disabled]="loadingTestMail"
+              (click)="testConnection()"/>
+  </div>
+</div>
