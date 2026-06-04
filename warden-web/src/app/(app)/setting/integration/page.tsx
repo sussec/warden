@@ -29,12 +29,31 @@ import {
   testTeamsIntegrationSetting,
   getMailIntegrationSetting,
   updateMailIntegrationSetting,
+  getGitHubIntegrationSetting,
+  updateGitHubIntegrationSetting,
+  testGitHubIntegrationSetting,
+  getJiraWebhookIntegrationSetting,
+  updateJiraWebhookIntegrationSetting,
+  getWebhookIntegrationSetting,
+  updateWebhookIntegrationSetting,
+  testWebhookIntegrationSetting,
 } from "@/client/sdk.gen";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type {
   JiraSetting,
   RedmineSetting,
   TeamsAlertSetting,
   MailAlertSetting,
+  GitHubSetting,
+  JiraWebhookSetting,
+  WebhookSetting,
+  WebhookFormat,
 } from "@/client/types.gen";
 
 function num(v: string): number {
@@ -558,15 +577,373 @@ function MailCard() {
   );
 }
 
+/* ---------------------------- GitHub ---------------------------- */
+
+function GitHubCard() {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState<GitHubSetting>({});
+
+  const { data } = useQuery({
+    queryKey: ["integration-github"],
+    queryFn: async () => (await getGitHubIntegrationSetting({ throwOnError: true })).data,
+  });
+  useEffect(() => {
+    if (data) setForm(data);
+  }, [data]);
+
+  const save = useMutation({
+    mutationFn: async (body: GitHubSetting) => {
+      await updateGitHubIntegrationSetting({ body, throwOnError: true });
+    },
+    onSuccess: () => {
+      toast.success("GitHub settings saved");
+      queryClient.invalidateQueries({ queryKey: ["integration-github"] });
+    },
+    onError: () => toast.error("Failed to save GitHub settings"),
+  });
+
+  const test = useMutation({
+    mutationFn: async (body: GitHubSetting) => {
+      await updateGitHubIntegrationSetting({ body, throwOnError: true });
+      queryClient.invalidateQueries({ queryKey: ["integration-github"] });
+      return (await testGitHubIntegrationSetting({ throwOnError: true })).data;
+    },
+    onSuccess: (ok) =>
+      ok ? toast.success("GitHub connection OK") : toast.error("GitHub test failed"),
+    onError: () => toast.error("GitHub test failed"),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>GitHub Issues</CardTitle>
+            <CardDescription>Create issues from findings.</CardDescription>
+          </div>
+          <Switch
+            checked={form.active ?? false}
+            onCheckedChange={(v) => save.mutate({ ...form, active: v })}
+            aria-label="Enable GitHub"
+          />
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Button variant="outline" onClick={() => setOpen(true)}>
+          Configure
+        </Button>
+      </CardContent>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>GitHub Configuration</DialogTitle>
+          </DialogHeader>
+          <form
+            id="github-form"
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              save.mutate(form);
+              setOpen(false);
+            }}
+          >
+            <div className="space-y-2">
+              <Label htmlFor="github-apiurl">API URL</Label>
+              <Input
+                id="github-apiurl"
+                placeholder="https://api.github.com"
+                value={form.apiUrl ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, apiUrl: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="github-token">Token</Label>
+              <Input
+                id="github-token"
+                type="password"
+                placeholder="••••••••"
+                value={form.token ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, token: e.target.value }))}
+              />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="github-owner">Owner</Label>
+                <Input
+                  id="github-owner"
+                  value={form.owner ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, owner: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="github-repo">Repository</Label>
+                <Input
+                  id="github-repo"
+                  value={form.repo ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, repo: e.target.value }))}
+                />
+              </div>
+            </div>
+          </form>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              type="button"
+              disabled={test.isPending}
+              onClick={() => test.mutate(form)}
+            >
+              {test.isPending ? "Testing…" : "Test"}
+            </Button>
+            <Button type="submit" form="github-form" disabled={save.isPending}>
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </Card>
+  );
+}
+
+/* ---------------------- Jira Webhook (status sync) ---------------------- */
+
+function JiraWebhookCard() {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState<JiraWebhookSetting>({});
+
+  const { data } = useQuery({
+    queryKey: ["integration-jira-webhook"],
+    queryFn: async () => (await getJiraWebhookIntegrationSetting({ throwOnError: true })).data,
+  });
+  useEffect(() => {
+    if (data) setForm(data);
+  }, [data]);
+
+  const save = useMutation({
+    mutationFn: async (body: JiraWebhookSetting) => {
+      await updateJiraWebhookIntegrationSetting({ body, throwOnError: true });
+    },
+    onSuccess: () => {
+      toast.success("Jira webhook saved");
+      queryClient.invalidateQueries({ queryKey: ["integration-jira-webhook"] });
+    },
+    onError: () => toast.error("Failed to save Jira webhook"),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Jira Webhook</CardTitle>
+            <CardDescription>Sync finding status from Jira transitions.</CardDescription>
+          </div>
+          <Switch
+            checked={form.active ?? false}
+            onCheckedChange={(v) => save.mutate({ ...form, active: v })}
+            aria-label="Enable Jira webhook"
+          />
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Button variant="outline" onClick={() => setOpen(true)}>
+          Configure
+        </Button>
+      </CardContent>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Jira Webhook Configuration</DialogTitle>
+          </DialogHeader>
+          <form
+            id="jira-webhook-form"
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              save.mutate(form);
+              setOpen(false);
+            }}
+          >
+            <p className="text-sm text-muted-foreground">
+              Point a Jira webhook at <code className="rounded bg-muted px-1">/api/integration/jira-webhook</code>{" "}
+              and set the shared token below. Issue transitions then update the linked finding.
+            </p>
+            <div className="space-y-2">
+              <Label htmlFor="jwh-token">Shared Token</Label>
+              <Input
+                id="jwh-token"
+                type="password"
+                placeholder="••••••••"
+                value={form.token ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, token: e.target.value }))}
+              />
+            </div>
+          </form>
+          <DialogFooter>
+            <Button type="submit" form="jira-webhook-form" disabled={save.isPending}>
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </Card>
+  );
+}
+
+/* ---------------------------- Webhook / Slack ---------------------------- */
+
+function WebhookCard() {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState<WebhookSetting>({
+    active: false,
+    securityAlertEvent: false,
+    newFindingEvent: false,
+    fixedFindingEvent: false,
+    needTriageFindingEvent: false,
+    scanCompletedEvent: false,
+    scanFailedEvent: false,
+    projectWithoutMemberEvent: false,
+  });
+
+  const { data } = useQuery({
+    queryKey: ["integration-webhook"],
+    queryFn: async () => (await getWebhookIntegrationSetting({ throwOnError: true })).data,
+  });
+  useEffect(() => {
+    if (data) setForm(data);
+  }, [data]);
+
+  const save = useMutation({
+    mutationFn: async (body: WebhookSetting) => {
+      await updateWebhookIntegrationSetting({ body, throwOnError: true });
+    },
+    onSuccess: () => {
+      toast.success("Webhook settings saved");
+      queryClient.invalidateQueries({ queryKey: ["integration-webhook"] });
+    },
+    onError: () => toast.error("Failed to save webhook settings"),
+  });
+
+  const test = useMutation({
+    mutationFn: async (body: WebhookSetting) => {
+      await updateWebhookIntegrationSetting({ body, throwOnError: true });
+      queryClient.invalidateQueries({ queryKey: ["integration-webhook"] });
+      return (await testWebhookIntegrationSetting({ throwOnError: true })).data;
+    },
+    onSuccess: (ok) =>
+      ok ? toast.success("Webhook delivered") : toast.error("Webhook test failed"),
+    onError: () => toast.error("Webhook test failed"),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Webhook</CardTitle>
+            <CardDescription>Send alerts to Slack or a generic webhook.</CardDescription>
+          </div>
+          <Switch
+            checked={form.active ?? false}
+            onCheckedChange={(v) => save.mutate({ ...form, active: v })}
+            aria-label="Enable Webhook"
+          />
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Button variant="outline" onClick={() => setOpen(true)}>
+          Configure
+        </Button>
+      </CardContent>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Webhook Configuration</DialogTitle>
+          </DialogHeader>
+          <form
+            id="webhook-form"
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              save.mutate(form);
+              setOpen(false);
+            }}
+          >
+            <div className="space-y-2">
+              <Label htmlFor="webhook-url">URL</Label>
+              <Input
+                id="webhook-url"
+                type="password"
+                placeholder="https://hooks.slack.com/services/…"
+                value={form.url ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Format</Label>
+              <Select
+                value={form.format ?? "Generic"}
+                onValueChange={(v) => setForm((f) => ({ ...f, format: v as WebhookFormat }))}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Generic">Generic JSON</SelectItem>
+                  <SelectItem value="Slack">Slack</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Separator />
+            <p className="text-sm font-medium">Events</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {ALERT_EVENTS.map((ev) => (
+                <label key={ev.key} className="flex items-center gap-2 text-sm">
+                  <Switch
+                    checked={Boolean(form[ev.key as keyof WebhookSetting])}
+                    onCheckedChange={(v) => setForm((f) => ({ ...f, [ev.key]: v }))}
+                  />
+                  {ev.label}
+                </label>
+              ))}
+            </div>
+          </form>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              type="button"
+              disabled={test.isPending}
+              onClick={() => test.mutate(form)}
+            >
+              {test.isPending ? "Testing…" : "Test"}
+            </Button>
+            <Button type="submit" form="webhook-form" disabled={save.isPending}>
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </Card>
+  );
+}
+
 export default function IntegrationPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-xl font-bold">Integrations</h1>
       <div className="grid gap-6 lg:grid-cols-2">
         <JiraCard />
+        <JiraWebhookCard />
         <RedmineCard />
+        <GitHubCard />
         <TeamsCard />
         <MailCard />
+        <WebhookCard />
       </div>
     </div>
   );

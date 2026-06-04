@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Bug, ListTodo, MessagesSquare, Mail, Settings2 } from "lucide-react";
+import { Bug, ListTodo, MessagesSquare, Mail, Settings2, CircleDot, Webhook } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -28,15 +28,21 @@ import {
   updateTeamsIntegrationProject,
   getMailIntegrationProject,
   updateMailIntegrationProject,
+  getGitHubIntegrationProject,
+  updateGitHubIntegrationProject,
+  getWebhookIntegrationProject,
+  updateWebhookIntegrationProject,
 } from "@/client/sdk.gen";
 import type {
   JiraProjectSetting,
   RedmineProjectSetting,
   TeamsProjectSetting,
   MailProjectAlertSetting,
+  GitHubProjectSetting,
+  WebhookProjectSetting,
 } from "@/client/types.gen";
 
-type IntegrationKey = "jira" | "redmine" | "teams" | "mail";
+type IntegrationKey = "jira" | "redmine" | "github" | "teams" | "mail" | "webhook";
 
 const ALERT_EVENTS: { key: keyof MailProjectAlertSetting; label: string }[] = [
   { key: "securityAlertEvent", label: "Security alert" },
@@ -92,8 +98,10 @@ export default function ProjectIntegrationPage() {
   const cards: { key: IntegrationKey; label: string; icon: typeof Bug; description: string }[] = [
     { key: "jira", label: "Jira", icon: Bug, description: "Create Jira issues from findings." },
     { key: "redmine", label: "Redmine", icon: ListTodo, description: "Create Redmine issues from findings." },
+    { key: "github", label: "GitHub Issues", icon: CircleDot, description: "Create GitHub issues from findings." },
     { key: "teams", label: "Microsoft Teams", icon: MessagesSquare, description: "Send alerts to a Teams channel." },
     { key: "mail", label: "Mail", icon: Mail, description: "Send email alerts to members." },
+    { key: "webhook", label: "Webhook", icon: Webhook, description: "Send alerts to a Slack or generic webhook." },
   ];
 
   return (
@@ -102,7 +110,9 @@ export default function ProjectIntegrationPage() {
       <div className="grid gap-4 sm:grid-cols-2">
         {cards.map((c) => {
           const Icon = c.icon;
-          const isOn = enabled?.[c.key] ?? false;
+          // ProjectIntegration uses camelCase keys (gitHub); map our card key
+          const enabledKey = c.key === "github" ? "gitHub" : c.key;
+          const isOn = enabled?.[enabledKey as keyof typeof enabled] ?? false;
           return (
             <Card key={c.key} className="flex flex-row items-start justify-between gap-4 p-4">
               <div className="flex gap-3">
@@ -139,7 +149,169 @@ export default function ProjectIntegrationPage() {
       {openKey === "mail" && (
         <MailDialog projectId={id} onClose={() => setOpenKey(null)} onSaved={invalidate} />
       )}
+      {openKey === "github" && (
+        <GitHubDialog projectId={id} onClose={() => setOpenKey(null)} onSaved={invalidate} />
+      )}
+      {openKey === "webhook" && (
+        <WebhookDialog projectId={id} onClose={() => setOpenKey(null)} onSaved={invalidate} />
+      )}
     </div>
+  );
+}
+
+function GitHubDialog({
+  projectId,
+  onClose,
+  onSaved,
+}: {
+  projectId: string;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const { data } = useQuery({
+    queryKey: ["project-integration-github", projectId],
+    queryFn: async () =>
+      (await getGitHubIntegrationProject({ path: { projectId }, throwOnError: true })).data,
+  });
+  const [form, setForm] = useState<GitHubProjectSetting>({ active: false });
+  useEffect(() => {
+    if (data) setForm(data);
+  }, [data]);
+
+  const mut = useMutation({
+    mutationFn: async () =>
+      (await updateGitHubIntegrationProject({ path: { projectId }, body: form, throwOnError: true })).data,
+    onSuccess: () => {
+      toast.success("GitHub settings saved.");
+      onSaved();
+      onClose();
+    },
+    onError: () => toast.error("Could not save GitHub settings."),
+  });
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>GitHub Issues</DialogTitle>
+          <DialogDescription>Owner/repo for this project (credentials come from global settings).</DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="gh-active">Enabled</Label>
+            <Switch
+              id="gh-active"
+              checked={form.active ?? false}
+              onCheckedChange={(v) => setForm({ ...form, active: v })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Owner</Label>
+            <Input value={form.owner ?? ""} onChange={(e) => setForm({ ...form, owner: e.target.value })} />
+          </div>
+          <div className="space-y-2">
+            <Label>Repository</Label>
+            <Input value={form.repo ?? ""} onChange={(e) => setForm({ ...form, repo: e.target.value })} />
+          </div>
+          <div className="space-y-2">
+            <Label>Labels (comma-separated)</Label>
+            <Input
+              value={(form.labels ?? []).join(", ")}
+              onChange={(e) =>
+                setForm({ ...form, labels: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })
+              }
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={() => mut.mutate()} disabled={mut.isPending}>
+            {mut.isPending ? "Saving…" : "Save"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function WebhookDialog({
+  projectId,
+  onClose,
+  onSaved,
+}: {
+  projectId: string;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const { data } = useQuery({
+    queryKey: ["project-integration-webhook", projectId],
+    queryFn: async () =>
+      (await getWebhookIntegrationProject({ path: { projectId }, throwOnError: true })).data,
+  });
+  const [form, setForm] = useState<WebhookProjectSetting>({
+    active: false,
+    securityAlertEvent: false,
+    newFindingEvent: false,
+    fixedFindingEvent: false,
+    needTriageFindingEvent: false,
+    scanCompletedEvent: false,
+    scanFailedEvent: false,
+  });
+  useEffect(() => {
+    if (data) setForm(data);
+  }, [data]);
+
+  const mut = useMutation({
+    mutationFn: async () =>
+      (await updateWebhookIntegrationProject({ path: { projectId }, body: form, throwOnError: true })).data,
+    onSuccess: () => {
+      toast.success("Webhook settings saved.");
+      onSaved();
+      onClose();
+    },
+    onError: () => toast.error("Could not save webhook settings."),
+  });
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Webhook</DialogTitle>
+          <DialogDescription>Per-project alert events (URL comes from global settings).</DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="wh-active">Enabled</Label>
+            <Switch
+              id="wh-active"
+              checked={form.active ?? false}
+              onCheckedChange={(v) => setForm({ ...form, active: v })}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {ALERT_EVENTS.map((ev) => (
+              <label key={ev.key} className="flex items-center gap-2 text-sm">
+                <Switch
+                  checked={Boolean(form[ev.key as keyof WebhookProjectSetting])}
+                  onCheckedChange={(v) => setForm({ ...form, [ev.key]: v })}
+                />
+                {ev.label}
+              </label>
+            ))}
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={() => mut.mutate()} disabled={mut.isPending}>
+            {mut.isPending ? "Saving…" : "Save"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
