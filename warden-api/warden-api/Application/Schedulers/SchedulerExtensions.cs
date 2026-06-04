@@ -1,3 +1,4 @@
+using Warden.Application.Module.Ai.Triage;
 using Warden.Application.Schedulers.Job;
 using Quartz;
 
@@ -10,6 +11,8 @@ public static class SchedulerExtensions
         builder.AddQuartz(configure =>
         {
             configure.UseDefaultThreadPool(c => c.MaxConcurrency = 10);
+            // AI auto-triage (suggest-only) daily at 06:00
+            configure.AddAiTriageJob();
             // security alert at 08:00 AM, only on Monday
             var securityAlertJobKey = new JobKey(nameof(WeeklySecurityAlertJob));
             configure
