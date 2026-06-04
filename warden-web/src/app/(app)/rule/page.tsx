@@ -91,7 +91,12 @@ export default function RuleListPage() {
     {
       key: "id",
       header: "Rule",
-      cell: (r) => <span className="font-mono text-sm">{r.id ?? "—"}</span>,
+      className: "max-w-md",
+      cell: (r) => (
+        <span title={r.id ?? undefined} className="block truncate font-mono text-sm">
+          {r.id ?? "—"}
+        </span>
+      ),
     },
     {
       key: "scanner",
@@ -171,7 +176,7 @@ export default function RuleListPage() {
           <SelectContent>
             <SelectItem value={ALL}>All scanners</SelectItem>
             {scanners?.map((s) => (
-              <SelectItem key={s.id ?? s.name ?? ""} value={s.id ?? ""}>
+              <SelectItem key={s.id ?? s.name ?? ""} value={s.id ?? s.name ?? "unknown"}>
                 {s.name}
               </SelectItem>
             ))}

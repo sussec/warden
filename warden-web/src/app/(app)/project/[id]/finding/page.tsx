@@ -57,7 +57,12 @@ function ProjectFindingPageInner() {
     {
       key: "name",
       header: "Finding",
-      cell: (f) => <span className="font-medium">{f.name ?? f.identity}</span>,
+      className: "max-w-md",
+      cell: (f) => (
+        <span title={f.name ?? f.identity ?? undefined} className="block truncate font-medium">
+          {f.name ?? f.identity}
+        </span>
+      ),
     },
     {
       key: "scanner",
@@ -104,7 +109,7 @@ function ProjectFindingPageInner() {
             setPage((p) => ({ ...p, page: 1 }));
           }}
         >
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-44">
             <SelectValue placeholder="Severity" />
           </SelectTrigger>
           <SelectContent>
@@ -123,7 +128,7 @@ function ProjectFindingPageInner() {
             setPage((p) => ({ ...p, page: 1 }));
           }}
         >
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-44">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>

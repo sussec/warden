@@ -39,9 +39,9 @@ import type { FindingDetail, FindingStatus } from "@/client/types.gen";
 function MetaRow({ label, children }: { label: string; children: React.ReactNode }) {
   if (children === null || children === undefined || children === "") return null;
   return (
-    <div className="flex flex-col gap-0.5">
+    <div className="flex min-w-0 flex-col gap-0.5">
       <dt className="text-xs font-medium uppercase text-muted-foreground">{label}</dt>
-      <dd className="text-sm">{children}</dd>
+      <dd className="break-all text-sm">{children}</dd>
     </div>
   );
 }

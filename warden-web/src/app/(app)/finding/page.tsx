@@ -196,10 +196,12 @@ function FindingListPage() {
     {
       key: "name",
       header: "Finding",
+      className: "max-w-md",
       cell: (f) => (
         <Link
           href={`/finding/${f.id}`}
-          className="font-semibold text-primary hover:underline"
+          title={f.name ?? f.identity ?? f.id}
+          className="block truncate font-semibold text-primary hover:underline"
           onClick={(e) => e.stopPropagation()}
         >
           {f.name ?? f.identity ?? f.id}
@@ -290,7 +292,7 @@ function FindingListPage() {
           <SelectContent>
             <SelectItem value="__all">All scanners</SelectItem>
             {(scanners ?? []).map((s: Scanners) => (
-              <SelectItem key={s.name ?? s.id} value={s.name ?? ""}>
+              <SelectItem key={s.name ?? s.id} value={s.name ?? "unknown"}>
                 {s.name}
               </SelectItem>
             ))}

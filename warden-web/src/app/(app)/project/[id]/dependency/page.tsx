@@ -116,7 +116,7 @@ export default function ProjectDependencyPage() {
             setPage((p) => ({ ...p, page: 1 }));
           }}
         >
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-44">
             <SelectValue placeholder="Severity" />
           </SelectTrigger>
           <SelectContent>
@@ -135,7 +135,7 @@ export default function ProjectDependencyPage() {
             setPage((p) => ({ ...p, page: 1 }));
           }}
         >
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-44">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
