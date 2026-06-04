@@ -20,6 +20,7 @@ public interface IAuthService
     Task<SignInResponse> PasswordSignInAsync(SignInRequest request);
     Task<SignInResponse> RefreshTokenAsync(RefreshTokenRequest request);
     Task<bool> ResetPasswordAsync(ResetPasswordRequest request);
+    Task<bool> ChangePasswordAsync(Guid userId, ChangePasswordRequest request);
     Task<bool> LogoutAsync(LogoutRequest request);
 }
 
@@ -73,6 +74,7 @@ public class AuthService(
 
     public async Task<SignInResponse> RefreshTokenAsync(RefreshTokenRequest request)
     {
+        if (string.IsNullOrEmpty(request.RefreshToken)) throw new UnauthorizedException();
         var result = await new RefreshTokenCommand(userManager).ExecuteAsync(request);
         if (result.IsFailed)
         {
@@ -87,8 +89,19 @@ public class AuthService(
             .ExecuteAsync(request)).GetResult();
     }
 
+    public async Task<bool> ChangePasswordAsync(Guid userId, ChangePasswordRequest request)
+    {
+        var user = await userManager.FindByIdAsync(userId.ToString());
+        if (user == null) throw new BadRequestException("User not found");
+        var result = await userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+        if (!result.Succeeded)
+            throw new BadRequestException(string.Join("; ", result.Errors.Select(e => e.Description)));
+        return true;
+    }
+
     public Task<bool> LogoutAsync(LogoutRequest request)
     {
+        if (string.IsNullOrEmpty(request.Token)) return Task.FromResult(true);
         return userManager.LogoutAsync(request.Token);
     }
 }
