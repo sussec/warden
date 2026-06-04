@@ -8,7 +8,7 @@ We developed an [analyzer](https://github.com/sussec/warden-semgrep) that wraps 
 | ENV                    | Description                                                                                                        |
 |------------------------|--------------------------------------------------------------------------------------------------------------------|
 | SEMGREP_RULES          | Semgrep rules config                                                                                               |
-| SEMGREP_SEVERITY       | Semgrep severify filter (semgrep --severity). Option:  INFO, WARNING, ERROR                                        |
+| SEMGREP_SEVERITY       | Semgrep severity filter (semgrep --severity). Option:  INFO, WARNING, ERROR                                        |
 | SEMGREP_EXCLUDED_PATHS | Semgrep exclude path (semgrep --exclude)                                                                           |
 | SEMGREP_APP_TOKEN      | Semgrep app token. See more [here](https://semgrep.dev/docs/semgrep-ci/ci-environment-variables#semgrep_app_token) |
 | SEMGREP_PRO            | Scan with pro engine. Require SEMGREP_APP_TOKEN variable                                                           |

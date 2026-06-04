@@ -1,5 +1,5 @@
-# General
-To configure integration. Log in to admin account and go to **Setting > Integration**
+# Integration
+To configure integrations, sign in with an administrator account and navigate to **Setting > Integration**
 ![](../assets/images/setting_integration.png)
 
 ### Mail

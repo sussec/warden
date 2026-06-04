@@ -9,7 +9,8 @@
 [![License](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/ghcr.io-sussec%2Fwarden-2496ED?logo=docker&logoColor=white)](https://github.com/orgs/sussec/packages)
 [![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)](warden-api)
-[![Angular 19](https://img.shields.io/badge/Angular-19-DD0031?logo=angular&logoColor=white)](warden-ui)
+[![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)](warden-web)
+[![Bun](https://img.shields.io/badge/Bun-1.x-000000?logo=bun&logoColor=white)](warden-web)
 
 [Documentation](https://sussec.github.io/warden) · [Quick Start](#quick-start) · [CI/CD Integration](#cicd-integration) · [Support](#support)
 
@@ -53,12 +54,13 @@ Techanv Warden is a self-hosted **DevSecOps, ASPM (Application Security Posture 
 
 ![Architecture](docs/assets/images/warden_architecture.webp)
 
-Warden ships as a **single container image** (`ghcr.io/sussec/warden`) bundling the .NET 10 API and Angular UI, backed by PostgreSQL. Scanner wrapper images run inside your existing CI pipelines and push results to Warden over HTTPS using scoped CI access tokens — Warden never needs access to your source code or build infrastructure.
+Warden deploys as three services: the web application (`ghcr.io/sussec/warden-web`), the backend API (`ghcr.io/sussec/warden`), and PostgreSQL. The web service is the single entry point and proxies all API traffic same-origin; sessions are delivered as httpOnly cookies. Scanner wrapper images run inside your existing CI pipelines and push results to Warden over HTTPS using scoped CI access tokens — Warden never needs access to your source code or build infrastructure.
 
 | Component | Technology |
 |---|---|
-| `warden-api` | .NET 10 · ASP.NET Core · EF Core · PostgreSQL · Quartz.NET |
-| `warden-ui` | Angular 19 · Tailwind CSS · PrimeNG |
+| `warden-api` | .NET 10 · ASP.NET Core · EF Core · PostgreSQL (pgvector) · Quartz.NET |
+| `warden-web` | Next.js 16 · React 19 · Tailwind CSS 4 · TanStack Query · Bun |
+| API contract | OpenAPI specification at `/openapi/v1.json` drives a generated, fully typed web client; MCP endpoint at `/mcp` |
 | Scanners | Semgrep (SAST) · Gitleaks (secrets) · Trivy (SCA & containers) |
 
 ## Quick Start
@@ -66,6 +68,14 @@ Warden ships as a **single container image** (`ghcr.io/sussec/warden`) bundling 
 ```yaml
 # docker-compose.yml
 services:
+  web:
+    image: ghcr.io/sussec/warden-web:latest
+    depends_on: [warden]
+    environment:
+      API_INTERNAL_URL: http://warden:8080
+    ports:
+      - "8080:3000"                    # single entry point
+
   warden:
     image: ghcr.io/sussec/warden:latest
     depends_on: [db]
@@ -77,13 +87,14 @@ services:
       SYSTEM_PASSWORD: "ChangeMe!"     # initial admin password
       ACCESS_TOKEN_KEY: ""             # set a random 32+ char secret
       REFRESH_TOKEN_KEY: ""            # set a random 32+ char secret
-    ports:
-      - "8080:8080"
+      FRONTEND_URL: http://localhost:8080
+
   db:
     image: pgvector/pgvector:pg18
     environment:
       POSTGRES_USER: warden
       POSTGRES_PASSWORD: warden
+      POSTGRES_DB: warden
       PGDATA: /data/postgres
     volumes:
       - warden_db:/data/postgres
@@ -97,7 +108,7 @@ volumes:
 docker compose up -d
 ```
 
-Then open `http://localhost:8080` and sign in as `system` with the password you configured. Full installation guide: [sussec.github.io/warden](https://sussec.github.io/warden).
+Then open `http://localhost:8080` and sign in as `system` with the password you configured. To build from source instead, clone the repository, copy `.env.example` to `.env`, and run `docker compose up -d --build`. Full installation guide: [sussec.github.io/warden](https://sussec.github.io/warden).
 
 ## CI/CD Integration
 

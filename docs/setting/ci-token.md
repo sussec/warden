@@ -1,6 +1,7 @@
 # CI Access Token
-The CI Token is an access token used by scanner tools to communicate with the Techanv Warden.
 
-To manage the **CI Access Token**. Log in to admin account and navigate to **Setting > Access Token**
+A CI access token authenticates scanner tools with the Techanv Warden API. Tokens are scoped to result ingestion and should be stored as protected CI/CD variables, never committed to source control.
+
+To manage CI access tokens, sign in with an administrator account and navigate to **Setting > Access Token**. The token value is displayed once at creation time.
 
 ![](../assets/images/setting_access_token.png)

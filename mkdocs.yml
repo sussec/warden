@@ -1,9 +1,11 @@
 site_name: Techanv Warden
 site_url: https://sussec.github.io/warden
-site_author: Duo
+site_author: Techanv Consulting
 site_description: >-
-  Techanv Warden
-repo_name: Techanv Warden
+  Techanv Warden is a self-hosted application security posture management
+  (ASPM) and vulnerability management platform that consolidates SAST,
+  secret-detection, and SCA findings from CI/CD pipelines.
+repo_name: sussec/warden
 repo_url: https://github.com/sussec/warden
 edit_uri: "blob/main/docs/"
 copyright: Copyright &copy; 2026 Techanv Consulting
@@ -55,6 +57,7 @@ markdown_extensions:
 
 nav:
   - Getting Started:
+    - Overview: index.md
     - Installation: installation.md
     - System Setting:
       - General: setting/general.md
