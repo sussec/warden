@@ -1,6 +1,6 @@
 <div align="center">
 
-![Techanv Warden](docs/assets/images/warden_banner.png)
+![Techanv Warden](docs/assets/images/warden_banner.webp)
 
 # Techanv Warden
 
@@ -35,23 +35,23 @@ Techanv Warden is a self-hosted **DevSecOps, ASPM (Application Security Posture 
 
 **Executive dashboard** — organization-wide security posture, severity distribution, and trends at a glance.
 
-![Warden dashboard](docs/assets/images/warden_dashboard.png)
+![Warden dashboard](docs/assets/images/warden_dashboard.webp)
 
 **Findings triage** — filter by severity, scanner, rule, branch, or project; bulk-update statuses; export to Excel or PDF.
 
-![Findings triage](docs/assets/images/warden_findings.png)
+![Findings triage](docs/assets/images/warden_findings.webp)
 
 **Merge request feedback** — findings are commented directly on the MR/PR that introduced them.
 
-![Pipeline integration](docs/assets/images/warden_pipeline.png)
+![Pipeline integration](docs/assets/images/warden_pipeline.webp)
 
 **Weekly security digest** — scheduled email and Teams reports keep stakeholders informed without dashboard fatigue.
 
-![Weekly alerts](docs/assets/images/warden_alerts.png)
+![Weekly alerts](docs/assets/images/warden_alerts.webp)
 
 ## Architecture
 
-![Architecture](docs/assets/images/warden_architecture.png)
+![Architecture](docs/assets/images/warden_architecture.webp)
 
 Warden ships as a **single container image** (`ghcr.io/sussec/warden`) bundling the .NET 8 API and Angular UI, backed by PostgreSQL. Scanner wrapper images run inside your existing CI pipelines and push results to Warden over HTTPS using scoped CI access tokens — Warden never needs access to your source code or build infrastructure.
 
