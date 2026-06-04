@@ -27,7 +27,7 @@ public class JiraTest
     {
         string title = "feat/sec-01-fix-sqli";
         var issueId = title.JiraIssueId();
-        Console.WriteLine(!issueId.IsNullOrEmpty() ? $"Found issue ID: {issueId}" : "No issue ID found.");
+        Console.WriteLine(!string.IsNullOrEmpty(issueId) ? $"Found issue ID: {issueId}" : "No issue ID found.");
     }
 
     [Test]

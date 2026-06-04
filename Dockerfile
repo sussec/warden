@@ -1,10 +1,10 @@
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build_api_deps
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build_api_deps
 WORKDIR /src
 COPY warden-api/warden-api/warden-api.csproj .
 RUN dotnet restore "warden-api.csproj"

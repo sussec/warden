@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc.Controllers;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 
 namespace Warden.Api;
 
@@ -21,17 +21,10 @@ public static class SwaggerExtension
                 BearerFormat = "JWT",
                 Scheme = "bearer"
             });
-            config.AddSecurityRequirement(new OpenApiSecurityRequirement
+            config.AddSecurityRequirement(doc => new OpenApiSecurityRequirement
             {
                 {
-                    new OpenApiSecurityScheme
-                    {
-                        Reference = new OpenApiReference
-                        {
-                            Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                        }
-                    },
+                    new OpenApiSecuritySchemeReference("Bearer", doc),
                     []
                 }
             });

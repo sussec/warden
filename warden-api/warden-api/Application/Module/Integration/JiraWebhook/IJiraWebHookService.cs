@@ -26,7 +26,7 @@ public class JiraWebHookService(AppDbContext context, ILogger<JiraWebHookService
             if (setting.Active)
             {
                 var jiraIssueId = model.GitCommit.Branch.JiraIssueId();
-                if (jiraIssueId.IsNullOrEmpty())
+                if (string.IsNullOrEmpty(jiraIssueId))
                 {
                     jiraIssueId = model.GitCommit.CommitTitle?.JiraIssueId();
                 }

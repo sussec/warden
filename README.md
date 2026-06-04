@@ -8,7 +8,7 @@
 
 [![License](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/ghcr.io-sussec%2Fwarden-2496ED?logo=docker&logoColor=white)](https://github.com/orgs/sussec/packages)
-[![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet&logoColor=white)](warden-api)
+[![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)](warden-api)
 [![Angular 19](https://img.shields.io/badge/Angular-19-DD0031?logo=angular&logoColor=white)](warden-ui)
 
 [Documentation](https://sussec.github.io/warden) · [Quick Start](#quick-start) · [CI/CD Integration](#cicd-integration) · [Support](#support)
@@ -53,11 +53,11 @@ Techanv Warden is a self-hosted **DevSecOps, ASPM (Application Security Posture 
 
 ![Architecture](docs/assets/images/warden_architecture.webp)
 
-Warden ships as a **single container image** (`ghcr.io/sussec/warden`) bundling the .NET 8 API and Angular UI, backed by PostgreSQL. Scanner wrapper images run inside your existing CI pipelines and push results to Warden over HTTPS using scoped CI access tokens — Warden never needs access to your source code or build infrastructure.
+Warden ships as a **single container image** (`ghcr.io/sussec/warden`) bundling the .NET 10 API and Angular UI, backed by PostgreSQL. Scanner wrapper images run inside your existing CI pipelines and push results to Warden over HTTPS using scoped CI access tokens — Warden never needs access to your source code or build infrastructure.
 
 | Component | Technology |
 |---|---|
-| `warden-api` | .NET 8 · ASP.NET Core · EF Core · PostgreSQL · Quartz.NET |
+| `warden-api` | .NET 10 · ASP.NET Core · EF Core · PostgreSQL · Quartz.NET |
 | `warden-ui` | Angular 19 · Tailwind CSS · PrimeNG |
 | Scanners | Semgrep (SAST) · Gitleaks (secrets) · Trivy (SCA & containers) |
 
