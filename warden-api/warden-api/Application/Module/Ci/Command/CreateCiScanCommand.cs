@@ -17,7 +17,10 @@ public class CreateCiScanCommand(AppDbContext context)
 {
     public async Task<Result<CiScanInfo>> ExecuteAsync(CiScanRequest request)
     {
-        if ((request.Type is ScannerType.Sast or ScannerType.Dependency or ScannerType.Secret) == false)
+        // SAST/DAST/secret/IaC report findings; dependency/container report packages.
+        // Ingestion routes by scan id, not type, so all modeled types are accepted.
+        if ((request.Type is ScannerType.Sast or ScannerType.Dependency or ScannerType.Secret
+                or ScannerType.Container or ScannerType.Dast or ScannerType.Iast) == false)
         {
             return Result.Fail($"Not implemented {request.Type.ToString()}");
         }

@@ -39,3 +39,50 @@ Each scanner creates a scan (`source: Local`), uploads findings or dependencies 
 | `trivy` | SCA / dependencies | `aquasec/trivy` |
 
 For pipeline integration (GitLab CI, GitHub Actions), the same containers run as CI jobs — see the per-scanner pages.
+
+### Available scanners
+
+| Scanner | Type | Scans | Compose service |
+|---|---|---|---|
+| Semgrep | SAST | source code | semgrep |
+| Trivy IaC | SAST (misconfig) | Terraform, K8s, Dockerfile | trivy-iac |
+| Gitleaks | Secret | working tree | gitleaks |
+| TruffleHog | Secret | filesystem / history | trufflehog |
+| Trivy | SCA | dependencies | trivy |
+| Grype | SCA | dependencies | grype |
+| Trivy Image | Container | container images (set SCAN_IMAGE_REF) | trivy-image |
+| OWASP ZAP | DAST | running URL (set SCAN_TARGET_URL) | zap |
+| Nuclei | DAST | running URL (set SCAN_TARGET_URL) | nuclei |
+
+Examples:
+
+```bash
+# code / dependency / secret / IaC — mount the repo
+SCAN_TARGET=/path/to/repo docker compose --profile scan run --rm grype
+SCAN_TARGET=/path/to/repo docker compose --profile scan run --rm trufflehog
+SCAN_TARGET=/path/to/repo docker compose --profile scan run --rm trivy-iac
+
+# container image
+SCAN_IMAGE_REF=myorg/app:1.2.3 docker compose --profile scan run --rm trivy-image
+
+# dynamic scan of a running app
+SCAN_TARGET_URL=https://staging.example.com docker compose --profile scan run --rm zap
+SCAN_TARGET_URL=https://staging.example.com docker compose --profile scan run --rm nuclei
+```
+
+## SARIF import
+
+Any tool that emits SARIF 2.1.0 (CodeQL, Bandit, gosec, Checkov, and dozens more) can push findings without a wrapper:
+
+```
+POST /api/ci/sarif
+CI-TOKEN: <token>
+{
+  "scan": { "source": "Local", "repoId": "my-repo", "repoUrl": "https://local/my-repo",
+             "gitAction": "CommitBranch", "scanTitle": "CodeQL", "commitBranch": "main",
+             "commitHash": "<sha>", "scanner": "codeql", "type": "Sast", "isDefault": true },
+  "sarif": { "version": "2.1.0", "runs": [ ... ] }
+}
+```
+
+Severity uses the SARIF `security-severity` property when present (>=9 Critical, >=7 High, >=4 Medium, >0 Low), otherwise the result level. Findings flow through the same dedup and lifecycle as native scanners.

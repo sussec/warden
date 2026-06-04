@@ -775,6 +775,83 @@ export type Sla = {
     info?: number;
 };
 
+export type SarifArtifactContent = {
+    text?: string | null;
+};
+
+export type SarifArtifactLocation = {
+    uri?: string | null;
+};
+
+export type SarifLocation = {
+    physicalLocation?: SarifPhysicalLocation;
+};
+
+export type SarifLog = {
+    version?: string | null;
+    runs?: Array<SarifRun> | null;
+};
+
+export type SarifMessage = {
+    text?: string | null;
+};
+
+export type SarifPhysicalLocation = {
+    artifactLocation?: SarifArtifactLocation;
+    region?: SarifRegion;
+};
+
+export type SarifPropertyBag = {
+    'security-severity'?: string | null;
+    tags?: Array<string> | null;
+    cwe?: string | null;
+};
+
+export type SarifRegion = {
+    startLine?: number | null;
+    endLine?: number | null;
+    startColumn?: number | null;
+    endColumn?: number | null;
+    snippet?: SarifArtifactContent;
+};
+
+export type SarifReportingConfiguration = {
+    level?: string | null;
+};
+
+export type SarifReportingDescriptor = {
+    id?: string | null;
+    name?: string | null;
+    shortDescription?: SarifMessage;
+    fullDescription?: SarifMessage;
+    helpUri?: string | null;
+    defaultConfiguration?: SarifReportingConfiguration;
+    properties?: SarifPropertyBag;
+};
+
+export type SarifResult = {
+    ruleId?: string | null;
+    ruleIndex?: number | null;
+    level?: string | null;
+    message?: SarifMessage;
+    locations?: Array<SarifLocation> | null;
+    properties?: SarifPropertyBag;
+};
+
+export type SarifRun = {
+    tool?: SarifTool;
+    results?: Array<SarifResult> | null;
+};
+
+export type SarifTool = {
+    driver?: SarifToolComponent;
+};
+
+export type SarifToolComponent = {
+    name?: string | null;
+    rules?: Array<SarifReportingDescriptor> | null;
+};
+
 export type SastStatistic = {
     severity: SeveritySeries;
     status: SastStatus;
@@ -1039,6 +1116,11 @@ export type UploadCiFindingResponse = {
     openFindings: Array<CiFinding> | null;
     fixedFindings: Array<CiFinding> | null;
     isBlock: boolean;
+};
+
+export type UploadSarifRequest = {
+    scan: CiScanRequest;
+    sarif: SarifLog;
 };
 
 export type UserDetail = {
@@ -2645,6 +2727,22 @@ export type SyncRulesResponses = {
 };
 
 export type SyncRulesResponse = SyncRulesResponses[keyof SyncRulesResponses];
+
+export type UploadSarifData = {
+    body?: UploadSarifRequest;
+    path?: never;
+    query?: never;
+    url: '/api/ci/sarif';
+};
+
+export type UploadSarifResponses = {
+    /**
+     * OK
+     */
+    200: UploadCiFindingResponse;
+};
+
+export type UploadSarifResponse = UploadSarifResponses[keyof UploadSarifResponses];
 
 export type GetScannersData = {
     body?: ScannerFilter;

@@ -93,5 +93,74 @@ services:
     volumes:
       - ${SCAN_TARGET:-.}:/src:ro
 
+  # SCA second opinion + SBOM-grade dependency resolution
+  grype:
+    profiles: ["scan"]
+    build:
+      context: ./scanners
+      dockerfile: grype/Dockerfile
+    pull_policy: build
+    environment: *scanner-env
+    volumes:
+      - ${SCAN_TARGET:-.}:/src:ro
+
+  # git-history secret detection (complements gitleaks working-tree scan)
+  trufflehog:
+    profiles: ["scan"]
+    build:
+      context: ./scanners
+      dockerfile: trufflehog/Dockerfile
+    pull_policy: build
+    environment: *scanner-env
+    volumes:
+      - ${SCAN_TARGET:-.}:/src:ro
+
+  # IaC / misconfiguration scanning (Terraform, K8s, Dockerfile)
+  trivy-iac:
+    profiles: ["scan"]
+    build:
+      context: ./scanners
+      dockerfile: trivy-iac/Dockerfile
+    pull_policy: build
+    environment: *scanner-env
+    volumes:
+      - ${SCAN_TARGET:-.}:/src:ro
+
+  # container image vulnerability scanning — set SCAN_IMAGE_REF
+  trivy-image:
+    profiles: ["scan"]
+    build:
+      context: ./scanners
+      dockerfile: trivy-image/Dockerfile
+    pull_policy: build
+    environment:
+      <<: *scanner-env
+      IMAGE_REF: ${SCAN_IMAGE_REF:-}
+    volumes:
+      - ${SCAN_TARGET:-.}:/src:ro
+
+  # DAST against a running target — set SCAN_TARGET_URL (no source mount)
+  zap:
+    profiles: ["scan"]
+    build:
+      context: ./scanners
+      dockerfile: zap/Dockerfile
+    pull_policy: build
+    environment:
+      WARDEN_URL: http://warden:8080
+      WARDEN_TOKEN: ${WARDEN_TOKEN:-}
+      TARGET_URL: ${SCAN_TARGET_URL:-}
+
+  nuclei:
+    profiles: ["scan"]
+    build:
+      context: ./scanners
+      dockerfile: nuclei/Dockerfile
+    pull_policy: build
+    environment:
+      WARDEN_URL: http://warden:8080
+      WARDEN_TOKEN: ${WARDEN_TOKEN:-}
+      TARGET_URL: ${SCAN_TARGET_URL:-}
+
 volumes:
   warden_db:

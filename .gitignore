@@ -52,3 +52,7 @@ Thumbs.db
 
 # mkdocs build output
 site/
+
+# python
+__pycache__/
+*.pyc
