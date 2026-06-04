@@ -51,5 +51,47 @@ services:
       - "54321:5432"
     restart: unless-stopped
 
+  # ---------------------------------------------------------------------------
+  # Security scanners (profile: scan) — run on demand against a local checkout:
+  #   SCAN_TARGET=/path/to/repo docker compose --profile scan run --rm semgrep
+  #   SCAN_TARGET=/path/to/repo docker compose --profile scan run --rm gitleaks
+  #   SCAN_TARGET=/path/to/repo docker compose --profile scan run --rm trivy
+  # Requires WARDEN_TOKEN (Setting > Access Token) in .env.
+  # ---------------------------------------------------------------------------
+  semgrep:
+    profiles: ["scan"]
+    build:
+      context: ./scanners
+      dockerfile: semgrep/Dockerfile
+    pull_policy: build
+    environment: &scanner-env
+      WARDEN_URL: http://warden:8080
+      WARDEN_TOKEN: ${WARDEN_TOKEN:-}
+      REPO_NAME: ${SCAN_REPO_NAME:-}
+      BRANCH: ${SCAN_BRANCH:-}
+      COMMIT: ${SCAN_COMMIT:-}
+    volumes:
+      - ${SCAN_TARGET:-.}:/src:ro
+
+  gitleaks:
+    profiles: ["scan"]
+    build:
+      context: ./scanners
+      dockerfile: gitleaks/Dockerfile
+    pull_policy: build
+    environment: *scanner-env
+    volumes:
+      - ${SCAN_TARGET:-.}:/src:ro
+
+  trivy:
+    profiles: ["scan"]
+    build:
+      context: ./scanners
+      dockerfile: trivy/Dockerfile
+    pull_policy: build
+    environment: *scanner-env
+    volumes:
+      - ${SCAN_TARGET:-.}:/src:ro
+
 volumes:
   warden_db:
