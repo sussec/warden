@@ -5,8 +5,8 @@ import { client } from "@/client/client.gen";
 import { refreshOnce } from "./refresh";
 import { session } from "./session";
 
-// Behavior parity with the Angular AuthInterceptor:
-//  - attach Bearer token to every request
+// Cookie-based auth (httpOnly) — the browser attaches the session cookies on
+// same-origin requests, so no Authorization header is needed here.
 //  - 401 → single-flight refresh, retry original request once, else login redirect
 //  - 400 → surface API error messages as toasts
 let installed = false;
@@ -22,23 +22,11 @@ export function installAuthInterceptors() {
   if (installed) return;
   installed = true;
 
-  client.interceptors.request.use((request) => {
-    const token = session.getAccess();
-    if (token && !request.headers.has("Authorization")) {
-      request.headers.set("Authorization", `Bearer ${token}`);
-    }
-    return request;
-  });
-
   client.interceptors.response.use(async (response, request) => {
     if (response.status === 401 && !request.url.includes("/refresh-token")) {
-      const newToken = await refreshOnce();
-      if (newToken) {
-        const retried = new Request(request, {
-          headers: new Headers(request.headers),
-        });
-        retried.headers.set("Authorization", `Bearer ${newToken}`);
-        return fetch(retried);
+      const refreshed = await refreshOnce();
+      if (refreshed) {
+        return fetch(new Request(request, { headers: new Headers(request.headers) }));
       }
       session.clear();
       if (!window.location.pathname.startsWith("/auth")) redirectToLogin();

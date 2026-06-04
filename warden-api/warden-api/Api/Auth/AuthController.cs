@@ -23,22 +23,38 @@ public class AuthController(
 
     [HttpPost]
     [Route("/api/login")]
-    public Task<SignInResponse> Login(SignInRequest request)
+    public async Task<SignInResponse> Login(SignInRequest request)
     {
-        return authService.PasswordSignInAsync(request);
+        var response = await authService.PasswordSignInAsync(request);
+        AuthCookies.Append(HttpContext, response); // httpOnly session for the web app
+        return response;
     }
 
     [HttpPost]
     [Route("/api/refresh-token")]
-    public Task<SignInResponse> RefreshToken(RefreshTokenRequest request)
+    public async Task<SignInResponse> RefreshToken(RefreshTokenRequest request)
     {
-        return authService.RefreshTokenAsync(request);
+        // header-based clients send the token in the body; the web app relies on the cookie
+        request.RefreshToken ??= Request.Cookies[AuthCookies.Refresh];
+        try
+        {
+            var response = await authService.RefreshTokenAsync(request);
+            AuthCookies.Append(HttpContext, response);
+            return response;
+        }
+        catch
+        {
+            AuthCookies.Clear(HttpContext);
+            throw;
+        }
     }
 
     [HttpPost]
     [Route("/api/logout")]
     public Task<bool> Logout(LogoutRequest request)
     {
+        request.Token ??= Request.Cookies[AuthCookies.Refresh];
+        AuthCookies.Clear(HttpContext);
         return authService.LogoutAsync(request);
     }
 

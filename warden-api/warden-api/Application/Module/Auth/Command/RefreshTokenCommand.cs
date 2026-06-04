@@ -8,7 +8,7 @@ public class RefreshTokenCommand(JwtUserManager userManager)
 {
     public async Task<Result<SignInResponse>> ExecuteAsync(RefreshTokenRequest request)
     {
-        var result = await userManager.RefreshTokenAsync(request.RefreshToken);
+        var result = await userManager.RefreshTokenAsync(request.RefreshToken!);
         if (result.IsUnauthorized)
         {
             Result.Fail("Unauthorized");

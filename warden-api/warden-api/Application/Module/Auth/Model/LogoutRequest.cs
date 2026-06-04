@@ -1,9 +1,7 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace Warden.Application.Module.Auth.Model;
 
 public record LogoutRequest
 {
-    [Required] 
-    public required string Token { get; set; }
+    /// Optional — falls back to the warden_refresh httpOnly cookie.
+    public string? Token { get; set; }
 }

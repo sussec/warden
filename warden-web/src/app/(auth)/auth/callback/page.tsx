@@ -5,19 +5,15 @@ import { Suspense, useEffect } from "react";
 import { toast } from "sonner";
 import { session } from "@/lib/auth/session";
 
-// OIDC return target. The API redirects here with:
-//   ?oidc=true[&message=…][&accessToken=…&refreshToken=…]
+// OIDC return target. The API redirects here with ?oidc=true[&message=…];
+// the session itself arrives as httpOnly cookies (never in the URL).
 function CallbackHandler() {
   const router = useRouter();
   const search = useSearchParams();
 
   useEffect(() => {
     const message = search.get("message");
-    const accessToken = search.get("accessToken");
-    const refreshToken = search.get("refreshToken");
-
-    if (accessToken) {
-      session.set(accessToken, refreshToken);
+    if (session.isAuthenticated()) {
       router.replace("/dashboard");
       return;
     }

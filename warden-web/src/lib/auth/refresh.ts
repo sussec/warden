@@ -1,40 +1,29 @@
 import { session } from "./session";
 
-// Single-flight token refresh: concurrent 401s share one in-flight refresh
-// (port of the Angular interceptor's BehaviorSubject queue).
-let refreshing: Promise<string | null> | null = null;
+// Single-flight token refresh: concurrent 401s share one in-flight refresh.
+// The refresh token travels in the warden_refresh httpOnly cookie; the API
+// rotates both cookies on success.
+let refreshing: Promise<boolean> | null = null;
 
-async function doRefresh(): Promise<string | null> {
-  const refreshToken = session.getRefresh();
-  if (!refreshToken) return null;
+async function doRefresh(): Promise<boolean> {
   try {
-    // Raw fetch on purpose — must bypass the intercepted client to avoid loops.
     const res = await fetch("/api/refresh-token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken }),
+      body: JSON.stringify({}),
     });
     if (!res.ok) {
       session.clear();
-      return null;
+      return false;
     }
-    const data = (await res.json()) as {
-      accessToken?: string | null;
-      refreshToken?: string | null;
-    };
-    if (!data.accessToken) {
-      session.clear();
-      return null;
-    }
-    session.set(data.accessToken, data.refreshToken);
-    return data.accessToken;
+    return true;
   } catch {
     session.clear();
-    return null;
+    return false;
   }
 }
 
-export function refreshOnce(): Promise<string | null> {
+export function refreshOnce(): Promise<boolean> {
   if (!refreshing) {
     refreshing = doRefresh().finally(() => {
       refreshing = null;

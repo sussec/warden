@@ -22,8 +22,8 @@ export function useLogout() {
   const queryClient = useQueryClient();
   return async () => {
     try {
-      const token = session.getRefresh();
-      if (token) await logoutOp({ body: { token } });
+      // refresh token comes from the httpOnly cookie server-side
+      await logoutOp({ body: {} });
     } catch {
       /* best-effort server-side token revoke */
     }

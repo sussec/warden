@@ -43,10 +43,9 @@ public class OpenIdConnectController(
 
         var result = await authService.OpenIdConnectSignInAsync(email);
         var queryParams = "oidc=true";
-        if (!string.IsNullOrEmpty(result.Message)) queryParams += $"&message={result.Message}";
-        if (result.AuthResponse != null)
-            queryParams +=
-                $"&accessToken={result.AuthResponse.AccessToken}&refreshToken={result.AuthResponse.RefreshToken}";
+        if (!string.IsNullOrEmpty(result.Message)) queryParams += $"&message={Uri.EscapeDataString(result.Message)}";
+        // Session is delivered via httpOnly cookies — tokens never appear in the URL.
+        if (result.AuthResponse != null) AuthCookies.Append(HttpContext, result.AuthResponse);
         // warden-web (Next.js) handles the SSO return at /auth/callback (no hash routing).
         // FRONTEND_URL may be a comma-separated allowlist (CORS); redirect targets the first entry.
         var baseUrl = Configuration.FrontendUrl.Split(',')[0].Trim().TrimEnd('/');

@@ -1,29 +1,20 @@
-// Token session storage — parity with the Angular app (localStorage JWTs).
-// v2 follow-up: migrate to httpOnly cookies (requires API changes).
+// Cookie-based session (v2): tokens live in httpOnly cookies set by the API
+// (warden_access / warden_refresh). The browser sends them automatically on
+// same-origin requests. The SPA only reads the non-httpOnly warden_auth flag
+// for "signed in" state — tokens are never accessible to JS.
 
-const ACCESS_KEY = "access_token";
-const REFRESH_KEY = "refresh_token";
+const AUTH_FLAG = "warden_auth";
 
 const isBrowser = () => typeof window !== "undefined";
 
 export const session = {
-  getAccess(): string | null {
-    return isBrowser() ? localStorage.getItem(ACCESS_KEY) : null;
+  isAuthenticated(): boolean {
+    if (!isBrowser()) return false;
+    return document.cookie.split("; ").some((c) => c.startsWith(`${AUTH_FLAG}=`));
   },
-  getRefresh(): string | null {
-    return isBrowser() ? localStorage.getItem(REFRESH_KEY) : null;
-  },
-  set(accessToken: string, refreshToken?: string | null) {
-    if (!isBrowser()) return;
-    localStorage.setItem(ACCESS_KEY, accessToken);
-    if (refreshToken) localStorage.setItem(REFRESH_KEY, refreshToken);
-  },
+  /** Local best-effort clear; the API clears the httpOnly cookies on logout. */
   clear() {
     if (!isBrowser()) return;
-    localStorage.removeItem(ACCESS_KEY);
-    localStorage.removeItem(REFRESH_KEY);
-  },
-  isAuthenticated(): boolean {
-    return !!session.getAccess();
+    document.cookie = `${AUTH_FLAG}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
   },
 };

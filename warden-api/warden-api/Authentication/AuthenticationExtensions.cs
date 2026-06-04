@@ -41,6 +41,21 @@ public static class AuthenticationExtensions
         }).AddJwtBearer(options =>
         {
             options.SaveToken = true;
+            options.Events = new JwtBearerEvents
+            {
+                // Web app session: fall back to the httpOnly access-token cookie
+                // when no Authorization header is present (CI/MCP keep using Bearer).
+                OnMessageReceived = context =>
+                {
+                    if (string.IsNullOrEmpty(context.Token) &&
+                        !context.Request.Headers.ContainsKey("Authorization") &&
+                        context.Request.Cookies.TryGetValue("warden_access", out var cookieToken))
+                    {
+                        context.Token = cookieToken;
+                    }
+                    return Task.CompletedTask;
+                }
+            };
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = false,

@@ -38,7 +38,7 @@ function LoginForm() {
         return;
       }
       if (data?.accessToken) {
-        session.set(data.accessToken, data.refreshToken);
+        // session cookies were set by the API (httpOnly)
         router.replace(search.get("returnUrl") ?? "/dashboard");
       }
     },
