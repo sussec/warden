@@ -10,7 +10,8 @@ import {
   heroPaperAirplane,
   heroPauseCircle,
   heroPencilSquare,
-  heroScale
+  heroScale,
+  heroSparkles
 } from "@ng-icons/heroicons/outline";
 
 export const icons = {
@@ -97,5 +98,6 @@ export const icons = {
   heroPaperAirplane: heroPaperAirplane,
   heroPauseCircle: heroPauseCircle,
   heroPencilSquare: heroPencilSquare,
-  heroScale: heroScale
+  heroScale: heroScale,
+  heroSparkles: heroSparkles
 }

@@ -27,6 +27,8 @@ import {Tooltip} from 'primeng/tooltip';
 import {BranchFilterComponent, BranchOption} from '../../branch-filter/branch-filter.component';
 import {FindingStatusMenuComponent} from '../finding-status-menu/finding-status-menu.component';
 import {Skeleton} from 'primeng/skeleton';
+import {HttpErrorResponse} from '@angular/common/http';
+import {AiService} from '../../../../core/ai/ai.service';
 
 @Component({
   selector: 'finding-detail',
@@ -75,22 +77,28 @@ export class FindingDetailComponent {
   comment = '';
   recommendationPreview = true;
   branchOptions: BranchOption[] = [];
+  aiSuggestion = signal<string | null>(null);
+  aiSuggestionModel = signal<string | null>(null);
   loading = {
     finding: false,
     activity: false,
     comment: false,
     ticket: false,
-    recommendation: false
+    recommendation: false,
+    aiSuggestion: false
   }
 
   constructor(
     private findingService: FindingService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private aiService: AiService
   ) {
     effect(() => {
       const findingId = this.findingId();
       if (findingId) {
         this.finding = null;
+        this.aiSuggestion.set(null);
+        this.aiSuggestionModel.set(null);
         // load finding
         this.loading.finding = true;
         this.findingService.getFindingById({
@@ -250,6 +258,28 @@ export class FindingDetailComponent {
     ).subscribe(() => {
       this.toastr.success({message: 'Update recommendation success!'});
     })
+  }
+
+  requestAiSuggestion() {
+    this.loading.aiSuggestion = true;
+    this.aiService.getAiSuggestion(this.findingId()!).pipe(
+      finalize(() => this.loading.aiSuggestion = false)
+    ).subscribe({
+      next: suggestion => {
+        this.aiSuggestion.set(suggestion.content);
+        this.aiSuggestionModel.set(suggestion.model);
+      },
+      error: (error: HttpErrorResponse) => {
+        // The auth interceptor already toasts 400 responses that carry an `errors` array.
+        // Only surface a toast here for other error shapes (e.g. a plain `message`).
+        const body = error.error;
+        if (body && Array.isArray(body.errors) && body.errors.length > 0) {
+          return;
+        }
+        const message = body?.message || (typeof body === 'string' ? body : null) || 'Failed to get AI suggestion.';
+        this.toastr.error({message});
+      }
+    });
   }
 
   onChangeScanStatus(scanId: string, $event: FindingStatus) {

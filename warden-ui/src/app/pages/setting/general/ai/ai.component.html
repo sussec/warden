@@ -1,0 +1,49 @@
+<div class="flex flex-col gap-4 w-full">
+  <div class="flex flex-col gap-2 w-full">
+    <div class="flex flex-row gap-2 w-full items-center">
+      <span class="w-36 md:w-48">Enabled</span>
+      <div class="w-full max-w-md">
+        <p-toggle-switch [(ngModel)]="aiSetting.enabled"/>
+      </div>
+    </div>
+    <div class="flex flex-row gap-2 w-full items-center">
+      <span class="w-36 md:w-48">Endpoint</span>
+      <div class="w-full max-w-md">
+        <input pInputText type="text" class="w-full" [(ngModel)]="aiSetting.endpoint"
+               placeholder="https://api.openai.com/v1 or http://localhost:11434/v1">
+      </div>
+    </div>
+    <div class="flex flex-row gap-2 w-full items-center">
+      <span class="w-36 md:w-48">API Key</span>
+      <div class="w-full max-w-md flex flex-col gap-1">
+        <p-password [toggleMask]="true" [feedback]="false" styleClass="w-full" inputStyleClass="w-full"
+                    [(ngModel)]="aiSetting.apiKey"/>
+        <small class="text-muted-color">leave empty to keep current</small>
+      </div>
+    </div>
+    <div class="flex flex-row gap-2 w-full items-center">
+      <span class="w-36 md:w-48">Model</span>
+      <div class="w-full max-w-md">
+        <input pInputText type="text" class="w-full" [(ngModel)]="aiSetting.model"
+               placeholder="gpt-4.1-mini / llama3.3">
+      </div>
+    </div>
+    <div class="flex flex-row gap-2 w-full items-center">
+      <span class="w-36 md:w-48">Embedding Model</span>
+      <div class="w-full max-w-md">
+        <input pInputText type="text" class="w-full" [(ngModel)]="aiSetting.embeddingModel"
+               placeholder="text-embedding-3-small / nomic-embed-text">
+      </div>
+    </div>
+  </div>
+  <div class="flex flex-row gap-2 items-center">
+    <p-button severity="primary" label="Save"
+              [loading]="loading"
+              [disabled]="loading"
+              (click)="saveConfig()"/>
+    <p-button severity="secondary" label="Test Connection"
+              [loading]="loadingTest"
+              [disabled]="loadingTest"
+              (click)="testConnection()"/>
+  </div>
+</div>
