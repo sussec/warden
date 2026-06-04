@@ -72,7 +72,7 @@ public class RedmineTest
             Description = "*Bug Report*\n 1. This is a bug report.\n2. This is a bug report.\n3. This is a bug report.",
             DueDate = DateTime.Now.AddDays(4),
             Project = project,
-            Status = IdentifiableName.Create<IdentifiableName>(1),
+            Status = IdentifiableName.Create<IssueStatus>(1),
             Tracker = IdentifiableName.Create<IdentifiableName>(1),
             Priority = IdentifiableName.Create<IdentifiableName>(1),
         };

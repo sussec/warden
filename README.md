@@ -80,7 +80,7 @@ services:
     ports:
       - "8080:8080"
   db:
-    image: postgres
+    image: postgres:18
     environment:
       POSTGRES_USER: warden
       POSTGRES_PASSWORD: warden

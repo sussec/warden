@@ -47,7 +47,7 @@ public class RedmineTicketTracker(AppDbContext context) : ITicketTracker
                     Description = description,
                     DueDate = dueDate,
                     Project = IdentifiableName.Create<IdentifiableName>(projectSetting.ProjectId),
-                    Status = IdentifiableName.Create<IdentifiableName>(projectSetting.StatusId),
+                    Status = IdentifiableName.Create<IssueStatus>(projectSetting.StatusId),
                     Tracker = IdentifiableName.Create<IdentifiableName>(projectSetting.TrackerId),
                     Priority = IdentifiableName.Create<IdentifiableName>(projectSetting.PriorityId),
                 });
@@ -97,7 +97,7 @@ public class RedmineTicketTracker(AppDbContext context) : ITicketTracker
                     Description = description,
                     DueDate = dueDate,
                     Project = IdentifiableName.Create<IdentifiableName>(jiraProjectSetting.ProjectId),
-                    Status = IdentifiableName.Create<IdentifiableName>(jiraProjectSetting.StatusId),
+                    Status = IdentifiableName.Create<IssueStatus>(jiraProjectSetting.StatusId),
                     Tracker = IdentifiableName.Create<IdentifiableName>(jiraProjectSetting.TrackerId),
                     Priority = IdentifiableName.Create<IdentifiableName>(jiraProjectSetting.PriorityId),
                 });

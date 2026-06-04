@@ -14,9 +14,9 @@
         <PackageReference Include="Aguacongas.AspNetCore.Authentication" Version="6.1.0" />
         <PackageReference Include="Aguacongas.AspNetCore.Authentication.EntityFramework" Version="6.1.0" />
         <PackageReference Include="Atlassian.SDK" Version="13.0.0" />
-        <PackageReference Include="ClosedXML" Version="0.104.2" />
-        <PackageReference Include="FluentResults" Version="3.16.0" />
-        <PackageReference Include="MailKit" Version="4.11.0" />
+        <PackageReference Include="ClosedXML" Version="0.105.0" />
+        <PackageReference Include="FluentResults" Version="4.0.0" />
+        <PackageReference Include="MailKit" Version="4.17.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.8"/>
         <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.8"/>
         <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.8"/>
@@ -31,17 +31,17 @@
         <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.8" />
         <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="10.0.8"/>
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2"/>
-        <PackageReference Include="Quartz.Extensions.Hosting" Version="3.13.1" />
-        <PackageReference Include="QuestPDF" Version="2025.1.2" />
-        <PackageReference Include="QuestPDF.Markdown" Version="1.31.1" />
-        <PackageReference Include="redmine-api" Version="4.7.1" />
+        <PackageReference Include="Quartz.Extensions.Hosting" Version="3.18.1" />
+        <PackageReference Include="QuestPDF" Version="2026.5.0" />
+        <PackageReference Include="QuestPDF.Markdown" Version="1.49.1" />
+        <PackageReference Include="redmine-api" Version="4.65.0" />
         <PackageReference Include="Scalar.AspNetCore" Version="2.14.14" />
-        <PackageReference Include="ScottPlot" Version="5.0.54" />
-        <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
-        <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />
-        <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
-        <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
-        <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.116.1" />
+        <PackageReference Include="ScottPlot" Version="5.1.58" />
+        <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+        <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+        <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+        <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.4" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.1"/>
     </ItemGroup>
     <ItemGroup>

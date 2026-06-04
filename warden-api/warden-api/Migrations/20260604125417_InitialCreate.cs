@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Warden.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -17,10 +17,15 @@ namespace Warden.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    MailSetting = table.Column<string>(type: "text", nullable: true),
                     AuthSetting = table.Column<string>(type: "text", nullable: true),
                     SlaSastSetting = table.Column<string>(type: "text", nullable: true),
-                    SlaScaSetting = table.Column<string>(type: "text", nullable: true)
+                    SlaScaSetting = table.Column<string>(type: "text", nullable: true),
+                    MailSetting = table.Column<string>(type: "text", nullable: true),
+                    MailAlertSetting = table.Column<string>(type: "text", nullable: true),
+                    TeamsSetting = table.Column<string>(type: "text", nullable: true),
+                    JiraSetting = table.Column<string>(type: "text", nullable: true),
+                    JiraWebhookSetting = table.Column<string>(type: "text", nullable: true),
+                    RedmineSetting = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -118,7 +123,13 @@ namespace Warden.Migrations
                 columns: table => new
                 {
                     ProjectId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Metadata = table.Column<string>(type: "text", nullable: false)
+                    SastSetting = table.Column<string>(type: "text", nullable: true),
+                    ScaSetting = table.Column<string>(type: "text", nullable: true),
+                    JiraSetting = table.Column<string>(type: "text", nullable: true),
+                    RedmineSetting = table.Column<string>(type: "text", nullable: true),
+                    TeamsSetting = table.Column<string>(type: "text", nullable: true),
+                    MailSetting = table.Column<string>(type: "text", nullable: true),
+                    DefaultBranch = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -200,6 +211,23 @@ namespace Warden.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Tags", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Tickets",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Type = table.Column<int>(type: "integer", nullable: false),
+                    Url = table.Column<string>(type: "text", nullable: false),
+                    Metadata = table.Column<string>(type: "text", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tickets", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -319,6 +347,28 @@ namespace Warden.Migrations
                         name: "FK_RoleClaims_Roles_RoleId",
                         column: x => x.RoleId,
                         principalTable: "Roles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Rules",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    ScannerId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    Confidence = table.Column<int>(type: "integer", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Rules", x => new { x.Id, x.ScannerId });
+                    table.ForeignKey(
+                        name: "FK_Rules_Scanners_ScannerId",
+                        column: x => x.ScannerId,
+                        principalTable: "Scanners",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -482,6 +532,7 @@ namespace Warden.Migrations
                     EndColumn = table.Column<int>(type: "integer", nullable: true),
                     ProjectId = table.Column<Guid>(type: "uuid", nullable: false),
                     ScannerId = table.Column<Guid>(type: "uuid", nullable: false),
+                    TicketId = table.Column<Guid>(type: "uuid", nullable: true),
                     Metadata = table.Column<string>(type: "text", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
@@ -501,6 +552,11 @@ namespace Warden.Migrations
                         principalTable: "Scanners",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Findings_Tickets_TicketId",
+                        column: x => x.TicketId,
+                        principalTable: "Tickets",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -508,11 +564,14 @@ namespace Warden.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ProjectId = table.Column<Guid>(type: "uuid", nullable: false),
-                    IsDefault = table.Column<bool>(type: "boolean", nullable: false),
+                    CommitHash = table.Column<string>(type: "text", nullable: true),
+                    CommitTitle = table.Column<string>(type: "text", nullable: true),
+                    Type = table.Column<int>(type: "integer", nullable: false),
                     Branch = table.Column<string>(type: "text", nullable: false),
-                    Action = table.Column<int>(type: "integer", nullable: false),
+                    IsDefault = table.Column<bool>(type: "boolean", nullable: false),
                     TargetBranch = table.Column<string>(type: "text", nullable: true),
+                    MergeRequestId = table.Column<string>(type: "text", nullable: true),
+                    ProjectId = table.Column<Guid>(type: "uuid", nullable: false),
                     Metadata = table.Column<string>(type: "text", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
@@ -575,13 +634,21 @@ namespace Warden.Migrations
                 name: "ProjectPackages",
                 columns: table => new
                 {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
                     ProjectId = table.Column<Guid>(type: "uuid", nullable: false),
                     PackageId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Location = table.Column<string>(type: "text", nullable: false)
+                    Location = table.Column<string>(type: "text", nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: true),
+                    IgnoredReason = table.Column<string>(type: "text", nullable: true),
+                    FixedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    TicketId = table.Column<Guid>(type: "uuid", nullable: true),
+                    Metadata = table.Column<string>(type: "text", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ProjectPackages", x => new { x.ProjectId, x.PackageId, x.Location });
+                    table.PrimaryKey("PK_ProjectPackages", x => x.Id);
                     table.ForeignKey(
                         name: "FK_ProjectPackages_Packages_PackageId",
                         column: x => x.PackageId,
@@ -594,6 +661,11 @@ namespace Warden.Migrations
                         principalTable: "Projects",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ProjectPackages_Tickets_TicketId",
+                        column: x => x.TicketId,
+                        principalTable: "Tickets",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -638,6 +710,9 @@ namespace Warden.Migrations
                     UserId = table.Column<Guid>(type: "uuid", nullable: true),
                     Comment = table.Column<string>(type: "text", nullable: true),
                     Type = table.Column<int>(type: "integer", nullable: false),
+                    OldState = table.Column<string>(type: "text", nullable: true),
+                    NewState = table.Column<string>(type: "text", nullable: true),
+                    CommitId = table.Column<Guid>(type: "uuid", nullable: true),
                     FindingId = table.Column<Guid>(type: "uuid", nullable: false),
                     Metadata = table.Column<string>(type: "text", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -652,6 +727,11 @@ namespace Warden.Migrations
                         principalTable: "Findings",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_FindingActivities_ProjectCommits_CommitId",
+                        column: x => x.CommitId,
+                        principalTable: "ProjectCommits",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_FindingActivities_Users_UserId",
                         column: x => x.UserId,
@@ -670,9 +750,8 @@ namespace Warden.Migrations
                     JobUrl = table.Column<string>(type: "text", nullable: false),
                     StartedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     CompletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    CommitHash = table.Column<string>(type: "text", nullable: false),
-                    MergeRequestId = table.Column<string>(type: "text", nullable: true),
                     CommitId = table.Column<Guid>(type: "uuid", nullable: false),
+                    LastCommitHash = table.Column<string>(type: "text", nullable: true),
                     ProjectId = table.Column<Guid>(type: "uuid", nullable: false),
                     ScannerId = table.Column<Guid>(type: "uuid", nullable: false),
                     ContainerId = table.Column<Guid>(type: "uuid", nullable: true),
@@ -715,7 +794,8 @@ namespace Warden.Migrations
                     ScanId = table.Column<Guid>(type: "uuid", nullable: false),
                     FindingId = table.Column<Guid>(type: "uuid", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
-                    CommitHash = table.Column<string>(type: "text", nullable: false)
+                    CommitHash = table.Column<string>(type: "text", nullable: false),
+                    FixedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -732,6 +812,43 @@ namespace Warden.Migrations
                         principalTable: "Scans",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ScanProjectPackages",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ScanId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProjectPackageId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    FixedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    IgnoredReason = table.Column<string>(type: "text", nullable: true),
+                    UpdatedById = table.Column<Guid>(type: "uuid", nullable: true),
+                    Metadata = table.Column<string>(type: "text", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ScanProjectPackages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ScanProjectPackages_ProjectPackages_ProjectPackageId",
+                        column: x => x.ProjectPackageId,
+                        principalTable: "ProjectPackages",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ScanProjectPackages_Scans_ScanId",
+                        column: x => x.ScanId,
+                        principalTable: "Scans",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ScanProjectPackages_Users_UpdatedById",
+                        column: x => x.UpdatedById,
+                        principalTable: "Users",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateIndex(
@@ -752,6 +869,11 @@ namespace Warden.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_FindingActivities_CommitId",
+                table: "FindingActivities",
+                column: "CommitId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_FindingActivities_FindingId",
                 table: "FindingActivities",
                 column: "FindingId");
@@ -762,6 +884,12 @@ namespace Warden.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Findings_Identity_ProjectId",
+                table: "Findings",
+                columns: new[] { "Identity", "ProjectId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Findings_ProjectId",
                 table: "Findings",
                 column: "ProjectId");
@@ -770,6 +898,11 @@ namespace Warden.Migrations
                 name: "IX_Findings_ScannerId",
                 table: "Findings",
                 column: "ScannerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Findings_TicketId",
+                table: "Findings",
+                column: "TicketId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PackageDependencies_DependencyId",
@@ -801,6 +934,17 @@ namespace Warden.Migrations
                 name: "IX_ProjectPackages_PackageId",
                 table: "ProjectPackages",
                 column: "PackageId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProjectPackages_ProjectId_PackageId_Location",
+                table: "ProjectPackages",
+                columns: new[] { "ProjectId", "PackageId", "Location" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProjectPackages_TicketId",
+                table: "ProjectPackages",
+                column: "TicketId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProjectUsers_AddedById",
@@ -835,14 +979,35 @@ namespace Warden.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Rules_ScannerId",
+                table: "Rules",
+                column: "ScannerId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ScanFindings_FindingId",
                 table: "ScanFindings",
                 column: "FindingId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Scanners_NormalizedName",
+                name: "IX_ScanProjectPackages_ProjectPackageId",
+                table: "ScanProjectPackages",
+                column: "ProjectPackageId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ScanProjectPackages_ScanId_ProjectPackageId",
+                table: "ScanProjectPackages",
+                columns: new[] { "ScanId", "ProjectPackageId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ScanProjectPackages_UpdatedById",
+                table: "ScanProjectPackages",
+                column: "UpdatedById");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Scanners_NormalizedName_Type",
                 table: "Scanners",
-                column: "NormalizedName",
+                columns: new[] { "NormalizedName", "Type" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -864,6 +1029,12 @@ namespace Warden.Migrations
                 name: "IX_Scans_ScannerId",
                 table: "Scans",
                 column: "ScannerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SourceControls_NormalizedUrl_Type",
+                table: "SourceControls",
+                columns: new[] { "NormalizedUrl", "Type" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tags_Name",
@@ -944,9 +1115,6 @@ namespace Warden.Migrations
                 name: "ProjectEnvironmentVariables");
 
             migrationBuilder.DropTable(
-                name: "ProjectPackages");
-
-            migrationBuilder.DropTable(
                 name: "ProjectSettings");
 
             migrationBuilder.DropTable(
@@ -959,7 +1127,13 @@ namespace Warden.Migrations
                 name: "RoleClaims");
 
             migrationBuilder.DropTable(
+                name: "Rules");
+
+            migrationBuilder.DropTable(
                 name: "ScanFindings");
+
+            migrationBuilder.DropTable(
+                name: "ScanProjectPackages");
 
             migrationBuilder.DropTable(
                 name: "Tags");
@@ -980,10 +1154,10 @@ namespace Warden.Migrations
                 name: "Vulnerabilities");
 
             migrationBuilder.DropTable(
-                name: "Packages");
+                name: "Findings");
 
             migrationBuilder.DropTable(
-                name: "Findings");
+                name: "ProjectPackages");
 
             migrationBuilder.DropTable(
                 name: "Scans");
@@ -993,6 +1167,12 @@ namespace Warden.Migrations
 
             migrationBuilder.DropTable(
                 name: "Users");
+
+            migrationBuilder.DropTable(
+                name: "Packages");
+
+            migrationBuilder.DropTable(
+                name: "Tickets");
 
             migrationBuilder.DropTable(
                 name: "Containers");
