@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "gen-api": "openapi-ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
