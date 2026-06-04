@@ -5,7 +5,7 @@ import { Component } from '@angular/core';
   selector: 'app-footer',
   template: `<div class="layout-footer">
         Techanv Warden by
-        <a href="https://calif.io" target="_blank" rel="noopener noreferrer" class="text-primary font-bold hover:underline">calif.io</a>
+        <a href="https://techanv.com" target="_blank" rel="noopener noreferrer" class="text-primary font-bold hover:underline">Techanv Consulting</a>
     </div>`
 })
 export class AppFooter {}

@@ -139,4 +139,4 @@ Techanv Warden is built and maintained by [Techanv Consulting](https://github.co
 
 ## License
 
-Distributed under the [BSD 3-Clause License](LICENSE). Based on the Code Secure project by Calif Global Inc.
+Copyright © 2026 Techanv Consulting. Distributed under the [BSD 3-Clause License](LICENSE).
