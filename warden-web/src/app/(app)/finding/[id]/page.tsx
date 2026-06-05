@@ -18,6 +18,14 @@ import {
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -85,9 +93,9 @@ export default function FindingDetailPage() {
   const queryClient = useQueryClient();
 
   const [comment, setComment] = useState("");
-  const [showSuggestion, setShowSuggestion] = useState(false);
   const [streamText, setStreamText] = useState("");
   const [streaming, setStreaming] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [thinkIdx, setThinkIdx] = useState(0);
   const streamRef = useRef<HTMLDivElement>(null);
 
@@ -110,7 +118,7 @@ export default function FindingDetailPage() {
 
   // Stream the AI remediation token-by-token over SSE (same-origin cookie auth).
   async function streamSuggestion() {
-    setShowSuggestion(true);
+    setSheetOpen(true);
     setStreamText("");
     setStreaming(true);
     try {
@@ -294,46 +302,86 @@ export default function FindingDetailPage() {
         </Card>
       )}
 
-      <Card className="space-y-3 p-6">
-        <div className="flex items-center justify-between">
+      <Card className="flex items-center justify-between gap-4 p-6">
+        <div className="min-w-0">
           <h2 className="text-base font-bold">AI suggestion</h2>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void streamSuggestion()}
-            disabled={streaming}
-          >
-            {streaming ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <Sparkles className="size-4 text-secondary" />
-            )}
-            Get AI suggestion
-          </Button>
+          <p className="truncate text-sm text-muted-foreground">
+            {streamText && !streaming
+              ? "Remediation generated — open to review."
+              : "Generate an AI-assisted remediation for this finding."}
+          </p>
         </div>
-        {showSuggestion && (
-          <div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="shrink-0"
+          onClick={() => {
+            if (streamText && !streaming) setSheetOpen(true);
+            else void streamSuggestion();
+          }}
+          disabled={streaming}
+        >
+          {streaming ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Sparkles className="size-4 text-primary" />
+          )}
+          {streamText && !streaming ? "View suggestion" : "Get AI suggestion"}
+        </Button>
+      </Card>
+
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-xl">
+          <SheetHeader className="border-b border-border px-6 py-4">
+            <SheetTitle className="flex items-center gap-2">
+              <Sparkles className="size-4 text-primary" />
+              AI suggestion
+            </SheetTitle>
+            <SheetDescription className="truncate">
+              {finding.name ?? finding.ruleId ?? "Remediation"}
+            </SheetDescription>
+          </SheetHeader>
+
+          <div ref={streamRef} className="flex-1 overflow-y-auto px-6 py-5">
             {streaming && !streamText && (
               <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="size-1.5 animate-pulse rounded-full bg-secondary" />
+                <span className="size-1.5 animate-pulse rounded-full bg-primary" />
                 <span className="animate-pulse">{THINKING_WORDS[thinkIdx]}…</span>
               </p>
             )}
-            {/* Render formatted markdown live as it streams (unterminated code
-                fences are auto-closed to avoid raw-markup flashes). */}
+            {/* Live formatted markdown; unterminated code fences auto-closed. */}
             {streaming && streamText && (
-              <div ref={streamRef} className="max-h-[32rem] overflow-y-auto">
+              <>
                 <MarkdownView content={sanitizeStreamingMarkdown(streamText)} />
-                <span className="ml-px inline-block h-[1.05em] w-[2px] translate-y-[2px] animate-pulse bg-secondary" />
-              </div>
+                <span className="ml-px inline-block h-[1.05em] w-[2px] translate-y-[2px] animate-pulse bg-primary" />
+              </>
             )}
             {!streaming && streamText && <MarkdownView content={streamText} />}
             {!streaming && !streamText && (
-              <p className="text-sm text-muted-foreground">No suggestion available.</p>
+              <p className="text-sm text-muted-foreground">No suggestion yet.</p>
             )}
           </div>
-        )}
-      </Card>
+
+          <SheetFooter className="flex-row items-center justify-between border-t border-border px-6 py-4">
+            <span className="text-xs text-muted-foreground">
+              {streaming ? "Generating…" : streamText ? "Powered by your configured AI model" : ""}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void streamSuggestion()}
+              disabled={streaming}
+            >
+              {streaming ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Sparkles className="size-4 text-primary" />
+              )}
+              Regenerate
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
       <Card className="space-y-4 p-6">
         <h2 className="text-base font-bold">Activity</h2>
