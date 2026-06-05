@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { FaEnvelope, FaGithub, FaJira, FaMicrosoft } from "react-icons/fa6";
+import { SiRedmine } from "react-icons/si";
+import { Webhook as WebhookIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -237,9 +240,14 @@ function JiraCard() {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex items-center gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border bg-muted/50">
+              <FaJira className="size-4.5 text-[#0052cc] dark:text-[#4c9aff]" />
+            </div>
+            <div>
             <CardTitle>Jira</CardTitle>
             <CardDescription>Create issues from findings.</CardDescription>
+            </div>
           </div>
           <Switch
             checked={form.active ?? false}
@@ -410,9 +418,14 @@ function RedmineCard() {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex items-center gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border bg-muted/50">
+              <SiRedmine className="size-4.5 text-[#b32024] dark:text-[#e0565a]" />
+            </div>
+            <div>
             <CardTitle>Redmine</CardTitle>
             <CardDescription>Create issues from findings.</CardDescription>
+            </div>
           </div>
           <Switch
             checked={form.active ?? false}
@@ -542,9 +555,14 @@ function TeamsCard() {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex items-center gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border bg-muted/50">
+              <FaMicrosoft className="size-4.5 text-[#6264a7] dark:text-[#9ea2ff]" />
+            </div>
+            <div>
             <CardTitle>Microsoft Teams</CardTitle>
             <CardDescription>Send alerts to a Teams channel.</CardDescription>
+            </div>
           </div>
           <Switch
             checked={form.active}
@@ -652,9 +670,14 @@ function MailCard() {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex items-center gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border bg-muted/50">
+              <FaEnvelope className="size-4.5 text-high" />
+            </div>
+            <div>
             <CardTitle>Mail</CardTitle>
             <CardDescription>Email alert notifications.</CardDescription>
+            </div>
           </div>
           <Switch
             checked={form.active}
@@ -787,9 +810,14 @@ function GitHubCard() {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex items-center gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border bg-muted/50">
+              <FaGithub className="size-4.5 text-foreground" />
+            </div>
+            <div>
             <CardTitle>GitHub Issues</CardTitle>
             <CardDescription>Create issues from findings.</CardDescription>
+            </div>
           </div>
           <Switch
             checked={form.active ?? false}
@@ -929,9 +957,14 @@ function JiraWebhookCard() {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex items-center gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border bg-muted/50">
+              <FaJira className="size-4.5 text-[#0052cc] dark:text-[#4c9aff]" />
+            </div>
+            <div>
             <CardTitle>Jira Webhook</CardTitle>
             <CardDescription>Sync finding status from Jira transitions.</CardDescription>
+            </div>
           </div>
           <Switch
             checked={form.active ?? false}
@@ -1036,9 +1069,14 @@ function WebhookCard() {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex items-center gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border bg-muted/50">
+              <WebhookIcon className="size-4.5 text-low" />
+            </div>
+            <div>
             <CardTitle>Webhook</CardTitle>
             <CardDescription>Send alerts to Slack or a generic webhook.</CardDescription>
+            </div>
           </div>
           <Switch
             checked={form.active ?? false}
