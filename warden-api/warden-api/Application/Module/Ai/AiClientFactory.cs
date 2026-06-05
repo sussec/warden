@@ -18,6 +18,12 @@ public class AiClientFactory(AppDbContext context) : IAiClientFactory
         return CreateChatClient(setting);
     }
 
+    public async Task<int> GetEmbeddingDimensionAsync()
+    {
+        var setting = await context.GetAiSettingAsync();
+        return setting.EmbeddingDimension > 0 ? setting.EmbeddingDimension : 1536;
+    }
+
     public IChatClient? CreateChatClient(AiSetting setting)
     {
         if (string.IsNullOrEmpty(setting.Model))

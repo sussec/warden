@@ -13,6 +13,7 @@ export type AiSetting = {
     apiKey?: string | null;
     model?: string | null;
     embeddingModel?: string | null;
+    embeddingDimension?: number;
     embeddingEndpoint?: string | null;
     embeddingApiKey?: string | null;
 };

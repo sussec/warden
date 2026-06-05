@@ -185,6 +185,23 @@ export default function AiSettingPage() {
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="ai-embed-dim">Embedding dimension</Label>
+                <Input
+                  id="ai-embed-dim"
+                  type="number"
+                  min={1}
+                  placeholder="1536"
+                  value={form.embeddingDimension ?? 1536}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, embeddingDimension: Number(e.target.value) || 1536 }))
+                  }
+                />
+                <p className="text-xs text-muted-foreground">
+                  Must match the model: OpenAI 3-small = 1536, nomic-embed-text = 768,
+                  mxbai-embed-large = 1024. Changing it requires Rebuild search index.
+                </p>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="ai-embed-endpoint">
                   Embedding endpoint {isAnthropic ? "" : "(optional)"}
                 </Label>

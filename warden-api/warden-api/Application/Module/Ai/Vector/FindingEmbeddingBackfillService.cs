@@ -18,6 +18,9 @@ public sealed class FindingEmbeddingBackfillService(
             batchSize = 200;
         }
 
+        // Drop and recreate the collection so a changed embedding model/dimension takes effect.
+        await vectorStore.DropCollectionAsync(cancellationToken);
+
         var processed = 0;
         var skip = 0;
 

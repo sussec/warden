@@ -14,4 +14,7 @@ public interface IAiClientFactory
     /// <summary>Builds a chat client from explicit settings (used by the Test Connection action so
     /// the user tests what they typed, not the saved config). Returns null when model is missing.</summary>
     IChatClient? CreateChatClient(AiSetting setting);
+
+    /// <summary>Configured embedding vector dimension (defaults to 1536). Must match the embedding model.</summary>
+    Task<int> GetEmbeddingDimensionAsync();
 }

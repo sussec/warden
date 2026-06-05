@@ -29,6 +29,14 @@ public record AiSetting
     public string EmbeddingModel { get; set; } = string.Empty;
 
     /// <summary>
+    /// Dimension of the embedding vectors — must match the embedding model
+    /// (OpenAI text-embedding-3-small = 1536, nomic-embed-text = 768,
+    /// mxbai-embed-large = 1024). Changing it requires rebuilding the search
+    /// index (Setting → AI → Rebuild). Defaults to 1536.
+    /// </summary>
+    public int EmbeddingDimension { get; set; } = 1536;
+
+    /// <summary>
     /// Optional OpenAI-compatible base URL for embeddings, when it differs from the chat
     /// endpoint (required when the chat provider is Anthropic, which has no embeddings API).
     /// Empty = reuse the chat endpoint/key (only valid for OpenAI-compatible chat providers).

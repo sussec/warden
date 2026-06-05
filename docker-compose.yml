@@ -63,6 +63,46 @@ services:
     restart: unless-stopped
 
   # ---------------------------------------------------------------------------
+  # Local AI inference engines (profile: local-ai) — OpenAI-compatible /v1, so
+  # Warden talks to them via Setting > AI (point the endpoint at the service).
+  #   docker compose --profile local-ai up -d llama         # CPU, lightweight
+  #   docker compose --profile ai-gpu  up -d vllm           # GPU, production
+  # ---------------------------------------------------------------------------
+
+  # llama.cpp server — lightweight CPU inference, runs anywhere (laptop to RPi).
+  # Serves an embedding model on http://llama:8080/v1 (nomic-embed-text = 768 dims).
+  # Set Setting > AI: Embedding endpoint http://llama:8080/v1, dimension 768.
+  llama:
+    profiles: ["local-ai"]
+    image: ghcr.io/ggml-org/llama.cpp:server
+    command: >-
+      -hf ${LLAMA_EMBED_MODEL:-nomic-ai/nomic-embed-text-v1.5-GGUF}
+      --embeddings --pooling mean --host 0.0.0.0 --port 8080
+    ports:
+      - "8090:8080" # direct access for testing
+    restart: unless-stopped
+
+  # vLLM — high-throughput production serving (PagedAttention). Requires an
+  # NVIDIA GPU. Serves http://vllm:8000/v1. Pick an embedding or chat model.
+  vllm:
+    profiles: ["ai-gpu"]
+    image: vllm/vllm-openai:latest
+    command: ["--model", "${VLLM_MODEL:-intfloat/e5-mistral-7b-instruct}", "--task", "embed"]
+    environment:
+      HUGGING_FACE_HUB_TOKEN: ${HUGGING_FACE_HUB_TOKEN:-}
+    ports:
+      - "8000:8000"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: ["gpu"]
+    ipc: host
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
   # Security scanners (profile: scan) — run on demand against a local checkout:
   #   SCAN_TARGET=/path/to/repo docker compose --profile scan run --rm semgrep
   #   SCAN_TARGET=/path/to/repo docker compose --profile scan run --rm gitleaks

@@ -26,6 +26,9 @@ public sealed record FindingEmbedding
     [VectorStoreData]
     public string Text { get; init; } = string.Empty;
 
+    // Dimension is set at runtime from AiSetting.EmbeddingDimension via a
+    // VectorStoreCollectionDefinition (see FindingVectorStore.CreateCollection),
+    // so any embedding model works (768, 1024, 1536, …). The attribute is a fallback.
     [VectorStoreVector(1536, DistanceFunction = DistanceFunction.CosineSimilarity)]
     public ReadOnlyMemory<float> Embedding { get; init; }
 }
@@ -84,12 +87,49 @@ public sealed class FindingVectorStore(
         return _dataSource;
     }
 
-    private static VectorStoreCollection<Guid, FindingEmbedding> CreateCollection()
+    private static VectorStoreCollection<Guid, FindingEmbedding> CreateCollection(int dimension)
     {
         // ctor: (NpgsqlDataSource dataSource, bool ownsDataSource, PostgresVectorStoreOptions? options)
         // ownsDataSource = false: the static data source is shared/reused, so the store must not dispose it.
         var store = new PostgresVectorStore(GetDataSource(), false);
-        return store.GetCollection<Guid, FindingEmbedding>(CollectionName);
+        // Runtime definition so the vector dimension matches the configured embedding model.
+        var definition = new VectorStoreCollectionDefinition
+        {
+            Properties =
+            [
+                new VectorStoreKeyProperty("Id", typeof(Guid)),
+                new VectorStoreDataProperty("ProjectId", typeof(Guid)) { IsIndexed = true },
+                new VectorStoreDataProperty("Text", typeof(string)),
+                new VectorStoreVectorProperty("Embedding", typeof(ReadOnlyMemory<float>), dimension)
+                {
+                    DistanceFunction = DistanceFunction.CosineSimilarity,
+                },
+            ],
+        };
+        return store.GetCollection<Guid, FindingEmbedding>(CollectionName, definition);
+    }
+
+    /// <summary>
+    /// Drops the collection so it can be recreated at the configured dimension. Used by the
+    /// "Rebuild search index" action when the embedding model/dimension changes.
+    /// </summary>
+    public async Task DropCollectionAsync(CancellationToken cancellationToken = default)
+    {
+        var dimension = await aiClientFactory.GetEmbeddingDimensionAsync();
+        try
+        {
+            var collection = CreateCollection(dimension);
+            await collection.EnsureCollectionDeletedAsync(cancellationToken);
+            _collectionEnsured = false;
+        }
+        catch (Exception e) when (IsPgVectorMissing(e))
+        {
+            logger.LogWarning(e, PgVectorMissingWarning);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to drop finding embedding collection");
+        }
     }
 
     /// <summary>
@@ -115,7 +155,8 @@ public sealed class FindingVectorStore(
 
         try
         {
-            var collection = CreateCollection();
+            var dimension = await aiClientFactory.GetEmbeddingDimensionAsync();
+            var collection = CreateCollection(dimension);
             await EnsureCollectionOnceAsync(collection, cancellationToken);
 
             var input = BuildInputText(finding);
@@ -161,7 +202,8 @@ public sealed class FindingVectorStore(
 
         try
         {
-            var collection = CreateCollection();
+            var dimension = await aiClientFactory.GetEmbeddingDimensionAsync();
+            var collection = CreateCollection(dimension);
             await EnsureCollectionOnceAsync(collection, cancellationToken);
 
             var queryEmbedding = await generator.GenerateAsync(query, cancellationToken: cancellationToken);
@@ -203,7 +245,8 @@ public sealed class FindingVectorStore(
 
         try
         {
-            var collection = CreateCollection();
+            var dimension = await aiClientFactory.GetEmbeddingDimensionAsync();
+            var collection = CreateCollection(dimension);
             await EnsureCollectionOnceAsync(collection, cancellationToken);
             await collection.DeleteAsync(findingId, cancellationToken);
         }
