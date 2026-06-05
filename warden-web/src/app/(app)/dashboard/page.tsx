@@ -535,8 +535,8 @@ export default function DashboardPage() {
                   },
                 ]}
                 endAngle={360}
-                innerRadius={70}
-                outerRadius={105}
+                innerRadius="72%"
+                outerRadius="100%"
               >
                 <PolarAngleAxis type="number" domain={[0, sastStatusTotal || 1]} tick={false} axisLine={false} />
                 <ChartTooltip cursor={false} itemSorter={rankItem} content={<ChartTooltipContent hideLabel />} />
@@ -597,8 +597,8 @@ export default function DashboardPage() {
                   },
                 ]}
                 endAngle={360}
-                innerRadius={70}
-                outerRadius={105}
+                innerRadius="72%"
+                outerRadius="100%"
               >
                 <PolarAngleAxis type="number" domain={[0, scaStatusTotal || 1]} tick={false} axisLine={false} />
                 <ChartTooltip cursor={false} itemSorter={rankItem} content={<ChartTooltipContent hideLabel />} />
