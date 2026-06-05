@@ -18,6 +18,7 @@ import {
   Play,
   Radar,
   ScanSearch,
+  ShieldAlert,
 } from "lucide-react";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { toast } from "sonner";
@@ -154,6 +155,16 @@ const FLEET: FleetScanner[] = [
     description: "SCA second opinion with SBOM-grade dependency resolution (Syft).",
     icon: Boxes,
     command: `${TARGET} ${RUN} grype`,
+  },
+  {
+    service: "osv",
+    match: ["osv", "osv-scanner"],
+    type: "Dependency",
+    targetKind: "repository",
+    description:
+      "Supply-chain SCA across many ecosystems via Google's OSV.dev advisories, including malicious-package detection.",
+    icon: ShieldAlert,
+    command: `${TARGET} ${RUN} osv`,
   },
   {
     service: "trivy-iac",

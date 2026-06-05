@@ -140,6 +140,7 @@ nav:
     - Software Composition Analysis (SCA):
       - Trivy: security-integration/sca/trivy.md
       - Grype: security-integration/sca/grype.md
+      - OSV-Scanner: security-integration/sca/osv.md
     - Container & DAST:
       - Trivy Image: security-integration/container/trivy-image.md
       - OWASP ZAP: security-integration/dast/zap.md

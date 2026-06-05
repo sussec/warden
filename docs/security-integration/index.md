@@ -50,6 +50,7 @@ For pipeline integration (GitLab CI, GitHub Actions), the same containers run as
 | TruffleHog | Secret | filesystem / history | trufflehog |
 | Trivy | SCA | dependencies | trivy |
 | Grype | SCA | dependencies | grype |
+| OSV-Scanner | SCA | dependencies / supply-chain | osv |
 | Trivy Image | Container | container images (set SCAN_IMAGE_REF) | trivy-image |
 | OWASP ZAP | DAST | running URL (set SCAN_TARGET_URL) | zap |
 | Nuclei | DAST | running URL (set SCAN_TARGET_URL) | nuclei |

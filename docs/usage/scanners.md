@@ -19,6 +19,7 @@ The fleet mirrors the `scan` profile in `docker-compose.yml`:
 | trufflehog | Secret | repository path |
 | trivy | SCA | repository path |
 | grype | SCA | repository path |
+| osv | SCA / supply-chain | repository path |
 | trivy-iac | SAST (misconfig) | repository path |
 | trivy-image | Container | image reference |
 | zap | DAST | target URL |
