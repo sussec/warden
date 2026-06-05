@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   useMutation,
   useQuery,
@@ -36,6 +36,19 @@ import {
 } from "@/client/sdk.gen";
 import type { FindingDetail, FindingStatus } from "@/client/types.gen";
 
+// Rotating status words shown before the first token arrives (Claude-Code style).
+const THINKING_WORDS = [
+  "Thinking",
+  "Reading the finding",
+  "Inspecting the snippet",
+  "Tracing data flow",
+  "Cross-referencing CWEs",
+  "Weighing real-world impact",
+  "Drafting remediation",
+  "Hardening",
+  "Double-checking",
+];
+
 function MetaRow({ label, children }: { label: string; children: React.ReactNode }) {
   if (children === null || children === undefined || children === "") return null;
   return (
@@ -68,6 +81,25 @@ export default function FindingDetailPage() {
   const [showSuggestion, setShowSuggestion] = useState(false);
   const [streamText, setStreamText] = useState("");
   const [streaming, setStreaming] = useState(false);
+  const [thinkIdx, setThinkIdx] = useState(0);
+  const streamRef = useRef<HTMLDivElement>(null);
+
+  // Keep the latest streamed text in view as it grows (live-writing feel).
+  useEffect(() => {
+    if (streaming && streamRef.current) {
+      streamRef.current.scrollTop = streamRef.current.scrollHeight;
+    }
+  }, [streamText, streaming]);
+
+  // Cycle status words while waiting for the first token.
+  useEffect(() => {
+    if (!streaming || streamText) return;
+    const id = setInterval(
+      () => setThinkIdx((i) => (i + 1) % THINKING_WORDS.length),
+      1500,
+    );
+    return () => clearInterval(id);
+  }, [streaming, streamText]);
 
   // Stream the AI remediation token-by-token over SSE (same-origin cookie auth).
   async function streamSuggestion() {
@@ -275,16 +307,23 @@ export default function FindingDetailPage() {
         {showSuggestion && (
           <div>
             {streaming && !streamText && (
-              <p className="text-sm text-muted-foreground">Generating suggestion…</p>
+              <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="size-1.5 animate-pulse rounded-full bg-secondary" />
+                <span className="animate-pulse">{THINKING_WORDS[thinkIdx]}…</span>
+              </p>
             )}
-            {streamText && (
-              <>
-                <MarkdownView content={streamText} />
-                {streaming && (
-                  <span className="ml-0.5 inline-block h-4 w-2 animate-pulse bg-secondary align-text-bottom" />
-                )}
-              </>
+            {/* While streaming, show raw text as it types in (no markdown re-parse
+                flicker); once complete, render the formatted markdown. */}
+            {streaming && streamText && (
+              <div
+                ref={streamRef}
+                className="max-h-[28rem] overflow-y-auto whitespace-pre-wrap font-mono text-[13px] leading-relaxed text-foreground/90"
+              >
+                {streamText}
+                <span className="ml-px inline-block h-[1.05em] w-[2px] translate-y-[2px] animate-pulse bg-secondary" />
+              </div>
             )}
+            {!streaming && streamText && <MarkdownView content={streamText} />}
             {!streaming && !streamText && (
               <p className="text-sm text-muted-foreground">No suggestion available.</p>
             )}
