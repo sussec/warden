@@ -32,6 +32,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<ProjectUsers> ProjectUsers { set; get; } = null!;
     public DbSet<Rules> Rules { set; get; } = null!;
     public DbSet<ScanFindings> ScanFindings { set; get; } = null!;
+    public DbSet<ScanJobs> ScanJobs { set; get; } = null!;
     public DbSet<Scanners> Scanners { set; get; } = null!;
     public DbSet<ScanProjectPackages> ScanProjectPackages { set; get; } = null!;
     public DbSet<Scans> Scans { set; get; } = null!;

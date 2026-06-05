@@ -1,0 +1,13 @@
+using Warden.Core;
+
+namespace Warden.Application.Module.Scan;
+
+public class ScanModule : IModule
+{
+    public IServiceCollection RegisterModule(IServiceCollection builder)
+    {
+        builder.AddScoped<IScanJobService, ScanJobService>();
+        builder.AddHostedService<ScanRunnerWorker>();
+        return builder;
+    }
+}

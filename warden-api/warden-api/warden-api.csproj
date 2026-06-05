@@ -17,14 +17,15 @@
         <PackageReference Include="Aguacongas.AspNetCore.Authentication.EntityFramework" Version="6.1.0" />
         <PackageReference Include="Atlassian.SDK" Version="13.0.0" />
         <PackageReference Include="ClosedXML" Version="0.105.0" />
+        <PackageReference Include="Docker.DotNet" Version="3.125.15" />
         <PackageReference Include="FluentResults" Version="4.0.0" />
         <PackageReference Include="MailKit" Version="4.17.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.8"/>
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.8"/>
-        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.8"/>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.8" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.8" />
+        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.8" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
-        <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="10.0.8"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8"/>
+        <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="10.0.8" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.8">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -39,8 +40,8 @@
         <PackageReference Include="ModelContextProtocol.AspNetCore" Version="1.3.0" />
         <PackageReference Include="Pgvector" Version="0.3.2" />
         <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.8" />
-        <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="10.0.8"/>
-        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2"/>
+        <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="10.0.8" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
         <PackageReference Include="Quartz.Extensions.Hosting" Version="3.18.1" />
         <PackageReference Include="QuestPDF" Version="2026.5.0" />
         <PackageReference Include="QuestPDF.Markdown" Version="1.49.1" />
@@ -52,7 +53,7 @@
         <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
         <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
         <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.4" />
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.1"/>
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.1" />
     </ItemGroup>
     <ItemGroup>
         <None Update="Resources\**">

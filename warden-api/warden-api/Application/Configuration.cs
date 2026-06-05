@@ -16,6 +16,11 @@ public static class Configuration
         $"Host={Config.DbServer};Database={Config.DbName};Username={Config.DbUsername};Password={Config.DbPassword}";
     
     public static string SystemPassword => Config.SystemPassword;
+    public static string ScanDockerSocket => Config.ScanDockerSocket;
+    public static string ScanImagePrefix => Config.ScanImagePrefix;
+    public static string ScanNetwork => Config.ScanNetwork;
+    public static string ScanWardenUrl => Config.ScanWardenUrl;
+    public static string ScanToken => Config.ScanToken;
     public static SecurityKey AccessTokenKey => Config.AccessTokenSecurityKey;
     public static SecurityKey RefreshTokenKey => Config.RefreshTokenSecurityKey;
 }

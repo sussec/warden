@@ -39,6 +39,22 @@ public class AppConfig
     [Option(Env = "OPENAPI_ENABLED", Default = "true")]
     public string OpenApiEnabled { get; set; } = string.Empty;
 
+    // on-demand scan runner (UI-triggered sibling containers via docker socket)
+    [Option(Env = "SCAN_DOCKER_SOCKET", Default = "unix:///var/run/docker.sock")]
+    public string ScanDockerSocket { get; set; } = string.Empty;
+
+    [Option(Env = "SCAN_IMAGE_PREFIX", Default = "warden-")]
+    public string ScanImagePrefix { get; set; } = string.Empty;
+
+    [Option(Env = "SCAN_NETWORK", Default = "warden_default")]
+    public string ScanNetwork { get; set; } = string.Empty;
+
+    [Option(Env = "SCAN_WARDEN_URL", Default = "http://warden:8080")]
+    public string ScanWardenUrl { get; set; } = string.Empty;
+
+    [Option(Env = "WARDEN_TOKEN", Default = "")]
+    public string ScanToken { get; set; } = string.Empty;
+
     [JsonIgnore] internal SecurityKey AccessTokenSecurityKey = null!;
     [JsonIgnore] internal SecurityKey RefreshTokenSecurityKey = null!;
 
