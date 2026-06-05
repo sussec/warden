@@ -62,3 +62,4 @@ warden-web/test-results/
 warden-web/playwright-report/
 warden-web/e2e-results.json
 warden-web/.playwright/
+.claude/

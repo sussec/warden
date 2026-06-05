@@ -15,6 +15,7 @@ public class ScanRunnerWorker(IServiceScopeFactory scopeFactory, ILogger<ScanRun
     : BackgroundService
 {
     private const int MaxLogChars = 16_000;
+    private static readonly TimeSpan JobTimeout = TimeSpan.FromMinutes(30);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -29,6 +30,7 @@ public class ScanRunnerWorker(IServiceScopeFactory scopeFactory, ILogger<ScanRun
         using var docker = new DockerClientConfiguration(
             new Uri(Configuration.ScanDockerSocket)).CreateClient();
         logger.LogInformation("Scan runner active on {Socket}", Configuration.ScanDockerSocket);
+        await RecoverOrphansAsync(docker, stoppingToken);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -78,6 +80,48 @@ public class ScanRunnerWorker(IServiceScopeFactory scopeFactory, ILogger<ScanRun
         }
     }
 
+    /// Jobs left Running by a previous process (restart/crash) can never
+    /// complete — fail them and remove their leftover containers.
+    private async Task RecoverOrphansAsync(IDockerClient docker, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var scope = scopeFactory.CreateAsyncScope();
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var orphans = await context.ScanJobs
+                .Where(record => record.Status == ScanJobStatus.Running)
+                .ToListAsync(cancellationToken);
+            foreach (var job in orphans)
+            {
+                job.Status = ScanJobStatus.Failed;
+                job.Log = "Interrupted by Warden restart";
+                job.CompletedAt = DateTime.UtcNow;
+            }
+            if (orphans.Count > 0)
+            {
+                await context.SaveChangesAsync(cancellationToken);
+                logger.LogWarning("Failed {Count} orphaned scan job(s) from previous run", orphans.Count);
+            }
+
+            var containers = await docker.Containers.ListContainersAsync(
+                new ContainersListParameters
+                {
+                    All = true,
+                    Filters = new Dictionary<string, IDictionary<string, bool>>
+                    {
+                        ["label"] = new Dictionary<string, bool> { ["warden.scan-job"] = true }
+                    }
+                }, cancellationToken);
+            foreach (var container in containers)
+                await docker.Containers.RemoveContainerAsync(container.ID,
+                    new ContainerRemoveParameters { Force = true }, cancellationToken);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Scan runner orphan recovery failed");
+        }
+    }
+
     private static async Task<(long exitCode, string log)> RunContainerAsync(
         IDockerClient docker, ScanJobs job, CancellationToken cancellationToken)
     {
@@ -119,9 +163,19 @@ public class ScanRunnerWorker(IServiceScopeFactory scopeFactory, ILogger<ScanRun
         {
             await docker.Containers.StartContainerAsync(
                 created.ID, new ContainerStartParameters(), cancellationToken);
-            var wait = await docker.Containers.WaitContainerAsync(created.ID, cancellationToken);
-            var log = await ReadLogsAsync(docker, created.ID, cancellationToken);
-            return (wait.StatusCode, log);
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(JobTimeout);
+            try
+            {
+                var wait = await docker.Containers.WaitContainerAsync(created.ID, timeout.Token);
+                var log = await ReadLogsAsync(docker, created.ID, cancellationToken);
+                return (wait.StatusCode, log);
+            }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                var log = await ReadLogsAsync(docker, created.ID, cancellationToken);
+                return (-1, $"Timed out after {JobTimeout.TotalMinutes:0} minutes\n{log}");
+            }
         }
         finally
         {
