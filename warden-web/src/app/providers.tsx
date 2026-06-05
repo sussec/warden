@@ -25,20 +25,26 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <Toaster
         position="bottom-right"
         closeButton
-        gap={8}
+        gap={10}
+        offset={20}
         toastOptions={{
+          // Mirror the app's Card surface (rounded-xl, bg-card, shadow-sm) and
+          // the Outfit body font so toasts feel native to the warm-editorial UI.
           classNames: {
             toast:
-              "group rounded-lg border border-border bg-popover text-popover-foreground shadow-lg",
-            title: "text-sm font-semibold",
-            description: "text-muted-foreground",
-            actionButton: "rounded-md bg-primary text-primary-foreground",
-            cancelButton: "rounded-md bg-muted text-muted-foreground",
+              "group !font-sans gap-2.5 !rounded-xl !border-border !bg-card !text-card-foreground !shadow-sm p-4",
+            icon: "[&>svg]:size-4.5",
+            title: "text-sm font-semibold tracking-tight",
+            description: "!text-muted-foreground text-[13px] leading-relaxed",
+            actionButton:
+              "!rounded-md !bg-primary !text-primary-foreground text-xs font-medium",
+            cancelButton:
+              "!rounded-md !bg-muted !text-muted-foreground text-xs font-medium",
             closeButton:
-              "border-border bg-popover text-muted-foreground hover:text-foreground",
+              "!border-border !bg-card !text-muted-foreground hover:!text-foreground hover:!bg-muted",
             success: "[&_[data-icon]>svg]:text-emerald-600",
-            error: "[&_[data-icon]>svg]:text-destructive",
-            warning: "[&_[data-icon]>svg]:text-primary",
+            error: "[&_[data-icon]>svg]:text-red-600",
+            warning: "[&_[data-icon]>svg]:text-amber-600",
             info: "[&_[data-icon]>svg]:text-primary",
           },
         }}
