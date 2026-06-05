@@ -101,6 +101,25 @@ const SEVERITY_LABELS: Record<string, string> = {
   low: "Low",
 };
 
+// Recharts sorts legend/tooltip items alphabetically by default — rank them
+// by severity (then workflow state) instead.
+const ITEM_RANK: Record<string, number> = {
+  critical: 0,
+  high: 1,
+  medium: 2,
+  low: 3,
+  open: 0,
+  confirmed: 1,
+  ignore: 2,
+  acceptedRisk: 2,
+  fixed: 3,
+  sast: 0,
+  sca: 1,
+  count: 0,
+};
+const rankItem = (item: { dataKey?: unknown; value?: unknown; name?: unknown }) =>
+  ITEM_RANK[String(item.dataKey ?? item.name ?? item.value)] ?? 99;
+
 const RANGES = [
   { value: "7", label: "Last 7 days" },
   { value: "30", label: "Last 30 days" },
@@ -284,7 +303,7 @@ export default function DashboardPage() {
           </p>
         </div>
         <Select value={days} onValueChange={setDays}>
-          <SelectTrigger size="sm" className="w-40 bg-card">
+          <SelectTrigger size="sm" className="w-44 bg-card">
             <CalendarDays className="size-4 text-muted-foreground" />
             <SelectValue />
           </SelectTrigger>
@@ -337,7 +356,7 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           <ChartContainer config={severityConfig} className="aspect-auto h-64 w-full">
-            <AreaChart data={areaData}>
+            <AreaChart data={areaData} margin={{ top: 12, left: 0, right: 8 }}>
               <defs>
                 {SEVERITY_KEYS.map((key) => (
                   <linearGradient key={key} id={`fill-${key}`} x1="0" y1="0" x2="0" y2="1">
@@ -375,7 +394,7 @@ export default function DashboardPage() {
                   stackId="severity"
                 />
               ))}
-              <ChartLegend content={<ChartLegendContent />} />
+              <ChartLegend itemSorter={rankItem} content={<ChartLegendContent />} />
             </AreaChart>
           </ChartContainer>
         </CardContent>
@@ -391,7 +410,7 @@ export default function DashboardPage() {
           <CardContent className="flex-1 pb-0">
             <ChartContainer config={severityConfig} className="mx-auto aspect-square max-h-56">
               <PieChart>
-                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                <ChartTooltip cursor={false} itemSorter={rankItem} content={<ChartTooltipContent hideLabel />} />
                 <Pie
                   data={sastPie}
                   dataKey="count"
@@ -420,7 +439,7 @@ export default function DashboardPage() {
                     }}
                   />
                 </Pie>
-                <ChartLegend content={<ChartLegendContent nameKey="severity" />} />
+                <ChartLegend itemSorter={rankItem} content={<ChartLegendContent nameKey="severity" />} />
               </PieChart>
             </ChartContainer>
           </CardContent>
@@ -434,7 +453,7 @@ export default function DashboardPage() {
           <CardContent className="flex-1 pb-0">
             <ChartContainer config={severityConfig} className="mx-auto aspect-square max-h-56">
               <PieChart>
-                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                <ChartTooltip cursor={false} itemSorter={rankItem} content={<ChartTooltipContent hideLabel />} />
                 <Pie data={scaPie} dataKey="count" nameKey="severity" innerRadius={55} strokeWidth={5}>
                   <Label
                     content={({ viewBox }) => {
@@ -453,7 +472,7 @@ export default function DashboardPage() {
                     }}
                   />
                 </Pie>
-                <ChartLegend content={<ChartLegendContent nameKey="severity" />} />
+                <ChartLegend itemSorter={rankItem} content={<ChartLegendContent nameKey="severity" />} />
               </PieChart>
             </ChartContainer>
           </CardContent>
@@ -467,12 +486,12 @@ export default function DashboardPage() {
           <CardContent className="flex-1 pb-0">
             <ChartContainer config={compareConfig} className="mx-auto aspect-square max-h-56">
               <RadarChart data={radarData}>
-                <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
+                <ChartTooltip cursor={false} itemSorter={rankItem} content={<ChartTooltipContent indicator="line" />} />
                 <PolarAngleAxis dataKey="severity" />
                 <PolarGrid />
                 <Radar dataKey="sast" fill="var(--color-sast)" fillOpacity={0.5} stroke="var(--color-sast)" />
                 <Radar dataKey="sca" fill="var(--color-sca)" fillOpacity={0.4} stroke="var(--color-sca)" />
-                <ChartLegend content={<ChartLegendContent />} />
+                <ChartLegend itemSorter={rankItem} content={<ChartLegendContent />} />
               </RadarChart>
             </ChartContainer>
           </CardContent>
@@ -501,7 +520,7 @@ export default function DashboardPage() {
                 innerRadius={70}
                 outerRadius={105}
               >
-                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                <ChartTooltip cursor={false} itemSorter={rankItem} content={<ChartTooltipContent hideLabel />} />
                 <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
                   <Label
                     content={({ viewBox }) => {
@@ -530,7 +549,7 @@ export default function DashboardPage() {
                     className="stroke-transparent stroke-2"
                   />
                 ))}
-                <ChartLegend content={<ChartLegendContent />} />
+                <ChartLegend itemSorter={rankItem} content={<ChartLegendContent />} />
               </RadialBarChart>
             </ChartContainer>
           </CardContent>
@@ -555,7 +574,7 @@ export default function DashboardPage() {
                 innerRadius={70}
                 outerRadius={105}
               >
-                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                <ChartTooltip cursor={false} itemSorter={rankItem} content={<ChartTooltipContent hideLabel />} />
                 <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
                   <Label
                     content={({ viewBox }) => {
@@ -584,7 +603,7 @@ export default function DashboardPage() {
                     className="stroke-transparent stroke-2"
                   />
                 ))}
-                <ChartLegend content={<ChartLegendContent />} />
+                <ChartLegend itemSorter={rankItem} content={<ChartLegendContent />} />
               </RadialBarChart>
             </ChartContainer>
           </CardContent>
@@ -597,7 +616,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="flex-1">
             <ChartContainer config={compareConfig} className="aspect-auto h-56 w-full">
-              <LineChart data={lineData} margin={{ left: -20, right: 12 }}>
+              <LineChart data={lineData} margin={{ top: 12, left: -20, right: 12 }}>
                 <CartesianGrid vertical={false} />
                 <XAxis
                   dataKey="date"
@@ -618,7 +637,7 @@ export default function DashboardPage() {
                 />
                 <Line dataKey="sast" type="monotone" stroke="var(--color-sast)" strokeWidth={2} dot={false} />
                 <Line dataKey="sca" type="monotone" stroke="var(--color-sca)" strokeWidth={2} dot={false} />
-                <ChartLegend content={<ChartLegendContent />} />
+                <ChartLegend itemSorter={rankItem} content={<ChartLegendContent />} />
               </LineChart>
             </ChartContainer>
           </CardContent>
@@ -649,7 +668,7 @@ export default function DashboardPage() {
                   width={150}
                   tickFormatter={(v: string) => (v.length > 20 ? `${v.slice(0, 20)}…` : v)}
                 />
-                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                <ChartTooltip cursor={false} itemSorter={rankItem} content={<ChartTooltipContent hideLabel />} />
                 <Bar
                   dataKey="count"
                   fill="var(--color-count)"
@@ -682,7 +701,7 @@ export default function DashboardPage() {
                   width={150}
                   tickFormatter={(v: string) => (v.length > 20 ? `${v.slice(0, 20)}…` : v)}
                 />
-                <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                <ChartTooltip cursor={false} itemSorter={rankItem} content={<ChartTooltipContent />} />
                 {SEVERITY_KEYS.map((key, i) => (
                   <Bar
                     key={key}
@@ -692,7 +711,7 @@ export default function DashboardPage() {
                     radius={i === SEVERITY_KEYS.length - 1 ? [0, 4, 4, 0] : 0}
                   />
                 ))}
-                <ChartLegend content={<ChartLegendContent />} />
+                <ChartLegend itemSorter={rankItem} content={<ChartLegendContent />} />
               </BarChart>
             </ChartContainer>
           </CardContent>
