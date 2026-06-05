@@ -14,11 +14,14 @@ import {
   History,
   KeyRound,
   Loader2,
+  Bug,
   PackageSearch,
   Play,
   Radar,
   ScanSearch,
+  ScrollText,
   ShieldAlert,
+  ShieldCheck,
 } from "lucide-react";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { toast } from "sonner";
@@ -165,6 +168,36 @@ const FLEET: FleetScanner[] = [
       "Supply-chain SCA across many ecosystems via Google's OSV.dev advisories, including malicious-package detection.",
     icon: ShieldAlert,
     command: `${TARGET} ${RUN} osv`,
+  },
+  {
+    service: "syft",
+    match: ["syft"],
+    type: "Dependency",
+    targetKind: "repository",
+    description:
+      "SBOM generation — a full dependency inventory of every component (CycloneDX/SPDX-grade supply-chain baseline).",
+    icon: ScrollText,
+    command: `${TARGET} ${RUN} syft`,
+  },
+  {
+    service: "checkov",
+    match: ["checkov"],
+    type: "Sast",
+    targetKind: "repository",
+    description:
+      "IaC misconfiguration scanning with a large ruleset — Terraform, CloudFormation, Kubernetes, Helm, Dockerfile, ARM.",
+    icon: ShieldCheck,
+    command: `${TARGET} ${RUN} checkov`,
+  },
+  {
+    service: "guarddog",
+    match: ["guarddog"],
+    type: "Sast",
+    targetKind: "repository",
+    description:
+      "Malicious-package detection in dependency manifests — typosquatting, suspicious install scripts, obfuscation, exfiltration.",
+    icon: Bug,
+    command: `${TARGET} ${RUN} guarddog`,
   },
   {
     service: "trivy-iac",

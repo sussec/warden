@@ -46,11 +46,14 @@ For pipeline integration (GitLab CI, GitHub Actions), the same containers run as
 |---|---|---|---|
 | Semgrep | SAST | source code | semgrep |
 | Trivy IaC | SAST (misconfig) | Terraform, K8s, Dockerfile | trivy-iac |
+| Checkov | SAST (misconfig) | Terraform, K8s, Helm, Dockerfile, … | checkov |
 | Gitleaks | Secret | working tree | gitleaks |
 | TruffleHog | Secret | filesystem / history | trufflehog |
 | Trivy | SCA | dependencies | trivy |
 | Grype | SCA | dependencies | grype |
 | OSV-Scanner | SCA | dependencies / supply-chain | osv |
+| Syft | SBOM | dependency inventory | syft |
+| GuardDog | Supply-chain | malicious packages in manifests | guarddog |
 | Trivy Image | Container | container images (set SCAN_IMAGE_REF) | trivy-image |
 | OWASP ZAP | DAST | running URL (set SCAN_TARGET_URL) | zap |
 | Nuclei | DAST | running URL (set SCAN_TARGET_URL) | nuclei |

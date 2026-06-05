@@ -9,7 +9,7 @@ Techanv Warden is a self-hosted Application Security Posture Management (ASPM) a
 | Capability | Description |
 |---|---|
 | Unified findings | One dashboard for SAST, secrets, dependency, and container findings across every repository and branch. |
-| On-demand scanning | A ten-scanner fleet (Semgrep, Gitleaks, TruffleHog, Trivy, Grype, OSV-Scanner, Trivy IaC, Trivy Image, ZAP, Nuclei) you can launch from the UI or CLI — no pipeline required. |
+| On-demand scanning | A thirteen-scanner fleet (Semgrep, Checkov, Gitleaks, TruffleHog, Trivy, Grype, OSV-Scanner, Syft, GuardDog, Trivy IaC, Trivy Image, ZAP, Nuclei) you can launch from the UI or CLI — no pipeline required. |
 | Deduplication | Findings are fingerprinted per project. The same issue reported across repeated pipeline runs is tracked as a single finding. |
 | Fix detection | When a confirmed finding disappears from the default branch, Warden marks it fixed, and reopens it if the fix is reverted. |
 | Shift-left feedback | Scan results are posted directly on merge requests so developers see security issues before merge. |

@@ -137,10 +137,13 @@ nav:
       - Gitleaks: security-integration/sast/gitleaks.md
       - TruffleHog: security-integration/sast/trufflehog.md
       - Trivy IaC: security-integration/sast/trivy-iac.md
+      - Checkov: security-integration/sast/checkov.md
     - Software Composition Analysis (SCA):
       - Trivy: security-integration/sca/trivy.md
       - Grype: security-integration/sca/grype.md
       - OSV-Scanner: security-integration/sca/osv.md
+      - Syft (SBOM): security-integration/sca/syft.md
+      - GuardDog: security-integration/sca/guarddog.md
     - Container & DAST:
       - Trivy Image: security-integration/container/trivy-image.md
       - OWASP ZAP: security-integration/dast/zap.md

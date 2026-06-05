@@ -126,6 +126,39 @@ services:
     volumes:
       - ${SCAN_TARGET:-.}:/src:ro
 
+  # SBOM generation — full dependency inventory (CycloneDX/SPDX-grade)
+  syft:
+    profiles: ["scan"]
+    build:
+      context: ./scanners/quarkus
+      dockerfile: scanner-syft/Dockerfile
+    pull_policy: build
+    environment: *scanner-env
+    volumes:
+      - ${SCAN_TARGET:-.}:/src:ro
+
+  # IaC misconfiguration scanning with a large ruleset (Terraform, K8s, ...)
+  checkov:
+    profiles: ["scan"]
+    build:
+      context: ./scanners/quarkus
+      dockerfile: scanner-checkov/Dockerfile
+    pull_policy: build
+    environment: *scanner-env
+    volumes:
+      - ${SCAN_TARGET:-.}:/src:ro
+
+  # malicious-package detection in dependency manifests (typosquatting, etc.)
+  guarddog:
+    profiles: ["scan"]
+    build:
+      context: ./scanners/quarkus
+      dockerfile: scanner-guarddog/Dockerfile
+    pull_policy: build
+    environment: *scanner-env
+    volumes:
+      - ${SCAN_TARGET:-.}:/src:ro
+
   # git-history secret detection (complements gitleaks working-tree scan)
   trufflehog:
     profiles: ["scan"]
