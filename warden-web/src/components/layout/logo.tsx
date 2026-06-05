@@ -84,6 +84,19 @@ export function AnimatedWardenLogo({ className }: { className?: string }) {
 }
 
 /**
+ * Brand badge — the animated shield in a rounded-rectangle frame with a rotating
+ * gradient-ring sweep around it (CSS conic-gradient mask). Logo only, no wordmark.
+ * Distinctive, premium, and self-contained; honors prefers-reduced-motion.
+ */
+export function WardenBadge({ className }: { className?: string }) {
+  return (
+    <span className={cn("warden-badge relative grid size-10 place-items-center rounded-xl text-primary", className)}>
+      <AnimatedWardenLogo className="relative z-10 size-6" />
+    </span>
+  );
+}
+
+/**
  * Horizontal brand lockup — the animated shield mark plus the wordmark, all in
  * one self-contained SVG (no HTML text). The mark inherits the parent color
  * (azure via text-primary); the wordmark is rendered in the foreground color.

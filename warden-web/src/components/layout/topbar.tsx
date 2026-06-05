@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Menu, Moon, Sun, User, LogOut, Settings } from "lucide-react";
-import { AnimatedWardenLockup } from "./logo";
+import { WardenBadge } from "./logo";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -30,7 +30,7 @@ export function Topbar({ onMenuToggle }: { onMenuToggle: () => void }) {
         aria-label="Techanv Warden — dashboard"
         className="group flex items-center text-primary"
       >
-        <AnimatedWardenLockup className="h-10 w-auto transition-transform duration-300 group-hover:scale-[1.04]" />
+        <WardenBadge className="transition-transform duration-300 group-hover:scale-[1.06]" />
       </Link>
       <div className="ml-auto flex items-center gap-2">
         <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle dark mode">

@@ -60,9 +60,11 @@ export function DataTable<T>({
   const to = Math.min(page.page * page.size, count);
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex h-full min-h-0 flex-col gap-2">
+      {/* only the table body scrolls; header stays sticky, pagination pinned */}
+      <div className="min-h-0 flex-1 overflow-auto">
       <Table>
-        <TableHeader>
+        <TableHeader className="sticky top-0 z-10 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
           <TableRow>
             {columns.map((col) => (
               <TableHead key={col.key} className={cn("uppercase text-xs font-bold", col.className)}>
@@ -105,7 +107,8 @@ export function DataTable<T>({
             ))}
         </TableBody>
       </Table>
-      <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
+      </div>
+      <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-border/60 pt-2 text-sm text-muted-foreground">
         <span>
           Showing {from} to {to} of {count}
         </span>
