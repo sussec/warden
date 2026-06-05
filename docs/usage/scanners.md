@@ -15,6 +15,7 @@ The fleet mirrors the `scan` profile in `docker-compose.yml`:
 | Scanner | Type | Target |
 |---|---|---|
 | semgrep | SAST | repository path |
+| deepsec | SAST (AI-agent) | repository path |
 | gitleaks | Secret | repository path |
 | trufflehog | Secret | repository path |
 | trivy | SCA | repository path |

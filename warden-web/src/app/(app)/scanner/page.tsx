@@ -22,6 +22,7 @@ import {
   ScrollText,
   ShieldAlert,
   ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { toast } from "sonner";
@@ -198,6 +199,16 @@ const FLEET: FleetScanner[] = [
       "Malicious-package detection in dependency manifests — typosquatting, suspicious install scripts, obfuscation, exfiltration.",
     icon: Bug,
     command: `${TARGET} ${RUN} guarddog`,
+  },
+  {
+    service: "deepsec",
+    match: ["deepsec"],
+    type: "Sast",
+    targetKind: "repository",
+    description:
+      "AI-agent deep SAST (vercel-labs) — coding agents trace data flow to find logic vulns pattern scanners miss. Uses Warden's AI config; budget-capped.",
+    icon: Sparkles,
+    command: `${TARGET} ${RUN} deepsec`,
   },
   {
     service: "trivy-iac",

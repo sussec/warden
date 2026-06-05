@@ -45,6 +45,7 @@ For pipeline integration (GitLab CI, GitHub Actions), the same containers run as
 | Scanner | Type | Scans | Compose service |
 |---|---|---|---|
 | Semgrep | SAST | source code | semgrep |
+| deepsec | SAST (AI-agent) | source code (logic/data-flow) | deepsec |
 | Trivy IaC | SAST (misconfig) | Terraform, K8s, Dockerfile | trivy-iac |
 | Checkov | SAST (misconfig) | Terraform, K8s, Helm, Dockerfile, … | checkov |
 | Gitleaks | Secret | working tree | gitleaks |

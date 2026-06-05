@@ -138,6 +138,7 @@ nav:
       - TruffleHog: security-integration/sast/trufflehog.md
       - Trivy IaC: security-integration/sast/trivy-iac.md
       - Checkov: security-integration/sast/checkov.md
+      - deepsec (AI SAST): security-integration/sast/deepsec.md
     - Software Composition Analysis (SCA):
       - Trivy: security-integration/sca/trivy.md
       - Grype: security-integration/sca/grype.md

@@ -159,6 +159,28 @@ services:
     volumes:
       - ${SCAN_TARGET:-.}:/src:ro
 
+  # AI-agent deep SAST (vercel-labs/deepsec). Pipeline mode uses Warden's own
+  # AI config (single source of truth) and costs real model spend — budget-cap
+  # with DEEPSEC_LIMIT. Bridge mode ingests a CI-produced export via
+  # DEEPSEC_REPORT. See docs/security-integration/sast/deepsec.md.
+  deepsec:
+    profiles: ["scan"]
+    build:
+      context: ./scanners/quarkus
+      dockerfile: scanner-deepsec/Dockerfile
+    pull_policy: build
+    environment:
+      <<: *scanner-env
+      # reuse Warden's configured model endpoint as the deepsec gateway
+      AI_ENDPOINT: ${AI_ENDPOINT:-}
+      AI_MODEL: ${AI_MODEL:-}
+      WARDEN_AI_API_KEY: ${WARDEN_AI_API_KEY:-}
+      DEEPSEC_LIMIT: ${DEEPSEC_LIMIT:-50}
+      DEEPSEC_AGENT: ${DEEPSEC_AGENT:-codex}
+      DEEPSEC_REPORT: ${DEEPSEC_REPORT:-}
+    volumes:
+      - ${SCAN_TARGET:-.}:/src:ro
+
   # git-history secret detection (complements gitleaks working-tree scan)
   trufflehog:
     profiles: ["scan"]
