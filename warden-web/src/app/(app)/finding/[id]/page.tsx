@@ -36,6 +36,13 @@ import {
 } from "@/client/sdk.gen";
 import type { FindingDetail, FindingStatus } from "@/client/types.gen";
 
+// Close an unterminated ``` code fence so the markdown renders cleanly while
+// the answer is still streaming (prevents the flash of raw fence markup).
+function sanitizeStreamingMarkdown(text: string): string {
+  const fenceCount = (text.match(/```/g) ?? []).length;
+  return fenceCount % 2 === 1 ? `${text}\n\`\`\`` : text;
+}
+
 // Rotating status words shown before the first token arrives (Claude-Code style).
 const THINKING_WORDS = [
   "Thinking",
@@ -312,14 +319,11 @@ export default function FindingDetailPage() {
                 <span className="animate-pulse">{THINKING_WORDS[thinkIdx]}…</span>
               </p>
             )}
-            {/* While streaming, show raw text as it types in (no markdown re-parse
-                flicker); once complete, render the formatted markdown. */}
+            {/* Render formatted markdown live as it streams (unterminated code
+                fences are auto-closed to avoid raw-markup flashes). */}
             {streaming && streamText && (
-              <div
-                ref={streamRef}
-                className="max-h-[28rem] overflow-y-auto whitespace-pre-wrap font-mono text-[13px] leading-relaxed text-foreground/90"
-              >
-                {streamText}
+              <div ref={streamRef} className="max-h-[32rem] overflow-y-auto">
+                <MarkdownView content={sanitizeStreamingMarkdown(streamText)} />
                 <span className="ml-px inline-block h-[1.05em] w-[2px] translate-y-[2px] animate-pulse bg-secondary" />
               </div>
             )}

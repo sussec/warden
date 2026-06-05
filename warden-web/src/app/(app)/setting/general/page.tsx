@@ -47,7 +47,12 @@ export default function GeneralSettingPage() {
     mutationFn: async () =>
       (await testSmtpSetting({ query: { email: testEmail }, throwOnError: true })).data,
     onSuccess: (ok) => (ok ? toast.success("Test email sent") : toast.error("SMTP test failed")),
-    onError: () => toast.error("SMTP test failed"),
+    onError: (err: unknown) => {
+      // Surface the real SMTP/server error (e.g. "535 Authentication unsuccessful")
+      // returned in the API response, not a generic message.
+      const detail = (err as { errors?: string[] })?.errors?.[0];
+      toast.error(detail ?? "SMTP test failed", { duration: 8000 });
+    },
   });
 
   return (
