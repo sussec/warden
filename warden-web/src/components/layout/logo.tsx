@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 /**
  * Techanv Warden mark — a geometric shield holding a watch-beacon (sentinel
  * dot + radiating sweep arcs). Inline SVG so `fill="currentColor"` inherits
- * the surrounding text color (copper via text-primary) in light and dark.
+ * the surrounding text color (azure via text-primary) in light and dark.
  */
 export function WardenLogo({ className }: { className?: string }) {
   return (
@@ -86,7 +86,7 @@ export function AnimatedWardenLogo({ className }: { className?: string }) {
 /**
  * Horizontal brand lockup — the animated shield mark plus the wordmark, all in
  * one self-contained SVG (no HTML text). The mark inherits the parent color
- * (copper via text-primary); the wordmark is rendered in the foreground color.
+ * (azure via text-primary); the wordmark is rendered in the foreground color.
  * Shield draws in, beacon pulses, radar arcs ping, wordmark slides in.
  */
 export function AnimatedWardenLockup({ className }: { className?: string }) {

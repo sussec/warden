@@ -311,11 +311,11 @@ export default function DashboardPage() {
   const tickFormatter = (value: string) => format(parseISO(value), "MMM d");
 
   return (
-    <div className="flex flex-col gap-4 px-2">
+    <div className="flex flex-col gap-6">
       {/* header ------------------------------------------------------------ */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">Security Overview</h1>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight">Security Overview</h1>
           <p className="text-sm text-muted-foreground">
             SAST &amp; SCA posture across all projects
           </p>
@@ -338,14 +338,20 @@ export default function DashboardPage() {
       {/* KPI cards ---------------------------------------------------------- */}
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         {kpis.map((kpi) => (
-          <Card key={kpi.label} className="gap-2 py-4">
-            <CardHeader className="flex flex-row items-center justify-between px-4">
-              <CardDescription>{kpi.label}</CardDescription>
-              <kpi.icon className={`size-4 ${kpi.className}`} />
-            </CardHeader>
-            <CardContent className="px-4">
-              <div className="text-3xl font-bold tabular-nums">{kpi.value}</div>
-              <p className="text-xs text-muted-foreground">{kpi.hint}</p>
+          <Card key={kpi.label} className="gap-0 py-5">
+            <CardContent className="flex items-start gap-3.5 px-5">
+              <span className={`flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted ${kpi.className}`}>
+                <kpi.icon className="size-5" />
+              </span>
+              <div className="min-w-0 space-y-0.5">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  {kpi.label}
+                </p>
+                <div className="text-3xl font-bold leading-none tabular-nums">
+                  {kpi.value.toLocaleString()}
+                </div>
+                <p className="truncate text-xs text-muted-foreground">{kpi.hint}</p>
+              </div>
             </CardContent>
           </Card>
         ))}

@@ -1,17 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Techanv Warden — shield + watch-beacon mark (brand copper gradient) -->
+  <!-- Techanv Warden — shield + watch-beacon mark (brand azure gradient) -->
   <defs>
-    <linearGradient id="warden-copper" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#f09d57"/>
-      <stop offset="100%" stop-color="#cf6f2e"/>
+    <linearGradient id="warden-azure" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#46a6ef"/>
+      <stop offset="100%" stop-color="#0072d0"/>
     </linearGradient>
   </defs>
-  <path fill="url(#warden-copper)" fill-rule="evenodd"
+  <path fill="url(#warden-azure)" fill-rule="evenodd"
     d="M256 30 L450 98 V272 C450 386 368 450 256 484 C144 450 62 386 62 272 V98 Z
        M256 78 L406 130 V272 C406 356 344 408 256 438 C168 408 106 356 106 272 V130 Z"/>
-    <circle cx="256" cy="300" r="34" fill="url(#warden-copper)"/>
+    <circle cx="256" cy="300" r="34" fill="url(#warden-azure)"/>
   <path d="M205.1 249.1 A72 72 0 0 1 306.9 249.1" fill="none"
-    stroke="url(#warden-copper)" stroke-width="26" stroke-linecap="round" opacity="0.65"/>
+    stroke="url(#warden-azure)" stroke-width="26" stroke-linecap="round" opacity="0.65"/>
   <path d="M174 218 A116 116 0 0 1 338 218" fill="none"
-    stroke="url(#warden-copper)" stroke-width="26" stroke-linecap="round" opacity="0.35"/>
+    stroke="url(#warden-azure)" stroke-width="26" stroke-linecap="round" opacity="0.35"/>
 </svg>
