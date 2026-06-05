@@ -1,45 +1,49 @@
+/* Kumo (Cloudflare) — registered before Tailwind per the docs so its theme
+   tokens + utilities are available; @source lets Tailwind v4 scan Kumo's
+   classes in node_modules. theme-kumo is vendored (the exports map blocks it). */
+@source "../../node_modules/@cloudflare/kumo/dist/**/*.{js,jsx,ts,tsx}";
+@import "@cloudflare/kumo/styles/tailwind";
+@import "../styles/kumo-theme.css";
 @import "tailwindcss";
-/* Cloudflare Kumo component styles — additive + scoped ([data-kumo-*]);
-   only the package's exported style entry is importable. */
-@import "@cloudflare/kumo/styles";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Warden — premium AppSec palette: cool neutral grays + an azure security
-     accent (trillion-dollar tech feel; distinct from severity hues). */
-  --background: oklch(0.9770 0.0020 256);
-  --foreground: oklch(0.2200 0.0090 262);
-  --card: oklch(1.0000 0 0);
-  --card-foreground: oklch(0.2200 0.0090 262);
-  --popover: oklch(1.0000 0 0);
-  --popover-foreground: oklch(0.2200 0.0090 262);
-  --primary: oklch(0.5500 0.1700 250);
-  --primary-foreground: oklch(1.0000 0 0);
-  --secondary: oklch(0.9680 0.0040 256);
-  --secondary-foreground: oklch(0.3000 0.0090 262);
-  --muted: oklch(0.9680 0.0040 256);
-  --muted-foreground: oklch(0.5500 0.0120 262);
-  --accent: oklch(0.9680 0.0040 256);
-  --accent-foreground: oklch(0.2400 0.0090 262);
-  --destructive: oklch(0.5770 0.2150 27.3000);
-  --destructive-foreground: oklch(1.0000 0 0);
-  --border: oklch(0.9220 0.0040 256);
-  --input: oklch(0.8720 0.0050 256);
-  --ring: oklch(0.5500 0.1700 250);
-  --chart-1: oklch(0.5500 0.1600 250);
-  --chart-2: oklch(0.6898 0.1581 290.4107);
-  --chart-3: oklch(0.7480 0.1400 66.0000);
-  --chart-4: oklch(0.6270 0.1400 150.0000);
-  --chart-5: oklch(0.6090 0.1320 274.0000);
-  --sidebar: oklch(0.9830 0.0020 256);
-  --sidebar-foreground: oklch(0.3200 0.0090 262);
-  --sidebar-primary: oklch(0.5500 0.1700 250);
-  --sidebar-primary-foreground: oklch(1.0000 0 0);
-  --sidebar-accent: oklch(0.9680 0.0040 256);
-  --sidebar-accent-foreground: oklch(0.2400 0.0090 262);
-  --sidebar-border: oklch(0.9220 0.0040 256);
-  --sidebar-ring: oklch(0.5500 0.1700 250);
+  color-scheme: light;
+  /* Warden semantic tokens aliased to Cloudflare Kumo's design tokens
+     (light/dark self-switch via Kumo's own light-dark() + [data-mode]). */
+  --background: var(--color-kumo-canvas);
+  --foreground: var(--text-color-kumo-default);
+  --card: var(--color-kumo-base);
+  --card-foreground: var(--text-color-kumo-default);
+  --popover: var(--color-kumo-base);
+  --popover-foreground: var(--text-color-kumo-default);
+  --primary: var(--color-kumo-brand);
+  --primary-foreground: var(--text-color-kumo-inverse);
+  --secondary: var(--color-kumo-fill);
+  --secondary-foreground: var(--text-color-kumo-default);
+  --muted: var(--color-kumo-recessed);
+  --muted-foreground: var(--text-color-kumo-subtle);
+  --accent: var(--color-kumo-fill);
+  --accent-foreground: var(--text-color-kumo-default);
+  --destructive: var(--color-kumo-danger);
+  --destructive-foreground: var(--text-color-kumo-inverse);
+  --border: var(--color-kumo-hairline);
+  --input: var(--color-kumo-interact);
+  --ring: var(--color-kumo-brand);
+  --chart-1: var(--color-kumo-brand);
+  --chart-2: var(--color-kumo-info);
+  --chart-3: var(--color-kumo-warning);
+  --chart-4: var(--color-kumo-success);
+  --chart-5: var(--color-kumo-danger);
+  --sidebar: var(--color-kumo-elevated);
+  --sidebar-foreground: var(--text-color-kumo-default);
+  --sidebar-primary: var(--color-kumo-brand);
+  --sidebar-primary-foreground: var(--text-color-kumo-inverse);
+  --sidebar-accent: var(--color-kumo-fill);
+  --sidebar-accent-foreground: var(--text-color-kumo-default);
+  --sidebar-border: var(--color-kumo-hairline);
+  --sidebar-ring: var(--color-kumo-brand);
   --font-sans: var(--font-outfit), Outfit, sans-serif;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: var(--font-geist-mono), "Geist Mono", ui-monospace, monospace;
