@@ -237,7 +237,7 @@ export default function DashboardPage() {
   const tick = (v: string) => format(parseISO(v), "MMM d");
 
   return (
-    <div className="flex h-[calc(100dvh-5.5rem)] flex-col gap-3">
+    <div className="flex min-h-[calc(100dvh-5.5rem)] flex-col gap-3 lg:h-[calc(100dvh-5.5rem)] lg:min-h-0">
       {/* header */}
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
         <div>
@@ -260,7 +260,7 @@ export default function DashboardPage() {
       </div>
 
       {/* bento grid — fills the viewport, no scroll */}
-      <div className="grid min-h-0 flex-1 grid-cols-12 grid-rows-[auto_minmax(0,1.4fr)_minmax(0,1fr)] gap-3">
+      <div className="grid grid-cols-12 gap-3 lg:min-h-0 lg:flex-1 lg:grid-rows-[auto_minmax(0,1.4fr)_minmax(0,1fr)]">
         {/* KPI strip */}
         {kpis.map((k) => (
           <div
@@ -286,7 +286,7 @@ export default function DashboardPage() {
         <Tile
           title="Findings Trend"
           desc={`New ${trendView === "sast" ? "findings" : "vulnerable packages"} per day by severity`}
-          className="col-span-12 lg:col-span-8"
+          className="col-span-12 min-h-[300px] lg:col-span-8 lg:min-h-0"
           action={
             <ToggleGroup
               type="single"
@@ -325,7 +325,7 @@ export default function DashboardPage() {
         </Tile>
 
         {/* Severity donut (SAST + SCA combined) */}
-        <Tile title="Severity" desc="All findings & packages" className="col-span-12 lg:col-span-4">
+        <Tile title="Severity" desc="All findings & packages" className="col-span-12 min-h-[260px] lg:col-span-4 lg:min-h-0">
           <ChartContainer config={severityConfig} className="mx-auto aspect-square h-full">
             <PieChart>
               <ChartTooltip cursor={false} itemSorter={rankItem} content={<ChartTooltipContent hideLabel />} />
@@ -358,7 +358,7 @@ export default function DashboardPage() {
         </Tile>
 
         {/* Remediation status radial */}
-        <Tile title="Remediation" desc="Workflow state" className="col-span-12 sm:col-span-6 lg:col-span-4">
+        <Tile title="Remediation" desc="Workflow state" className="col-span-12 min-h-[220px] sm:col-span-6 lg:col-span-4 lg:min-h-0">
           <div className="flex h-full items-center gap-2">
             <ChartContainer config={statusConfig} className="aspect-square h-full max-h-[150px]">
               <RadialBarChart data={statusData} endAngle={360} innerRadius="68%" outerRadius="100%">
@@ -400,7 +400,7 @@ export default function DashboardPage() {
         </Tile>
 
         {/* Top findings */}
-        <Tile title="Top Findings" desc="Most frequent categories" className="col-span-12 sm:col-span-6 lg:col-span-8">
+        <Tile title="Top Findings" desc="Most frequent categories" className="col-span-12 min-h-[240px] sm:col-span-6 lg:col-span-8 lg:min-h-0">
           <ChartContainer config={topFindingConfig} className="h-full w-full">
             <BarChart data={topFindings} layout="vertical" margin={{ left: 4, right: 28, top: 2, bottom: 2 }}>
               <XAxis type="number" hide />
