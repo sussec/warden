@@ -63,9 +63,61 @@ public sealed class AnthropicChatClient : IChatClient
         IEnumerable<ChatMessage> messages, ChatOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        // Non-streaming under the hood; emit the full response as one update.
-        var response = await GetResponseAsync(messages, options, cancellationToken);
-        yield return new ChatResponseUpdate(ChatRole.Assistant, response.Text);
+        // Real token streaming over the Anthropic SSE format (stream:true ->
+        // content_block_delta / text_delta events).
+        var request = BuildRequest(messages, options);
+        request.Stream = true;
+        using var req = new HttpRequestMessage(HttpMethod.Post, _messagesUrl)
+        {
+            Content = JsonContent.Create(request),
+        };
+        req.Headers.TryAddWithoutValidation("x-api-key", _apiKey);
+        req.Headers.TryAddWithoutValidation("anthropic-version", AnthropicVersion);
+        req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
+
+        using var res = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        if (!res.IsSuccessStatusCode)
+        {
+            var body = await res.Content.ReadAsStringAsync(cancellationToken);
+            throw new HttpRequestException($"Anthropic API {(int)res.StatusCode}: {Truncate(body)}");
+        }
+
+        await using var stream = await res.Content.ReadAsStreamAsync(cancellationToken);
+        using var reader = new StreamReader(stream);
+        while (!reader.EndOfStream)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var line = await reader.ReadLineAsync(cancellationToken);
+            if (string.IsNullOrEmpty(line) || !line.StartsWith("data:", StringComparison.Ordinal))
+            {
+                continue;
+            }
+            var payload = line[5..].Trim();
+            if (payload is "[DONE]" or "")
+            {
+                continue;
+            }
+            string? text = null;
+            try
+            {
+                using var doc = JsonDocument.Parse(payload);
+                var root = doc.RootElement;
+                if (root.TryGetProperty("type", out var t) && t.GetString() == "content_block_delta" &&
+                    root.TryGetProperty("delta", out var delta) &&
+                    delta.TryGetProperty("text", out var txt))
+                {
+                    text = txt.GetString();
+                }
+            }
+            catch (JsonException)
+            {
+                // skip malformed/keepalive frames
+            }
+            if (!string.IsNullOrEmpty(text))
+            {
+                yield return new ChatResponseUpdate(ChatRole.Assistant, text);
+            }
+        }
     }
 
     public object? GetService(Type serviceType, object? serviceKey = null) =>
@@ -125,6 +177,7 @@ public sealed class AnthropicChatClient : IChatClient
     {
         [JsonPropertyName("model")] public string Model { get; set; } = string.Empty;
         [JsonPropertyName("max_tokens")] public int MaxTokens { get; set; }
+        [JsonPropertyName("stream")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public bool Stream { get; set; }
         [JsonPropertyName("system")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? System { get; set; }
         [JsonPropertyName("temperature")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public float? Temperature { get; set; }
         [JsonPropertyName("messages")] public List<AnthropicMessage> Messages { get; set; } = new();

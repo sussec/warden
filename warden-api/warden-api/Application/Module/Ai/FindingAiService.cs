@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Text;
 using FluentResults;
 using Warden.Application.Module.Setting;
@@ -25,15 +26,96 @@ public class FindingAiService(AppDbContext context, IAiClientFactory aiClientFac
             return Result.Fail("AI assistance is not enabled. Configure it under Settings > AI.");
         }
 
-        var finding = await context.Findings
-            .Include(f => f.Scanner)
-            .Include(f => f.Project)
-            .FirstOrDefaultAsync(f => f.Id == findingId);
+        var finding = await LoadFindingAsync(findingId);
         if (finding == null)
         {
             return Result.Fail("Finding not found");
         }
 
+        try
+        {
+            var setting = await context.GetAiSettingAsync();
+            var response = await chatClient.GetResponseAsync(BuildMessages(finding));
+            return Result.Ok(new AiSuggestion
+            {
+                Content = response.Text,
+                Model = setting.Model
+            });
+        }
+        catch (Exception e)
+        {
+            // Log full detail server-side; return a generic message so provider/internal
+            // diagnostics (endpoints, auth errors, rate-limit headers) never reach the client.
+            logger.LogError(e, "AI remediation suggestion failed for finding {FindingId}", findingId);
+            return Result.Fail("AI request failed. Check the AI configuration and provider availability.");
+        }
+    }
+
+    public async IAsyncEnumerable<string> StreamRemediationAsync(
+        Guid findingId, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var chatClient = await aiClientFactory.CreateChatClientAsync();
+        if (chatClient == null)
+        {
+            yield return "AI assistance is not enabled. Configure it under Settings > AI.";
+            yield break;
+        }
+
+        var finding = await LoadFindingAsync(findingId);
+        if (finding == null)
+        {
+            yield return "Finding not found.";
+            yield break;
+        }
+
+        var messages = BuildMessages(finding);
+        var stream = chatClient.GetStreamingResponseAsync(messages, cancellationToken: cancellationToken)
+            .GetAsyncEnumerator(cancellationToken);
+        try
+        {
+            while (true)
+            {
+                string? text;
+                string? error = null;
+                try
+                {
+                    if (!await stream.MoveNextAsync())
+                    {
+                        break;
+                    }
+                    text = stream.Current.Text;
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "AI streaming suggestion failed for finding {FindingId}", findingId);
+                    error = "AI request failed. Check the AI configuration and provider availability.";
+                    text = null;
+                }
+                if (error != null)
+                {
+                    yield return error;
+                    yield break;
+                }
+                if (!string.IsNullOrEmpty(text))
+                {
+                    yield return text;
+                }
+            }
+        }
+        finally
+        {
+            await stream.DisposeAsync();
+        }
+    }
+
+    private async Task<Core.Entity.Findings?> LoadFindingAsync(Guid findingId) =>
+        await context.Findings
+            .Include(f => f.Scanner)
+            .Include(f => f.Project)
+            .FirstOrDefaultAsync(f => f.Id == findingId);
+
+    private static List<ChatMessage> BuildMessages(Core.Entity.Findings finding)
+    {
         var prompt = new StringBuilder();
         prompt.AppendLine($"Finding: {finding.Name}");
         prompt.AppendLine($"Severity: {finding.Severity}");
@@ -55,27 +137,10 @@ public class FindingAiService(AppDbContext context, IAiClientFactory aiClientFac
             prompt.AppendLine(finding.Snippet);
             prompt.AppendLine("```");
         }
-
-        try
-        {
-            var setting = await context.GetAiSettingAsync();
-            var response = await chatClient.GetResponseAsync(
-            [
-                new ChatMessage(ChatRole.System, SystemPrompt),
-                new ChatMessage(ChatRole.User, prompt.ToString())
-            ]);
-            return Result.Ok(new AiSuggestion
-            {
-                Content = response.Text,
-                Model = setting.Model
-            });
-        }
-        catch (Exception e)
-        {
-            // Log full detail server-side; return a generic message so provider/internal
-            // diagnostics (endpoints, auth errors, rate-limit headers) never reach the client.
-            logger.LogError(e, "AI remediation suggestion failed for finding {FindingId}", findingId);
-            return Result.Fail("AI request failed. Check the AI configuration and provider availability.");
-        }
+        return
+        [
+            new ChatMessage(ChatRole.System, SystemPrompt),
+            new ChatMessage(ChatRole.User, prompt.ToString())
+        ];
     }
 }

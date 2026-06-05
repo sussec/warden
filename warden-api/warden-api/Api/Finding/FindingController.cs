@@ -26,6 +26,31 @@ public class FindingController(
         return result.GetResult();
     }
 
+    /// <summary>
+    /// Streams the AI remediation suggestion token-by-token as Server-Sent Events
+    /// (each chunk on a `data:` line; a final `event: done`). Lets the UI render the
+    /// answer as it is generated instead of waiting for the full response.
+    /// </summary>
+    [HttpGet]
+    [Route("{findingId:guid}/ai-suggestion/stream")]
+    public async Task StreamAiSuggestion(Guid findingId, CancellationToken cancellationToken)
+    {
+        findingAuthorize.Authorize(findingId, CurrentUser, PermissionAction.Read);
+        Response.Headers.ContentType = "text/event-stream";
+        Response.Headers.CacheControl = "no-cache";
+        Response.Headers["X-Accel-Buffering"] = "no"; // disable proxy buffering
+
+        await foreach (var chunk in findingAiService.StreamRemediationAsync(findingId, cancellationToken))
+        {
+            // SSE data frames: encode newlines so multi-line chunks stay one event.
+            var encoded = chunk.Replace("\n", "\\n");
+            await Response.WriteAsync($"data: {encoded}\n\n", cancellationToken);
+            await Response.Body.FlushAsync(cancellationToken);
+        }
+        await Response.WriteAsync("event: done\ndata: \n\n", cancellationToken);
+        await Response.Body.FlushAsync(cancellationToken);
+    }
+
     [HttpPost]
     [Route("filter")]
     public async Task<Page<FindingSummary>> GetFindings(FindingFilter filter)

@@ -30,7 +30,6 @@ import { FindingActivityTimeline } from "@/components/findings/finding-activity-
 import { findingStatusMeta } from "@/components/findings/finding-status";
 import {
   addComment,
-  getAiSuggestion,
   getFindingActivities,
   getFindingById,
   updateFinding,
@@ -67,6 +66,42 @@ export default function FindingDetailPage() {
 
   const [comment, setComment] = useState("");
   const [showSuggestion, setShowSuggestion] = useState(false);
+  const [streamText, setStreamText] = useState("");
+  const [streaming, setStreaming] = useState(false);
+
+  // Stream the AI remediation token-by-token over SSE (same-origin cookie auth).
+  async function streamSuggestion() {
+    setShowSuggestion(true);
+    setStreamText("");
+    setStreaming(true);
+    try {
+      const res = await fetch(`/api/finding/${findingId}/ai-suggestion/stream`, {
+        credentials: "same-origin",
+      });
+      if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const frames = buffer.split("\n\n");
+        buffer = frames.pop() ?? "";
+        for (const frame of frames) {
+          if (frame.startsWith("event: done")) continue;
+          const line = frame.split("\n").find((l) => l.startsWith("data:"));
+          if (!line) continue;
+          const chunk = line.slice(5).replace(/^ /, "").replace(/\\n/g, "\n");
+          if (chunk) setStreamText((t) => t + chunk);
+        }
+      }
+    } catch {
+      toast.error("Failed to stream AI suggestion");
+    } finally {
+      setStreaming(false);
+    }
+  }
 
   const { data: finding, isLoading } = useQuery({
     queryKey: ["finding", findingId],
@@ -117,12 +152,6 @@ export default function FindingDetailPage() {
       void queryClient.invalidateQueries({ queryKey: ["finding-activity", findingId] });
     },
     onError: () => toast.error("Failed to post comment"),
-  });
-
-  const aiSuggestion = useMutation({
-    mutationFn: async () =>
-      (await getAiSuggestion({ path: { findingId }, throwOnError: true })).data,
-    onError: () => toast.error("Failed to get AI suggestion"),
   });
 
   if (isLoading || !finding) {
@@ -232,13 +261,10 @@ export default function FindingDetailPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              setShowSuggestion(true);
-              if (!aiSuggestion.data && !aiSuggestion.isPending) aiSuggestion.mutate();
-            }}
-            disabled={aiSuggestion.isPending}
+            onClick={() => void streamSuggestion()}
+            disabled={streaming}
           >
-            {aiSuggestion.isPending ? (
+            {streaming ? (
               <Loader2 className="size-4 animate-spin" />
             ) : (
               <Sparkles className="size-4 text-secondary" />
@@ -248,20 +274,18 @@ export default function FindingDetailPage() {
         </div>
         {showSuggestion && (
           <div>
-            {aiSuggestion.isPending && (
+            {streaming && !streamText && (
               <p className="text-sm text-muted-foreground">Generating suggestion…</p>
             )}
-            {aiSuggestion.data?.content && (
+            {streamText && (
               <>
-                <MarkdownView content={aiSuggestion.data.content} />
-                {aiSuggestion.data.model && (
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Model: {aiSuggestion.data.model}
-                  </p>
+                <MarkdownView content={streamText} />
+                {streaming && (
+                  <span className="ml-0.5 inline-block h-4 w-2 animate-pulse bg-secondary align-text-bottom" />
                 )}
               </>
             )}
-            {aiSuggestion.data && !aiSuggestion.data.content && !aiSuggestion.isPending && (
+            {!streaming && !streamText && (
               <p className="text-sm text-muted-foreground">No suggestion available.</p>
             )}
           </div>
