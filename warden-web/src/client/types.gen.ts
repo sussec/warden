@@ -155,6 +155,13 @@ export type CreateProjectMemberRequest = {
     role: ProjectRole;
 };
 
+export type CreateScanJobRequest = {
+    scanner: string;
+    target: string;
+    repoName?: string | null;
+    branch?: string | null;
+};
+
 export type CreateTokenRequest = {
     name: string;
 };
@@ -911,9 +918,32 @@ export type ScanDependencyResult = {
     scanUrl: string | null;
 };
 
+export type ScanJobFilter = {
+    scanner?: string | null;
+    status?: ScanJobStatus;
+};
+
+export type ScanJobInfo = {
+    id: string;
+    scanner: string | null;
+    targetType: ScanTargetType;
+    target: string | null;
+    repoName?: string | null;
+    branch?: string | null;
+    status: ScanJobStatus;
+    log?: string | null;
+    createdAt: string;
+    startedAt?: string | null;
+    completedAt?: string | null;
+};
+
+export type ScanJobStatus = 'Queued' | 'Running' | 'Succeeded' | 'Failed';
+
 export type ScanStatus = 'Queue' | 'Running' | 'Completed' | 'Error';
 
 export type ScanStrategy = 'AllFiles' | 'ChangedFileOnly';
+
+export type ScanTargetType = 'Repository' | 'Image' | 'Url';
 
 export type ScannerFilter = {
     type?: Array<ScannerType> | null;
@@ -3071,6 +3101,56 @@ export type UploadSarifResponses = {
 };
 
 export type UploadSarifResponse = UploadSarifResponses[keyof UploadSarifResponses];
+
+export type CreateScanJobData = {
+    body?: CreateScanJobRequest;
+    path?: never;
+    query?: never;
+    url: '/api/scan-job';
+};
+
+export type CreateScanJobResponses = {
+    /**
+     * OK
+     */
+    200: ScanJobInfo;
+};
+
+export type CreateScanJobResponse = CreateScanJobResponses[keyof CreateScanJobResponses];
+
+export type GetScanJobsData = {
+    body?: ScanJobFilter;
+    path?: never;
+    query?: never;
+    url: '/api/scan-job/filter';
+};
+
+export type GetScanJobsResponses = {
+    /**
+     * OK
+     */
+    200: Array<ScanJobInfo>;
+};
+
+export type GetScanJobsResponse = GetScanJobsResponses[keyof GetScanJobsResponses];
+
+export type GetScanJobData = {
+    body?: never;
+    path: {
+        scanJobId: string;
+    };
+    query?: never;
+    url: '/api/scan-job/{scanJobId}';
+};
+
+export type GetScanJobResponses = {
+    /**
+     * OK
+     */
+    200: ScanJobInfo;
+};
+
+export type GetScanJobResponse = GetScanJobResponses[keyof GetScanJobResponses];
 
 export type GetScannersData = {
     body?: ScannerFilter;
