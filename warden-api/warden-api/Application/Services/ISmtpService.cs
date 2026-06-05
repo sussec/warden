@@ -2,6 +2,7 @@ using Warden.Application.Module.Setting;
 using Warden.Core.Extension;
 using FluentResults;
 using MailKit.Net.Smtp;
+using MailKit.Security;
 using MimeKit;
 using MimeKit.Text;
 
@@ -52,16 +53,20 @@ public class SmtpService(SmtpSetting setting) : ISmtpService
                 mailClient.ServerCertificateValidationCallback = (s, c, h, e) => true;
             }
 
-            if (setting.UseSsl)
-            {
-                await mailClient.ConnectAsync(setting.Server, setting.Port, setting.UseSsl);
-            }
-            else
-            {
-                await mailClient.ConnectAsync(setting.Server, setting.Port);
-            }
+            // Choose the right TLS mode by port/flag. MailKit's bool useSsl means
+            // *implicit* TLS (port 465); STARTTLS (port 587, e.g. Office365/Gmail)
+            // must be requested explicitly or the handshake fails.
+            var socketOptions = setting.Port == 465
+                ? SecureSocketOptions.SslOnConnect
+                : setting.UseSsl
+                    ? SecureSocketOptions.StartTls
+                    : SecureSocketOptions.StartTlsWhenAvailable;
+            await mailClient.ConnectAsync(setting.Server, setting.Port, socketOptions);
 
-            await mailClient.AuthenticateAsync(setting.UserName, setting.Password);
+            if (!string.IsNullOrEmpty(setting.Password))
+            {
+                await mailClient.AuthenticateAsync(setting.UserName, setting.Password);
+            }
             await mailClient.SendAsync(message);
             await mailClient.DisconnectAsync(true);
             return true;
