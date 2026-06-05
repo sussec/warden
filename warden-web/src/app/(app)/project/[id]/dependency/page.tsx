@@ -111,13 +111,14 @@ export default function ProjectDependencyPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-4">
-      <h2 className="text-lg font-semibold">Dependencies</h2>
-      <div className="flex flex-wrap items-center gap-3">
+    <div className="flex h-[calc(100dvh-5.5rem)] flex-col gap-3">
+      {/* header + filters */}
+      <div className="flex shrink-0 flex-wrap items-center gap-3">
+        <h2 className="mr-1 text-lg font-semibold">Dependencies</h2>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            className="w-64 pl-9"
+            className="w-64 bg-card/70 pl-9 backdrop-blur-md"
             placeholder="Search packages…"
             value={name}
             onChange={(e) => {
@@ -133,7 +134,7 @@ export default function ProjectDependencyPage() {
             setPage((p) => ({ ...p, page: 1 }));
           }}
         >
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="w-44 bg-card/70 backdrop-blur-md">
             <SelectValue placeholder="Severity" />
           </SelectTrigger>
           <SelectContent>
@@ -152,7 +153,7 @@ export default function ProjectDependencyPage() {
             setPage((p) => ({ ...p, page: 1 }));
           }}
         >
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="w-44 bg-card/70 backdrop-blur-md">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -165,25 +166,30 @@ export default function ProjectDependencyPage() {
           </SelectContent>
         </Select>
       </div>
-      <DataTable
-        columns={columns}
-        rows={data?.items}
-        loading={isLoading}
-        count={data?.count}
-        pageCount={data?.pageCount}
-        page={page}
-        onPageChange={setPage}
-        emptyMessage="No dependencies found"
-        onRowClick={(p) =>
-          setDrawerTarget({
-            packageId: p.packageId,
-            projectId: id,
-            group: p.group,
-            name: p.name,
-            version: p.version,
-          })
-        }
-      />
+
+      {/* table region — scrolls inside; page stays fixed */}
+      <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-border/60 bg-card/70 p-3 shadow-sm backdrop-blur-md">
+        <DataTable
+          columns={columns}
+          rows={data?.items}
+          loading={isLoading}
+          count={data?.count}
+          pageCount={data?.pageCount}
+          page={page}
+          onPageChange={setPage}
+          emptyMessage="No dependencies found"
+          onRowClick={(p) =>
+            setDrawerTarget({
+              packageId: p.packageId,
+              projectId: id,
+              group: p.group,
+              name: p.name,
+              version: p.version,
+            })
+          }
+        />
+      </div>
+
       <PackageDetailDrawer
         target={drawerTarget}
         onOpenChange={(open) => {

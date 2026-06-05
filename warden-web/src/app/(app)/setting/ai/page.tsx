@@ -85,9 +85,20 @@ export default function AiSettingPage() {
   });
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-bold">AI</h1>
-      <Card>
+    <div className="flex h-[calc(100dvh-5.5rem)] flex-col gap-3">
+      {/* header */}
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
+        <div>
+          <h1 className="text-lg font-bold tracking-tight">AI</h1>
+          <p className="text-xs text-muted-foreground">
+            LLM endpoint for remediation suggestions, triage &amp; semantic search
+          </p>
+        </div>
+      </div>
+
+      {/* scrollable form region — page stays fixed */}
+      <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-border/60 bg-card/70 shadow-sm backdrop-blur-md">
+        <Card className="border-0 bg-transparent shadow-none">
         <CardHeader>
           <CardTitle>AI provider</CardTitle>
           <CardDescription>
@@ -255,7 +266,8 @@ export default function AiSettingPage() {
             </div>
           </form>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }

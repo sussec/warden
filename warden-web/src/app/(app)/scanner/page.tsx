@@ -429,8 +429,9 @@ export default function ScannerPage() {
   );
 
   return (
-    <div className="flex flex-col gap-4 px-2">
-      <div>
+    <div className="flex h-[calc(100dvh-5.5rem)] flex-col gap-4">
+      {/* header */}
+      <div className="shrink-0 px-2">
         <h1 className="text-xl font-bold tracking-tight">Scanners</h1>
         <p className="text-sm text-muted-foreground">
           Security scan fleet — run from the UI or CLI, results land in Findings
@@ -438,6 +439,8 @@ export default function ScannerPage() {
         </p>
       </div>
 
+      {/* scrollable body — page stays fixed, content scrolls here */}
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto px-2">
       {/* registered scanners ------------------------------------------------ */}
       <Card>
         <CardHeader>
@@ -567,6 +570,7 @@ export default function ScannerPage() {
             </CardContent>
           </Card>
         ))}
+      </div>
       </div>
 
       {runScanner && <RunDialog scanner={runScanner} onClose={() => setRunScanner(null)} />}

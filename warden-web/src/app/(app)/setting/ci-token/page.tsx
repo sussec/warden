@@ -122,25 +122,34 @@ export default function CiTokenPage() {
   ];
 
   return (
-    <Card className="p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">CI Tokens</h1>
+    <div className="flex h-[calc(100dvh-5.5rem)] flex-col gap-3">
+      {/* header */}
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
+        <div>
+          <h1 className="text-lg font-bold tracking-tight">CI Tokens</h1>
+          <p className="text-xs text-muted-foreground">
+            Tokens used by CI pipelines to upload scan results
+          </p>
+        </div>
         <Button onClick={() => setCreateOpen(true)}>
           <Plus className="size-4" />
           Create Token
         </Button>
       </div>
-      <div className="my-4" />
-      <DataTable
-        columns={columns}
-        rows={pageRows}
-        loading={isLoading}
-        count={allRows.length}
-        pageCount={pageCount}
-        page={page}
-        onPageChange={setPage}
-        emptyMessage="No CI tokens yet"
-      />
+
+      {/* body — scrolls inside, page stays fixed */}
+      <Card className="min-h-0 flex-1 overflow-auto border-border/60 bg-card/70 p-4 shadow-sm backdrop-blur-md">
+        <DataTable
+          columns={columns}
+          rows={pageRows}
+          loading={isLoading}
+          count={allRows.length}
+          pageCount={pageCount}
+          page={page}
+          onPageChange={setPage}
+          emptyMessage="No CI tokens yet"
+        />
+      </Card>
 
       {/* Create token */}
       <Dialog open={createOpen} onOpenChange={(o) => (o ? setCreateOpen(true) : closeCreate())}>
@@ -229,6 +238,6 @@ export default function CiTokenPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Card>
+    </div>
   );
 }

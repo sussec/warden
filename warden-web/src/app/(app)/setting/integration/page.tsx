@@ -1165,16 +1165,28 @@ function WebhookCard() {
 
 export default function IntegrationPage() {
   return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-bold">Integrations</h1>
-      <div className="grid gap-6 lg:grid-cols-2">
-        <JiraCard />
-        <JiraWebhookCard />
-        <RedmineCard />
-        <GitHubCard />
-        <TeamsCard />
-        <MailCard />
-        <WebhookCard />
+    <div className="flex h-[calc(100dvh-5.5rem)] flex-col gap-4">
+      {/* header */}
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
+        <div>
+          <h1 className="text-lg font-bold tracking-tight">Integrations</h1>
+          <p className="text-xs text-muted-foreground">
+            Connect issue trackers and alert channels
+          </p>
+        </div>
+      </div>
+
+      {/* scroll region — page stays fixed, settings scroll inside */}
+      <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-border/60 bg-card/70 p-4 shadow-sm backdrop-blur-md">
+        <div className="grid gap-4 lg:grid-cols-2">
+          <JiraCard />
+          <JiraWebhookCard />
+          <RedmineCard />
+          <GitHubCard />
+          <TeamsCard />
+          <MailCard />
+          <WebhookCard />
+        </div>
       </div>
     </div>
   );

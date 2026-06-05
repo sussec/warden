@@ -203,11 +203,13 @@ export default function FindingDetailPage() {
 
   if (isLoading || !finding) {
     return (
-      <Card className="space-y-4 p-6">
-        <Skeleton className="h-8 w-2/3" />
-        <Skeleton className="h-5 w-1/3" />
-        <Skeleton className="h-40 w-full" />
-      </Card>
+      <div className="flex h-[calc(100dvh-5.5rem)] flex-col">
+        <Card className="space-y-4 p-6">
+          <Skeleton className="h-8 w-2/3" />
+          <Skeleton className="h-5 w-1/3" />
+          <Skeleton className="h-40 w-full" />
+        </Card>
+      </div>
     );
   }
 
@@ -217,28 +219,29 @@ export default function FindingDetailPage() {
   const activities = activityPage?.items ?? [];
 
   return (
-    <div className="space-y-6">
-      <Card className="space-y-4 p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0 space-y-2">
-            <h1 className="text-xl font-bold">{finding.name ?? finding.identity ?? findingId}</h1>
-            <div className="flex flex-wrap items-center gap-2">
-              <SeverityBadge severity={finding.severity} />
-              <FindingStatusBadge status={finding.status} />
-            </div>
-          </div>
+    <div className="flex h-[calc(100dvh-5.5rem)] flex-col gap-4">
+      {/* fixed header: title + badges + actions */}
+      <div className="flex shrink-0 flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0 space-y-2">
+          <h1 className="text-xl font-bold">{finding.name ?? finding.identity ?? findingId}</h1>
           <div className="flex flex-wrap items-center gap-2">
-            <TicketMenu findingId={findingId} ticket={finding.ticket} />
-            <FindingStatusMenu
-              label={findingStatusMeta(finding.status).label}
-              loading={changeStatus.isPending}
-              onSelect={(s) => changeStatus.mutate(s)}
-            />
+            <SeverityBadge severity={finding.severity} />
+            <FindingStatusBadge status={finding.status} />
           </div>
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <TicketMenu findingId={findingId} ticket={finding.ticket} />
+          <FindingStatusMenu
+            label={findingStatusMeta(finding.status).label}
+            loading={changeStatus.isPending}
+            onSelect={(s) => changeStatus.mutate(s)}
+          />
+        </div>
+      </div>
 
-        <Separator />
-
+      {/* detail body — scrolls inside; page stays fixed */}
+      <div className="flex-1 min-h-0 space-y-6 overflow-auto">
+      <Card className="space-y-4 p-6">
         <dl className="grid grid-cols-2 gap-4 md:grid-cols-3">
           <MetaRow label="Project">
             <Link
@@ -413,6 +416,7 @@ export default function FindingDetailPage() {
         <Separator />
         <FindingActivityTimeline activities={activities} />
       </Card>
+      </div>
     </div>
   );
 }

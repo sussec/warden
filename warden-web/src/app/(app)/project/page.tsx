@@ -6,7 +6,6 @@ import { useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -106,13 +105,14 @@ export default function ProjectListPage() {
   ];
 
   return (
-    <Card className="p-6">
-      <h1 className="text-xl font-bold">Projects</h1>
-      <div className="my-4 flex flex-wrap items-center gap-3">
+    <div className="flex h-[calc(100dvh-5.5rem)] flex-col gap-3">
+      {/* header + filters — fixed at top */}
+      <div className="flex shrink-0 flex-wrap items-center gap-3">
+        <h1 className="mr-1 text-lg font-bold tracking-tight">Projects</h1>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            className="w-64 pl-9"
+            className="w-64 bg-card/70 pl-9 backdrop-blur-md"
             placeholder="Search…"
             value={name}
             onChange={(e) => {
@@ -122,7 +122,7 @@ export default function ProjectListPage() {
           />
         </div>
         <Select value={sortBy} onValueChange={(v) => setSortBy(v as ProjectSortField)}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-40 bg-card/70 backdrop-blur-md">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>
@@ -138,7 +138,7 @@ export default function ProjectListPage() {
             setPage((p) => ({ ...p, page: 1 }));
           }}
         >
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-48 bg-card/70 backdrop-blur-md">
             <SelectValue placeholder="Source control" />
           </SelectTrigger>
           <SelectContent>
@@ -151,16 +151,20 @@ export default function ProjectListPage() {
           </SelectContent>
         </Select>
       </div>
-      <DataTable
-        columns={columns}
-        rows={data?.items}
-        loading={isLoading}
-        count={data?.count}
-        pageCount={data?.pageCount}
-        page={page}
-        onPageChange={setPage}
-        onRowClick={(p) => router.push(`/project/${p.id}/overview`)}
-      />
-    </Card>
+
+      {/* table region owns the scroll — page itself never scrolls */}
+      <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-border/60 bg-card/70 p-3 shadow-sm backdrop-blur-md">
+        <DataTable
+          columns={columns}
+          rows={data?.items}
+          loading={isLoading}
+          count={data?.count}
+          pageCount={data?.pageCount}
+          page={page}
+          onPageChange={setPage}
+          onRowClick={(p) => router.push(`/project/${p.id}/overview`)}
+        />
+      </div>
+    </div>
   );
 }

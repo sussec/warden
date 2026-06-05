@@ -11,7 +11,6 @@ import {
 } from "@tanstack/react-query";
 import { ChevronDown, Loader2, Search, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -233,9 +232,10 @@ function FindingListPage() {
   ];
 
   return (
-    <Card className="p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-bold">Findings</h1>
+    <div className="flex h-[calc(100dvh-5.5rem)] flex-col gap-3">
+      {/* header + filters — fixed at top */}
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
+        <h1 className="text-lg font-bold tracking-tight">Findings</h1>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setAiOpen(true)}>
             <Sparkles className="size-4" />
@@ -245,7 +245,7 @@ function FindingListPage() {
         </div>
       </div>
 
-      <div className="my-4 flex flex-wrap items-center gap-3">
+      <div className="flex shrink-0 flex-wrap items-center gap-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -309,16 +309,19 @@ function FindingListPage() {
         )}
       </div>
 
-      <DataTable
-        columns={columns}
-        rows={rows}
-        loading={isLoading}
-        count={data?.count}
-        pageCount={data?.pageCount}
-        page={page}
-        onPageChange={setPage}
-        onRowClick={(f) => router.push(`/finding/${f.id}`)}
-      />
+      {/* table region — the only thing that scrolls; page stays fixed */}
+      <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-border/60 bg-card/70 p-3 shadow-sm backdrop-blur-md">
+        <DataTable
+          columns={columns}
+          rows={rows}
+          loading={isLoading}
+          count={data?.count}
+          pageCount={data?.pageCount}
+          page={page}
+          onPageChange={setPage}
+          onRowClick={(f) => router.push(`/finding/${f.id}`)}
+        />
+      </div>
 
       <Dialog open={aiOpen} onOpenChange={setAiOpen}>
         <DialogContent className="max-w-2xl">
@@ -391,7 +394,7 @@ function FindingListPage() {
           )}
         </DialogContent>
       </Dialog>
-    </Card>
+    </div>
   );
 }
 

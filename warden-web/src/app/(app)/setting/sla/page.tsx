@@ -80,39 +80,51 @@ export default function SlaSettingPage() {
   });
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-bold">SLA</h1>
-      <Card>
-        <CardHeader>
-          <CardTitle>SLA</CardTitle>
-          <CardDescription>Remediation deadlines (in days) per severity.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form
-            className="space-y-6"
-            onSubmit={(e) => {
-              e.preventDefault();
-              save.mutate();
-            }}
-          >
-            <SlaFields
-              title="SAST"
-              value={form.sast ?? {}}
-              onChange={(v) => setForm((f) => ({ ...f, sast: v }))}
-            />
-            <SlaFields
-              title="SCA"
-              value={form.sca ?? {}}
-              onChange={(v) => setForm((f) => ({ ...f, sca: v }))}
-            />
-            <div className="flex justify-end">
-              <Button type="submit" disabled={save.isPending}>
-                {save.isPending ? "Saving…" : "Save"}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+    <div className="flex h-[calc(100dvh-5.5rem)] flex-col gap-3">
+      {/* header */}
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
+        <div>
+          <h1 className="text-lg font-bold tracking-tight">SLA</h1>
+          <p className="text-xs text-muted-foreground">
+            Remediation deadlines (in days) per severity
+          </p>
+        </div>
+      </div>
+
+      {/* form — scrolls inside, page stays fixed */}
+      <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-border/60 bg-card/70 shadow-sm backdrop-blur-md">
+        <Card className="border-0 bg-transparent shadow-none backdrop-blur-none">
+          <CardHeader>
+            <CardTitle>SLA</CardTitle>
+            <CardDescription>Remediation deadlines (in days) per severity.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form
+              className="space-y-6"
+              onSubmit={(e) => {
+                e.preventDefault();
+                save.mutate();
+              }}
+            >
+              <SlaFields
+                title="SAST"
+                value={form.sast ?? {}}
+                onChange={(v) => setForm((f) => ({ ...f, sast: v }))}
+              />
+              <SlaFields
+                title="SCA"
+                value={form.sca ?? {}}
+                onChange={(v) => setForm((f) => ({ ...f, sca: v }))}
+              />
+              <div className="flex justify-end">
+                <Button type="submit" disabled={save.isPending}>
+                  {save.isPending ? "Saving…" : "Save"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useQuery, keepPreviousData, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Search, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -142,56 +141,63 @@ export default function RuleListPage() {
   ];
 
   return (
-    <Card className="p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Rules</h1>
-        <Button onClick={() => syncMut.mutate()} disabled={syncMut.isPending}>
-          <RefreshCw className={syncMut.isPending ? "size-4 animate-spin" : "size-4"} />
-          {syncMut.isPending ? "Syncing…" : "Sync"}
-        </Button>
-      </div>
-      <div className="my-4 flex flex-wrap items-center gap-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="w-64 pl-9"
-            placeholder="Search rules…"
-            value={name}
-            onChange={(e) => {
-              setName(e.target.value);
+    <div className="flex h-[calc(100dvh-5.5rem)] flex-col gap-3">
+      {/* header + filters */}
+      <div className="flex shrink-0 flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h1 className="text-lg font-bold tracking-tight">Rules</h1>
+          <Button onClick={() => syncMut.mutate()} disabled={syncMut.isPending}>
+            <RefreshCw className={syncMut.isPending ? "size-4 animate-spin" : "size-4"} />
+            {syncMut.isPending ? "Syncing…" : "Sync"}
+          </Button>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              className="w-64 pl-9 bg-card/70 backdrop-blur-md"
+              placeholder="Search rules…"
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                setPage((p) => ({ ...p, page: 1 }));
+              }}
+            />
+          </div>
+          <Select
+            value={scannerId}
+            onValueChange={(v) => {
+              setScannerId(v);
               setPage((p) => ({ ...p, page: 1 }));
             }}
-          />
+          >
+            <SelectTrigger className="w-48 bg-card/70 backdrop-blur-md">
+              <SelectValue placeholder="Scanner" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>All scanners</SelectItem>
+              {scanners?.map((s) => (
+                <SelectItem key={s.id ?? s.name ?? ""} value={s.id ?? s.name ?? "unknown"}>
+                  {s.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <Select
-          value={scannerId}
-          onValueChange={(v) => {
-            setScannerId(v);
-            setPage((p) => ({ ...p, page: 1 }));
-          }}
-        >
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Scanner" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>All scanners</SelectItem>
-            {scanners?.map((s) => (
-              <SelectItem key={s.id ?? s.name ?? ""} value={s.id ?? s.name ?? "unknown"}>
-                {s.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
-      <DataTable
-        columns={columns}
-        rows={data?.items}
-        loading={isLoading}
-        count={data?.count}
-        pageCount={data?.pageCount}
-        page={page}
-        onPageChange={setPage}
-      />
-    </Card>
+
+      {/* table region — scrolls inside; page stays fixed */}
+      <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-border/60 bg-card/70 p-3 shadow-sm backdrop-blur-md">
+        <DataTable
+          columns={columns}
+          rows={data?.items}
+          loading={isLoading}
+          count={data?.count}
+          pageCount={data?.pageCount}
+          page={page}
+          onPageChange={setPage}
+        />
+      </div>
+    </div>
   );
 }

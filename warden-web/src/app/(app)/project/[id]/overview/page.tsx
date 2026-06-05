@@ -196,37 +196,44 @@ export default function ProjectOverviewPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-4">
-      <ProjectStats projectId={id} />
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Scan History</h2>
-        <div className="flex items-center gap-2">
-          <SarifUpload projectId={id} />
-          <SbomButton projectId={id} />
+    <div className="flex h-[calc(100dvh-5.5rem)] flex-col gap-3">
+      {/* header — overview stats + actions pinned at top */}
+      <div className="flex shrink-0 flex-col gap-3">
+        <ProjectStats projectId={id} />
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold">Scan History</h2>
+          <div className="flex items-center gap-2">
+            <SarifUpload projectId={id} />
+            <SbomButton projectId={id} />
+          </div>
+        </div>
+        <div className="relative w-64">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            className="pl-9"
+            placeholder="Search commits…"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              setPage((p) => ({ ...p, page: 1 }));
+            }}
+          />
         </div>
       </div>
-      <div className="relative w-64">
-        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          className="pl-9"
-          placeholder="Search commits…"
-          value={name}
-          onChange={(e) => {
-            setName(e.target.value);
-            setPage((p) => ({ ...p, page: 1 }));
-          }}
+
+      {/* scan history table — owns its own scroll, page stays fixed */}
+      <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-border/60 bg-card/70 p-3 shadow-sm backdrop-blur-md">
+        <DataTable
+          columns={columns}
+          rows={data?.items}
+          loading={isLoading}
+          count={data?.count}
+          pageCount={data?.pageCount}
+          page={page}
+          onPageChange={setPage}
+          emptyMessage="No commits found"
         />
       </div>
-      <DataTable
-        columns={columns}
-        rows={data?.items}
-        loading={isLoading}
-        count={data?.count}
-        pageCount={data?.pageCount}
-        page={page}
-        onPageChange={setPage}
-        emptyMessage="No commits found"
-      />
     </div>
   );
 }

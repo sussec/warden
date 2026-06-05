@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Search } from "lucide-react";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -109,13 +108,14 @@ export default function DependencyListPage() {
   ];
 
   return (
-    <Card className="p-6">
-      <h1 className="text-xl font-bold">Dependencies</h1>
-      <div className="my-4 flex flex-wrap items-center gap-3">
+    <div className="flex h-[calc(100dvh-5.5rem)] flex-col gap-3">
+      {/* header + filters — fixed at top */}
+      <div className="flex shrink-0 flex-wrap items-center gap-3">
+        <h1 className="mr-2 text-lg font-bold tracking-tight">Dependencies</h1>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            className="w-64 pl-9"
+            className="w-64 bg-card/70 pl-9 backdrop-blur-md"
             placeholder="Search packages…"
             value={name}
             onChange={(e) => {
@@ -131,7 +131,7 @@ export default function DependencyListPage() {
             setPage((p) => ({ ...p, page: 1 }));
           }}
         >
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="w-44 bg-card/70 backdrop-blur-md">
             <SelectValue placeholder="Severity" />
           </SelectTrigger>
           <SelectContent>
@@ -150,7 +150,7 @@ export default function DependencyListPage() {
             setPage((p) => ({ ...p, page: 1 }));
           }}
         >
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="w-44 bg-card/70 backdrop-blur-md">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -163,31 +163,35 @@ export default function DependencyListPage() {
           </SelectContent>
         </Select>
       </div>
-      <DataTable
-        columns={columns}
-        rows={data?.items}
-        loading={isLoading}
-        count={data?.count}
-        pageCount={data?.pageCount}
-        page={page}
-        onPageChange={setPage}
-        onRowClick={(p) =>
-          setDrawerTarget({
-            packageId: p.packageId,
-            // Global rows carry a projectId; pass it so status/ticket actions stay enabled.
-            projectId: p.projectId || null,
-            group: p.group,
-            name: p.name,
-            version: p.version,
-          })
-        }
-      />
+
+      {/* table region — owns the scroll; page stays fixed */}
+      <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-border/60 bg-card/70 p-3 shadow-sm backdrop-blur-md">
+        <DataTable
+          columns={columns}
+          rows={data?.items}
+          loading={isLoading}
+          count={data?.count}
+          pageCount={data?.pageCount}
+          page={page}
+          onPageChange={setPage}
+          onRowClick={(p) =>
+            setDrawerTarget({
+              packageId: p.packageId,
+              // Global rows carry a projectId; pass it so status/ticket actions stay enabled.
+              projectId: p.projectId || null,
+              group: p.group,
+              name: p.name,
+              version: p.version,
+            })
+          }
+        />
+      </div>
       <PackageDetailDrawer
         target={drawerTarget}
         onOpenChange={(open) => {
           if (!open) setDrawerTarget(null);
         }}
       />
-    </Card>
+    </div>
   );
 }

@@ -192,37 +192,42 @@ export default function ProjectMemberPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold">Members</h2>
+    <div className="flex h-[calc(100dvh-5.5rem)] flex-col gap-3">
+      {/* header + filters */}
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <h2 className="text-lg font-semibold">Members</h2>
+          <div className="relative w-64">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              className="pl-9 bg-card/70 backdrop-blur-md"
+              placeholder="Search members…"
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                setPage((p) => ({ ...p, page: 1 }));
+              }}
+            />
+          </div>
+        </div>
         <Button onClick={() => setAddOpen(true)}>
           <UserPlus className="size-4" /> Add member
         </Button>
       </div>
 
-      <div className="relative w-64">
-        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          className="pl-9"
-          placeholder="Search members…"
-          value={name}
-          onChange={(e) => {
-            setName(e.target.value);
-            setPage((p) => ({ ...p, page: 1 }));
-          }}
+      {/* table region — scrolls inside, page stays fixed */}
+      <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-border/60 bg-card/70 p-3 shadow-sm backdrop-blur-md">
+        <DataTable
+          columns={columns}
+          rows={data?.items}
+          loading={isLoading}
+          count={data?.count}
+          pageCount={data?.pageCount}
+          page={page}
+          onPageChange={setPage}
+          emptyMessage="No members found"
         />
       </div>
-
-      <DataTable
-        columns={columns}
-        rows={data?.items}
-        loading={isLoading}
-        count={data?.count}
-        pageCount={data?.pageCount}
-        page={page}
-        onPageChange={setPage}
-        emptyMessage="No members found"
-      />
 
       {/* Add member */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>

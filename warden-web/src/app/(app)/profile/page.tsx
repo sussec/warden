@@ -34,7 +34,7 @@ function ChangePasswordCard() {
   });
 
   return (
-    <Card>
+    <Card className="border-border/60 bg-card/70 backdrop-blur-md">
       <CardHeader>
         <CardTitle>Change password</CardTitle>
         <CardDescription>
@@ -104,14 +104,24 @@ export default function ProfilePage() {
   const initial = name.trim().charAt(0).toUpperCase();
 
   return (
-    <div className="max-w-2xl space-y-6">
-      <h1 className="text-xl font-bold">Profile</h1>
-      <Card>
-        <CardHeader>
-          <CardTitle>Account</CardTitle>
-          <CardDescription>Your account details.</CardDescription>
-        </CardHeader>
-        <CardContent>
+    <div className="flex h-[calc(100dvh-5.5rem)] flex-col gap-3">
+      {/* header */}
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
+        <div>
+          <h1 className="text-lg font-bold tracking-tight">Profile</h1>
+          <p className="text-xs text-muted-foreground">Account details &amp; security settings</p>
+        </div>
+      </div>
+
+      {/* form sections — scroll inside, page stays fixed */}
+      <div className="min-h-0 flex-1 overflow-auto">
+        <div className="max-w-2xl space-y-6 pb-2">
+          <Card className="border-border/60 bg-card/70 backdrop-blur-md">
+            <CardHeader>
+              <CardTitle>Account</CardTitle>
+              <CardDescription>Your account details.</CardDescription>
+            </CardHeader>
+            <CardContent>
           {isLoading ? (
             <div className="flex items-center gap-4">
               <Skeleton className="size-16 rounded-full" />
@@ -138,9 +148,11 @@ export default function ProfilePage() {
               </dl>
             </div>
           )}
-        </CardContent>
-      </Card>
-      <ChangePasswordCard />
+            </CardContent>
+          </Card>
+          <ChangePasswordCard />
+        </div>
+      </div>
     </div>
   );
 }

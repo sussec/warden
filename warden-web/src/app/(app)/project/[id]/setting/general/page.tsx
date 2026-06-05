@@ -164,7 +164,20 @@ export default function ProjectGeneralSettingPage() {
   }
 
   return (
-    <div className="flex max-w-3xl flex-col gap-6">
+    <div className="flex h-[calc(100dvh-5.5rem)] flex-col gap-3">
+      {/* header */}
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
+        <div>
+          <h1 className="text-lg font-bold tracking-tight">General Settings</h1>
+          <p className="text-xs text-muted-foreground">
+            Project details, default branches &amp; security thresholds
+          </p>
+        </div>
+      </div>
+
+      {/* scrollable form region — page stays fixed */}
+      <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-auto rounded-xl border border-border/60 bg-card/70 p-4 shadow-sm backdrop-blur-md">
+      <div className="flex w-full max-w-3xl flex-col gap-6">
       <div className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">General</h2>
         <div className="space-y-2">
@@ -238,6 +251,8 @@ export default function ProjectGeneralSettingPage() {
           </Button>
         </div>
       </Card>
+      </div>
+      </div>
     </div>
   );
 }

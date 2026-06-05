@@ -56,9 +56,18 @@ export default function GeneralSettingPage() {
   });
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-bold">General</h1>
-      <Card>
+    <div className="flex h-[calc(100dvh-5.5rem)] flex-col gap-3">
+      {/* header */}
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
+        <div>
+          <h1 className="text-lg font-bold tracking-tight">General</h1>
+          <p className="text-xs text-muted-foreground">Workspace &amp; outbound email configuration</p>
+        </div>
+      </div>
+
+      {/* scrollable settings region — page stays fixed */}
+      <div className="min-h-0 flex-1 space-y-6 overflow-auto">
+      <Card className="bg-card/70 backdrop-blur-md">
         <CardHeader>
           <CardTitle>SMTP</CardTitle>
           <CardDescription>Outbound email server configuration.</CardDescription>
@@ -163,6 +172,7 @@ export default function GeneralSettingPage() {
           </form>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

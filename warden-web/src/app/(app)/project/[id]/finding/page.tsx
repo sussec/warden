@@ -87,9 +87,10 @@ function ProjectFindingPageInner() {
   ];
 
   return (
-    <div className="flex flex-col gap-4">
-      <h2 className="text-lg font-semibold">Findings</h2>
-      <div className="flex flex-wrap items-center gap-3">
+    <div className="flex h-[calc(100dvh-5.5rem)] flex-col gap-3">
+      {/* header + filters */}
+      <div className="flex shrink-0 flex-wrap items-center gap-3">
+        <h2 className="mr-1 text-lg font-bold tracking-tight">Findings</h2>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -141,17 +142,20 @@ function ProjectFindingPageInner() {
           </SelectContent>
         </Select>
       </div>
-      <DataTable
-        columns={columns}
-        rows={data?.items}
-        loading={isLoading}
-        count={data?.count}
-        pageCount={data?.pageCount}
-        page={page}
-        onPageChange={setPage}
-        onRowClick={(f) => router.push(`/finding/${f.id}`)}
-        emptyMessage="No findings found"
-      />
+      {/* table region — scrolls; the page itself does not */}
+      <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-border/60 bg-card/70 p-3 shadow-sm backdrop-blur-md">
+        <DataTable
+          columns={columns}
+          rows={data?.items}
+          loading={isLoading}
+          count={data?.count}
+          pageCount={data?.pageCount}
+          page={page}
+          onPageChange={setPage}
+          onRowClick={(f) => router.push(`/finding/${f.id}`)}
+          emptyMessage="No findings found"
+        />
+      </div>
     </div>
   );
 }

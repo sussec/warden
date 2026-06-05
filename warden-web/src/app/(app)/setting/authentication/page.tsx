@@ -43,15 +43,28 @@ export default function AuthenticationSettingPage() {
     setForm((f) => ({ ...f, openIdConnectSetting: { ...f.openIdConnectSetting, ...patch } }));
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-bold">Authentication</h1>
-      <Card>
+    <div className="flex h-[calc(100dvh-5.5rem)] flex-col gap-3">
+      {/* header */}
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
+        <div>
+          <h1 className="text-lg font-bold tracking-tight">Authentication</h1>
+          <p className="text-xs text-muted-foreground">Login methods and OpenID Connect (SSO).</p>
+        </div>
+        <Button type="submit" form="auth-setting-form" disabled={save.isPending}>
+          {save.isPending ? "Saving…" : "Save"}
+        </Button>
+      </div>
+
+      {/* scroll region — form scrolls, page stays fixed */}
+      <div className="min-h-0 flex-1 overflow-auto">
+        <Card className="bg-card/70 backdrop-blur-md">
         <CardHeader>
           <CardTitle>Authentication</CardTitle>
           <CardDescription>Login methods and OpenID Connect (SSO).</CardDescription>
         </CardHeader>
         <CardContent>
           <form
+            id="auth-setting-form"
             className="space-y-4"
             onSubmit={(e) => {
               e.preventDefault();
@@ -132,14 +145,10 @@ export default function AuthenticationSettingPage() {
                 />
               </div>
             </div>
-            <div className="flex justify-end">
-              <Button type="submit" disabled={save.isPending}>
-                {save.isPending ? "Saving…" : "Save"}
-              </Button>
-            </div>
           </form>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }

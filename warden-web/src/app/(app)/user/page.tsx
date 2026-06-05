@@ -5,7 +5,6 @@ import { useQuery, keepPreviousData, useMutation, useQueryClient } from "@tansta
 import { Search, UserPlus, MoreHorizontal } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -262,56 +261,61 @@ export default function UserListPage() {
   ];
 
   return (
-    <Card className="p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Users</h1>
+    <div className="flex h-[calc(100dvh-5.5rem)] flex-col gap-3">
+      {/* header + filters */}
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-lg font-bold tracking-tight">Users</h1>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              className="w-64 bg-card/70 pl-9 backdrop-blur-md"
+              placeholder="Search users…"
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                setPage((p) => ({ ...p, page: 1 }));
+              }}
+            />
+          </div>
+          <Select
+            value={roleId}
+            onValueChange={(v) => {
+              setRoleId(v);
+              setPage((p) => ({ ...p, page: 1 }));
+            }}
+          >
+            <SelectTrigger className="w-40 bg-card/70 backdrop-blur-md">
+              <SelectValue placeholder="Role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>All roles</SelectItem>
+              {roles?.map((r) => (
+                <SelectItem key={r.id} value={r.id}>
+                  {r.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <Button onClick={() => setCreateOpen(true)}>
           <UserPlus className="size-4" />
           Add User
         </Button>
       </div>
-      <div className="my-4 flex flex-wrap items-center gap-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="w-64 pl-9"
-            placeholder="Search users…"
-            value={name}
-            onChange={(e) => {
-              setName(e.target.value);
-              setPage((p) => ({ ...p, page: 1 }));
-            }}
-          />
-        </div>
-        <Select
-          value={roleId}
-          onValueChange={(v) => {
-            setRoleId(v);
-            setPage((p) => ({ ...p, page: 1 }));
-          }}
-        >
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Role" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>All roles</SelectItem>
-            {roles?.map((r) => (
-              <SelectItem key={r.id} value={r.id}>
-                {r.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+
+      {/* table region — scrolls inside; the page itself does not */}
+      <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-border/60 bg-card/70 p-3 shadow-sm backdrop-blur-md">
+        <DataTable
+          columns={columns}
+          rows={data?.items}
+          loading={isLoading}
+          count={data?.count}
+          pageCount={data?.pageCount}
+          page={page}
+          onPageChange={setPage}
+        />
       </div>
-      <DataTable
-        columns={columns}
-        rows={data?.items}
-        loading={isLoading}
-        count={data?.count}
-        pageCount={data?.pageCount}
-        page={page}
-        onPageChange={setPage}
-      />
 
       {/* Create user */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
@@ -447,6 +451,6 @@ export default function UserListPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Card>
+    </div>
   );
 }
