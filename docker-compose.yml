@@ -72,8 +72,8 @@ services:
   semgrep:
     profiles: ["scan"]
     build:
-      context: ./scanners
-      dockerfile: semgrep/Dockerfile
+      context: ./scanners/quarkus
+      dockerfile: scanner-semgrep/Dockerfile
     pull_policy: build
     environment: &scanner-env
       WARDEN_URL: http://warden:8080
@@ -87,8 +87,8 @@ services:
   gitleaks:
     profiles: ["scan"]
     build:
-      context: ./scanners
-      dockerfile: gitleaks/Dockerfile
+      context: ./scanners/quarkus
+      dockerfile: scanner-gitleaks/Dockerfile
     pull_policy: build
     environment: *scanner-env
     volumes:
@@ -97,8 +97,8 @@ services:
   trivy:
     profiles: ["scan"]
     build:
-      context: ./scanners
-      dockerfile: trivy/Dockerfile
+      context: ./scanners/quarkus
+      dockerfile: scanner-trivy/Dockerfile
     pull_policy: build
     environment: *scanner-env
     volumes:
@@ -108,8 +108,8 @@ services:
   grype:
     profiles: ["scan"]
     build:
-      context: ./scanners
-      dockerfile: grype/Dockerfile
+      context: ./scanners/quarkus
+      dockerfile: scanner-grype/Dockerfile
     pull_policy: build
     environment: *scanner-env
     volumes:
@@ -119,8 +119,8 @@ services:
   trufflehog:
     profiles: ["scan"]
     build:
-      context: ./scanners
-      dockerfile: trufflehog/Dockerfile
+      context: ./scanners/quarkus
+      dockerfile: scanner-trufflehog/Dockerfile
     pull_policy: build
     environment: *scanner-env
     volumes:
@@ -130,8 +130,8 @@ services:
   trivy-iac:
     profiles: ["scan"]
     build:
-      context: ./scanners
-      dockerfile: trivy-iac/Dockerfile
+      context: ./scanners/quarkus
+      dockerfile: scanner-trivy-iac/Dockerfile
     pull_policy: build
     environment: *scanner-env
     volumes:
@@ -141,8 +141,8 @@ services:
   trivy-image:
     profiles: ["scan"]
     build:
-      context: ./scanners
-      dockerfile: trivy-image/Dockerfile
+      context: ./scanners/quarkus
+      dockerfile: scanner-trivy-image/Dockerfile
     pull_policy: build
     environment:
       <<: *scanner-env
@@ -154,8 +154,8 @@ services:
   zap:
     profiles: ["scan"]
     build:
-      context: ./scanners
-      dockerfile: zap/Dockerfile
+      context: ./scanners/quarkus
+      dockerfile: scanner-zap/Dockerfile
     pull_policy: build
     environment:
       WARDEN_URL: http://warden:8080
@@ -165,8 +165,8 @@ services:
   nuclei:
     profiles: ["scan"]
     build:
-      context: ./scanners
-      dockerfile: nuclei/Dockerfile
+      context: ./scanners/quarkus
+      dockerfile: scanner-nuclei/Dockerfile
     pull_policy: build
     environment:
       WARDEN_URL: http://warden:8080
