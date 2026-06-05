@@ -1,11 +1,45 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { subDays } from "date-fns";
 import { useRouter } from "next/navigation";
-import { Surface } from "@cloudflare/kumo/components/surface";
-import { SankeyChart } from "@cloudflare/kumo/components/chart";
+import { useQuery } from "@tanstack/react-query";
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Label,
+  LabelList,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  PolarAngleAxis,
+  PolarGrid,
+  PolarRadiusAxis,
+  Radar,
+  RadarChart,
+  RadialBar,
+  RadialBarChart,
+  XAxis,
+  YAxis,
+} from "recharts";
+import {
+  Bug,
+  CalendarDays,
+  Flame,
+  Package,
+  ShieldCheck,
+} from "lucide-react";
+import { eachDayOfInterval, format, parseISO, subDays } from "date-fns";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -13,124 +47,282 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { echarts } from "@/lib/echarts";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+  type ChartConfig,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 import { sastStatistic, scaStatistic, trendStatistic } from "@/client/sdk.gen";
+import type { TrendPoint } from "@/client/types.gen";
+
+// ---------------------------------------------------------------------------
+// Chart configs — severity palette shared with the rest of the app
+// (globals.css --severity-*), status palette matches the legacy dashboard.
+// ---------------------------------------------------------------------------
+
+const severityConfig = {
+  critical: { label: "Critical", color: "var(--severity-critical)" },
+  high: { label: "High", color: "var(--severity-high)" },
+  medium: { label: "Medium", color: "var(--severity-medium)" },
+  low: { label: "Low", color: "var(--severity-low)" },
+} satisfies ChartConfig;
+
+const sastStatusConfig = {
+  open: { label: "Open", color: "var(--muted-foreground)" },
+  confirmed: { label: "Fixing", color: "var(--chart-1)" },
+  acceptedRisk: { label: "Accepted Risk", color: "var(--severity-high)" },
+  fixed: { label: "Fixed", color: "var(--severity-info)" },
+} satisfies ChartConfig;
+
+const scaStatusConfig = {
+  open: { label: "Open", color: "var(--muted-foreground)" },
+  ignore: { label: "Accepted Risk", color: "var(--severity-high)" },
+  fixed: { label: "Fixed", color: "var(--severity-info)" },
+} satisfies ChartConfig;
+
+const compareConfig = {
+  sast: { label: "SAST", color: "var(--chart-1)" },
+  sca: { label: "SCA", color: "var(--chart-2)" },
+} satisfies ChartConfig;
+
+const topFindingConfig = {
+  count: { label: "Findings", color: "var(--chart-2)" },
+} satisfies ChartConfig;
+
+const SEVERITY_KEYS = ["critical", "high", "medium", "low"] as const;
+const SEVERITY_LABELS: Record<string, string> = {
+  critical: "Critical",
+  high: "High",
+  medium: "Medium",
+  low: "Low",
+};
+
+// Recharts sorts legend/tooltip items alphabetically by default — rank them
+// by severity (then workflow state) instead.
+const ITEM_RANK: Record<string, number> = {
+  critical: 0,
+  high: 1,
+  medium: 2,
+  low: 3,
+  open: 0,
+  confirmed: 1,
+  ignore: 2,
+  acceptedRisk: 2,
+  fixed: 3,
+  sast: 0,
+  sca: 1,
+  count: 0,
+};
+const rankItem = (item: { dataKey?: unknown; value?: unknown; name?: unknown }) =>
+  ITEM_RANK[String(item.dataKey ?? item.name ?? item.value)] ?? 99;
 
 const RANGES = [
-  { value: "7", label: "Past 7 Days" },
-  { value: "30", label: "Past 30 Days" },
-  { value: "90", label: "Past 90 Days" },
-];
-
-const SEV = [
-  { key: "critical", label: "Critical", color: "#e5484d" },
-  { key: "high", label: "High", color: "#eb722a" },
-  { key: "medium", label: "Medium", color: "#f0a92a" },
-  { key: "low", label: "Low", color: "#6b8cff" },
+  { value: "7", label: "Last 7 days" },
+  { value: "30", label: "Last 30 days" },
+  { value: "90", label: "Last 90 days" },
 ] as const;
 
-const SOURCE_COLOR = "#2f7fdb";
-const DEP_COLOR = "#21b3b3";
+// ---------------------------------------------------------------------------
 
-function n(v: number | undefined | null): number {
-  return typeof v === "number" ? v : 0;
+function fillTrend(points: TrendPoint[] | undefined, start: Date, end: Date) {
+  const byDay = new Map(
+    (points ?? []).map((p) => [format(parseISO(p.date), "yyyy-MM-dd"), p]),
+  );
+  return eachDayOfInterval({ start, end }).map((day) => {
+    const key = format(day, "yyyy-MM-dd");
+    const p = byDay.get(key);
+    return {
+      date: key,
+      critical: p?.critical ?? 0,
+      high: p?.high ?? 0,
+      medium: p?.medium ?? 0,
+      low: p?.low ?? 0,
+      total: (p?.critical ?? 0) + (p?.high ?? 0) + (p?.medium ?? 0) + (p?.low ?? 0),
+    };
+  });
 }
 
-export default function CommandCenterDashboard() {
+function severityPie(series?: {
+  critical: number;
+  high: number;
+  medium: number;
+  low: number;
+}) {
+  return SEVERITY_KEYS.map((key) => ({
+    severity: key,
+    count: series?.[key] ?? 0,
+    fill: `var(--color-${key})`,
+  }));
+}
+
+function StatusBreakdown({
+  items,
+}: {
+  items: { key: string; label: string; value: number; color: string }[];
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 px-4 pt-3">
+      {items.map((s) => (
+        <div key={s.key} className="flex items-center gap-2 text-sm">
+          <span className="size-2 shrink-0 rounded-full" style={{ background: s.color }} />
+          <span className="truncate text-muted-foreground">{s.label}</span>
+          <span className="ml-auto font-medium tabular-nums">{s.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function DashboardPage() {
   const router = useRouter();
-  const [days, setDays] = useState("30");
-  const [tab, setTab] = useState<"summary" | "threats" | "health">("threats");
+  const [days, setDays] = useState<string>("30");
+  const [trendView, setTrendView] = useState<"sast" | "sca">("sast");
 
   const range = useMemo(() => {
     const end = new Date();
-    return { startDate: subDays(end, Number(days)).toISOString(), endDate: end.toISOString() };
+    return {
+      start: subDays(end, Number(days)),
+      end,
+      body: {
+        startDate: subDays(end, Number(days)).toISOString(),
+        endDate: end.toISOString(),
+      },
+    };
   }, [days]);
 
   const { data: sast } = useQuery({
-    queryKey: ["dashboard", "sast", range],
-    queryFn: async () => (await sastStatistic({ body: range, throwOnError: true })).data,
+    queryKey: ["dashboard", "sast", range.body],
+    queryFn: async () =>
+      (await sastStatistic({ body: range.body, throwOnError: true })).data,
   });
   const { data: sca } = useQuery({
-    queryKey: ["dashboard", "sca", range],
-    queryFn: async () => (await scaStatistic({ body: range, throwOnError: true })).data,
+    queryKey: ["dashboard", "sca", range.body],
+    queryFn: async () =>
+      (await scaStatistic({ body: range.body, throwOnError: true })).data,
   });
   const { data: trend } = useQuery({
-    queryKey: ["dashboard", "trend", range],
-    queryFn: async () => (await trendStatistic({ body: range, throwOnError: true })).data,
+    queryKey: ["dashboard", "trend", range.body],
+    queryFn: async () =>
+      (await trendStatistic({ body: range.body, throwOnError: true })).data,
   });
 
-  const sastTotal = SEV.reduce((a, s) => a + n(sast?.severity[s.key]), 0);
-  const scaTotal = SEV.reduce((a, s) => a + n(sca?.severity[s.key]), 0);
-  const sevTotals = SEV.map((s) => ({
-    ...s,
-    sast: n(sast?.severity[s.key]),
-    sca: n(sca?.severity[s.key]),
-    total: n(sast?.severity[s.key]) + n(sca?.severity[s.key]),
-  }));
-  const grandTotal = sastTotal + scaTotal;
-  const criticalHigh = sevTotals[0].total + sevTotals[1].total;
+  // ---- derived series ------------------------------------------------------
 
-  // Sankey threat-flow: sources (Codebase / Dependencies) -> severity buckets.
-  const sankey = useMemo(() => {
-    const nodes = [
-      { id: "codebase", name: "Codebase", value: sastTotal, color: SOURCE_COLOR },
-      { id: "deps", name: "Dependencies", value: scaTotal, color: DEP_COLOR },
-      ...SEV.map((s) => ({
-        id: s.key,
-        name: s.label,
-        value: n(sast?.severity[s.key]) + n(sca?.severity[s.key]),
-        color: s.color,
+  const sastTrend = useMemo(
+    () => fillTrend(trend?.sast, range.start, range.end),
+    [trend, range],
+  );
+  const scaTrend = useMemo(
+    () => fillTrend(trend?.sca, range.start, range.end),
+    [trend, range],
+  );
+  const areaData = trendView === "sast" ? sastTrend : scaTrend;
+
+  const lineData = useMemo(
+    () =>
+      sastTrend.map((p, i) => ({
+        date: p.date,
+        sast: p.total,
+        sca: scaTrend[i]?.total ?? 0,
       })),
-    ];
-    const links: { source: number; target: number; value: number }[] = [];
-    SEV.forEach((s, i) => {
-      const ti = 2 + i;
-      const a = n(sast?.severity[s.key]);
-      const b = n(sca?.severity[s.key]);
-      if (a > 0) links.push({ source: 0, target: ti, value: a });
-      if (b > 0) links.push({ source: 1, target: ti, value: b });
-    });
-    return { nodes, links };
-  }, [sast, sca, sastTotal, scaTotal]);
+    [sastTrend, scaTrend],
+  );
 
-  const pointTotal = (p: { critical: number; high: number; medium: number; low: number }) =>
-    n(p.critical) + n(p.high) + n(p.medium) + n(p.low);
-  const sparkSast = (trend?.sast ?? []).map(pointTotal);
-  const sparkSca = (trend?.sca ?? []).map(pointTotal);
+  const radarData = useMemo(
+    () =>
+      SEVERITY_KEYS.map((key) => ({
+        severity: SEVERITY_LABELS[key],
+        sast: sast?.severity[key] ?? 0,
+        sca: sca?.severity[key] ?? 0,
+      })),
+    [sast, sca],
+  );
+
+  const sastPie = useMemo(() => severityPie(sast?.severity), [sast]);
+  const scaPie = useMemo(() => severityPie(sca?.severity), [sca]);
+  const sastTotal = sastPie.reduce((acc, cur) => acc + cur.count, 0);
+  const scaTotal = scaPie.reduce((acc, cur) => acc + cur.count, 0);
+
+  const sastStatusTotal =
+    (sast?.status.open ?? 0) +
+    (sast?.status.confirmed ?? 0) +
+    (sast?.status.acceptedRisk ?? 0) +
+    (sast?.status.fixed ?? 0);
+  const scaStatusTotal =
+    (sca?.status.open ?? 0) + (sca?.status.ignore ?? 0) + (sca?.status.fixed ?? 0);
+
+  const topFindings = useMemo(
+    () =>
+      (sast?.topFindings ?? []).map((f) => ({
+        category: f.category,
+        count: f.count,
+        fill: "var(--color-count)",
+      })),
+    [sast],
+  );
+
+  const topPackages = useMemo(
+    () =>
+      (sca?.topDependencies ?? []).map((d) => ({
+        name: d.name,
+        critical: d.critical,
+        high: d.high,
+        medium: d.medium,
+        low: d.low,
+      })),
+    [sca],
+  );
 
   const kpis = [
-    { label: "Total Findings", value: grandTotal, accent: "text-foreground" },
-    { label: "Critical + High", value: criticalHigh, accent: "text-[color:var(--severity-critical)]" },
-    { label: "Open", value: n(sast?.status.open) + n(sca?.status.open), accent: "text-[color:var(--severity-high)]" },
-    { label: "Fixed", value: n(sast?.status.fixed) + n(sca?.status.fixed), accent: "text-[color:var(--severity-info)]" },
+    {
+      label: "Open Issues",
+      value: (sast?.status.open ?? 0) + (sca?.status.open ?? 0),
+      hint: "SAST + SCA awaiting triage",
+      icon: Bug,
+      className: "text-critical",
+    },
+    {
+      label: "Critical Findings",
+      value: (sast?.severity.critical ?? 0) + (sca?.severity.critical ?? 0),
+      hint: "Highest severity across scans",
+      icon: Flame,
+      className: "text-high",
+    },
+    {
+      label: "Vulnerable Packages",
+      value: scaTotal,
+      hint: "Dependencies with known risk",
+      icon: Package,
+      className: "text-medium",
+    },
+    {
+      label: "Fixed",
+      value: (sast?.status.fixed ?? 0) + (sca?.status.fixed ?? 0),
+      hint: "Resolved in selected period",
+      icon: ShieldCheck,
+      className: "text-info",
+    },
   ];
 
+  const tickFormatter = (value: string) => format(parseISO(value), "MMM d");
+
   return (
-    <div className="flex flex-col gap-5">
-      {/* command bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <h1 className="text-xl font-bold tracking-tight">Command Center</h1>
-          <span className="flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium">
-            <span className="size-1.5 animate-pulse rounded-full bg-[color:var(--severity-info)]" />
-            LIVE
-          </span>
-        </div>
-        <div className="flex items-center gap-2 rounded-full border border-border bg-card p-1 text-sm">
-          {(["summary", "threats", "health"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`rounded-full px-3 py-1 capitalize transition-colors ${
-                tab === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t === "health" ? "Operational Health" : t}
-            </button>
-          ))}
+    <div className="flex flex-col gap-6">
+      {/* header ------------------------------------------------------------ */}
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight">Security Overview</h1>
+          <p className="text-sm text-muted-foreground">
+            SAST &amp; SCA posture across all projects
+          </p>
         </div>
         <Select value={days} onValueChange={setDays}>
-          <SelectTrigger size="sm" className="w-40 bg-card">
+          <SelectTrigger size="sm" className="w-44 bg-card">
+            <CalendarDays className="size-4 text-muted-foreground" />
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -143,161 +335,427 @@ export default function CommandCenterDashboard() {
         </Select>
       </div>
 
-      {/* KPI strip */}
+      {/* KPI cards ---------------------------------------------------------- */}
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-        {kpis.map((k) => (
-          <Surface key={k.label} className="rounded-xl border border-border bg-card p-5">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{k.label}</p>
-            <div className={`mt-1 text-3xl font-bold tabular-nums ${k.accent}`}>
-              {k.value.toLocaleString()}
-            </div>
-          </Surface>
+        {kpis.map((kpi) => (
+          <Card key={kpi.label} className="gap-0 py-5">
+            <CardContent className="flex items-start gap-3.5 px-5">
+              <span className={`flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted ${kpi.className}`}>
+                <kpi.icon className="size-5" />
+              </span>
+              <div className="min-w-0 space-y-0.5">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  {kpi.label}
+                </p>
+                <div className="text-3xl font-bold leading-none tabular-nums">
+                  {kpi.value.toLocaleString()}
+                </div>
+                <p className="truncate text-xs text-muted-foreground">{kpi.hint}</p>
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      {/* threat-flow Sankey */}
-      <Surface className="rounded-xl border border-border bg-card p-5">
-        <div className="mb-2 flex items-center justify-between">
+      {/* trend area chart ---------------------------------------------------- */}
+      <Card>
+        <CardHeader className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-base font-bold">Threat Flow</h2>
-            <p className="text-sm text-muted-foreground">
-              Findings from sources to severity across the selected window
-            </p>
+            <CardTitle>Findings Trend</CardTitle>
+            <CardDescription>
+              New {trendView === "sast" ? "findings" : "vulnerable packages"} per
+              day by severity
+            </CardDescription>
           </div>
-          <div className="flex items-center gap-3 text-xs">
-            {SEV.map((s) => (
-              <span key={s.key} className="flex items-center gap-1.5 text-muted-foreground">
-                <span className="size-2 rounded-full" style={{ background: s.color }} />
-                {s.label}
-              </span>
-            ))}
-          </div>
-        </div>
-        {grandTotal > 0 ? (
-          <SankeyChart
-            echarts={echarts}
-            nodes={sankey.nodes}
-            links={sankey.links}
-            height={380}
-            linkColor="gradient"
-            linkOpacity={0.45}
-            nodeLabelLayout="stacked"
-            onNodeClick={(node) => {
-              const sev = SEV.find((s) => s.key === node.id);
-              if (sev) router.push(`/finding?severity=${sev.label}`);
-            }}
-          />
-        ) : (
-          <div className="flex h-[380px] items-center justify-center text-sm text-muted-foreground">
-            No findings in this window.
-          </div>
-        )}
-      </Surface>
-
-      {/* bottom panels */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {/* scanner fleet */}
-        <Surface className="rounded-xl border border-border bg-card p-5">
-          <h3 className="text-sm font-bold">Coverage</h3>
-          <p className="text-xs text-muted-foreground">SAST &amp; SCA posture</p>
-          <div className="mt-4 space-y-3">
-            <CoverageRow label="Code findings (SAST)" value={sastTotal} total={grandTotal} color={SOURCE_COLOR} />
-            <CoverageRow label="Dependency vulns (SCA)" value={scaTotal} total={grandTotal} color={DEP_COLOR} />
-          </div>
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            <Mini label="Open" value={n(sast?.status.open) + n(sca?.status.open)} />
-            <Mini label="Confirmed" value={n(sast?.status.confirmed)} />
-            <Mini label="Accepted" value={n(sast?.status.acceptedRisk) + n(sca?.status.ignore)} />
-            <Mini label="Fixed" value={n(sast?.status.fixed) + n(sca?.status.fixed)} />
-          </div>
-        </Surface>
-
-        {/* trend sparklines */}
-        <Surface className="rounded-xl border border-border bg-card p-5">
-          <h3 className="text-sm font-bold">Activity</h3>
-          <p className="text-xs text-muted-foreground">New findings per day</p>
-          <div className="mt-4 space-y-4">
-            <Spark label="SAST" data={sparkSast} color={SOURCE_COLOR} />
-            <Spark label="SCA" data={sparkSca} color={DEP_COLOR} />
-          </div>
-        </Surface>
-
-        {/* severity table */}
-        <Surface className="rounded-xl border border-border bg-card p-5">
-          <h3 className="text-sm font-bold">Severity Breakdown</h3>
-          <p className="text-xs text-muted-foreground">By source</p>
-          <table className="mt-3 w-full text-sm">
-            <thead>
-              <tr className="text-xs text-muted-foreground">
-                <th className="pb-2 text-left font-medium">Severity</th>
-                <th className="pb-2 text-right font-medium">SAST</th>
-                <th className="pb-2 text-right font-medium">SCA</th>
-                <th className="pb-2 text-right font-medium">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sevTotals.map((s) => (
-                <tr key={s.key} className="border-t border-border/60">
-                  <td className="py-1.5">
-                    <span
-                      className="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium"
-                      style={{ background: `${s.color}22`, color: s.color }}
-                    >
-                      {s.label}
-                    </span>
-                  </td>
-                  <td className="py-1.5 text-right tabular-nums">{s.sast.toLocaleString()}</td>
-                  <td className="py-1.5 text-right tabular-nums">{s.sca.toLocaleString()}</td>
-                  <td className="py-1.5 text-right font-semibold tabular-nums">{s.total.toLocaleString()}</td>
-                </tr>
+          <ToggleGroup
+            type="single"
+            variant="outline"
+            size="sm"
+            value={trendView}
+            onValueChange={(v) => v && setTrendView(v as "sast" | "sca")}
+          >
+            <ToggleGroupItem value="sast">SAST</ToggleGroupItem>
+            <ToggleGroupItem value="sca">SCA</ToggleGroupItem>
+          </ToggleGroup>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer config={severityConfig} className="aspect-auto h-64 w-full">
+            <AreaChart data={areaData} margin={{ top: 12, left: 0, right: 8 }}>
+              <defs>
+                {SEVERITY_KEYS.map((key) => (
+                  <linearGradient key={key} id={`fill-${key}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={`var(--color-${key})`} stopOpacity={0.8} />
+                    <stop offset="95%" stopColor={`var(--color-${key})`} stopOpacity={0.1} />
+                  </linearGradient>
+                ))}
+              </defs>
+              <CartesianGrid vertical={false} />
+              <XAxis
+                dataKey="date"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                minTickGap={32}
+                tickFormatter={tickFormatter}
+              />
+              <YAxis tickLine={false} axisLine={false} width={32} allowDecimals={false} />
+              <ChartTooltip
+                cursor={false}
+                content={
+                  <ChartTooltipContent
+                    indicator="dot"
+                    labelFormatter={(value) => format(parseISO(value as string), "MMM d, yyyy")}
+                  />
+                }
+              />
+              {[...SEVERITY_KEYS].reverse().map((key) => (
+                <Area
+                  key={key}
+                  dataKey={key}
+                  type="natural"
+                  fill={`url(#fill-${key})`}
+                  stroke={`var(--color-${key})`}
+                  stackId="severity"
+                />
               ))}
-            </tbody>
-          </table>
-        </Surface>
-      </div>
-    </div>
-  );
-}
+              <ChartLegend itemSorter={rankItem} content={<ChartLegendContent />} />
+            </AreaChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
 
-function CoverageRow({ label, value, total, color }: { label: string; value: number; total: number; color: string }) {
-  const pct = total > 0 ? Math.round((value / total) * 100) : 0;
-  return (
-    <div>
-      <div className="flex items-center justify-between text-sm">
-        <span>{label}</span>
-        <span className="tabular-nums text-muted-foreground">{value.toLocaleString()}</span>
-      </div>
-      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
-      </div>
-    </div>
-  );
-}
+      {/* severity donuts + radar --------------------------------------------- */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Card className="flex flex-col">
+          <CardHeader className="items-center pb-0">
+            <CardTitle>SAST Severity</CardTitle>
+            <CardDescription>Findings by severity</CardDescription>
+          </CardHeader>
+          <CardContent className="flex-1 pb-0">
+            <ChartContainer config={severityConfig} className="mx-auto aspect-square max-h-56">
+              <PieChart>
+                <ChartTooltip cursor={false} itemSorter={rankItem} content={<ChartTooltipContent hideLabel />} />
+                <Pie
+                  data={sastPie}
+                  dataKey="count"
+                  nameKey="severity"
+                  innerRadius={55}
+                  strokeWidth={5}
+                  onClick={(_, i) =>
+                    router.push(`/finding?severity=${SEVERITY_LABELS[SEVERITY_KEYS[i]]}`)
+                  }
+                  className="cursor-pointer"
+                >
+                  <Label
+                    content={({ viewBox }) => {
+                      if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                        return (
+                          <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
+                            <tspan x={viewBox.cx} y={viewBox.cy} className="fill-foreground text-2xl font-bold">
+                              {sastTotal.toLocaleString()}
+                            </tspan>
+                            <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 20} className="fill-muted-foreground text-xs">
+                              Findings
+                            </tspan>
+                          </text>
+                        );
+                      }
+                    }}
+                  />
+                </Pie>
+                <ChartLegend itemSorter={rankItem} content={<ChartLegendContent nameKey="severity" />} />
+              </PieChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
 
-function Mini({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-lg bg-muted/60 px-3 py-2">
-      <div className="text-lg font-bold tabular-nums">{value.toLocaleString()}</div>
-      <div className="text-xs text-muted-foreground">{label}</div>
-    </div>
-  );
-}
+        <Card className="flex flex-col">
+          <CardHeader className="items-center pb-0">
+            <CardTitle>SCA Severity</CardTitle>
+            <CardDescription>Vulnerable packages by severity</CardDescription>
+          </CardHeader>
+          <CardContent className="flex-1 pb-0">
+            <ChartContainer config={severityConfig} className="mx-auto aspect-square max-h-56">
+              <PieChart>
+                <ChartTooltip cursor={false} itemSorter={rankItem} content={<ChartTooltipContent hideLabel />} />
+                <Pie data={scaPie} dataKey="count" nameKey="severity" innerRadius={55} strokeWidth={5}>
+                  <Label
+                    content={({ viewBox }) => {
+                      if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                        return (
+                          <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
+                            <tspan x={viewBox.cx} y={viewBox.cy} className="fill-foreground text-2xl font-bold">
+                              {scaTotal.toLocaleString()}
+                            </tspan>
+                            <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 20} className="fill-muted-foreground text-xs">
+                              Packages
+                            </tspan>
+                          </text>
+                        );
+                      }
+                    }}
+                  />
+                </Pie>
+                <ChartLegend itemSorter={rankItem} content={<ChartLegendContent nameKey="severity" />} />
+              </PieChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
 
-function Spark({ label, data, color }: { label: string; data: number[]; color: string }) {
-  const max = Math.max(1, ...data);
-  const pts = data.length > 1
-    ? data.map((v, i) => `${(i / (data.length - 1)) * 100},${30 - (v / max) * 28}`).join(" ")
-    : "0,30 100,30";
-  const total = data.reduce((a, b) => a + b, 0);
-  return (
-    <div>
-      <div className="flex items-center justify-between text-xs">
-        <span className="font-medium">{label}</span>
-        <span className="tabular-nums text-muted-foreground">{total.toLocaleString()} total</span>
+        <Card className="flex flex-col">
+          <CardHeader className="items-center pb-0">
+            <CardTitle>SAST vs SCA</CardTitle>
+            <CardDescription>Severity profile comparison</CardDescription>
+          </CardHeader>
+          <CardContent className="flex-1 pb-0">
+            <ChartContainer config={compareConfig} className="mx-auto aspect-square max-h-56">
+              <RadarChart data={radarData}>
+                <ChartTooltip cursor={false} itemSorter={rankItem} content={<ChartTooltipContent indicator="line" />} />
+                <PolarAngleAxis dataKey="severity" />
+                <PolarGrid />
+                <Radar dataKey="sast" fill="var(--color-sast)" fillOpacity={0.5} stroke="var(--color-sast)" />
+                <Radar dataKey="sca" fill="var(--color-sca)" fillOpacity={0.4} stroke="var(--color-sca)" />
+                <ChartLegend itemSorter={rankItem} content={<ChartLegendContent />} />
+              </RadarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
       </div>
-      <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="mt-1 h-10 w-full">
-        <polyline points={pts} fill="none" stroke={color} strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
-      </svg>
+
+      {/* status radials + daily line ------------------------------------------ */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Card className="flex flex-col">
+          <CardHeader className="items-center pb-0">
+            <CardTitle>SAST Status</CardTitle>
+            <CardDescription>Remediation workflow state</CardDescription>
+          </CardHeader>
+          <CardContent className="flex-1 pb-0">
+            <ChartContainer config={sastStatusConfig} className="mx-auto aspect-square max-h-44">
+              <RadialBarChart
+                data={[
+                  {
+                    open: sast?.status.open ?? 0,
+                    confirmed: sast?.status.confirmed ?? 0,
+                    acceptedRisk: sast?.status.acceptedRisk ?? 0,
+                    fixed: sast?.status.fixed ?? 0,
+                  },
+                ]}
+                endAngle={360}
+                innerRadius="72%"
+                outerRadius="100%"
+              >
+                <PolarAngleAxis type="number" domain={[0, sastStatusTotal || 1]} tick={false} axisLine={false} />
+                <ChartTooltip cursor={false} itemSorter={rankItem} content={<ChartTooltipContent hideLabel />} />
+                <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
+                  <Label
+                    content={({ viewBox }) => {
+                      if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                        return (
+                          <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle">
+                            <tspan x={viewBox.cx} y={(viewBox.cy || 0) - 6} className="fill-foreground text-2xl font-bold">
+                              {sastStatusTotal.toLocaleString()}
+                            </tspan>
+                            <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 14} className="fill-muted-foreground text-xs">
+                              Findings
+                            </tspan>
+                          </text>
+                        );
+                      }
+                    }}
+                  />
+                </PolarRadiusAxis>
+                {(["open", "confirmed", "acceptedRisk", "fixed"] as const).map((key) => (
+                  <RadialBar
+                    key={key}
+                    dataKey={key}
+                    stackId="status"
+                    cornerRadius={4}
+                    fill={`var(--color-${key})`}
+                    className="stroke-transparent stroke-2"
+                  />
+                ))}
+              </RadialBarChart>
+            </ChartContainer>
+            <StatusBreakdown
+              items={[
+                { key: "open", label: "Open", value: sast?.status.open ?? 0, color: "var(--muted-foreground)" },
+                { key: "confirmed", label: "Fixing", value: sast?.status.confirmed ?? 0, color: "var(--chart-1)" },
+                { key: "acceptedRisk", label: "Accepted Risk", value: sast?.status.acceptedRisk ?? 0, color: "var(--severity-high)" },
+                { key: "fixed", label: "Fixed", value: sast?.status.fixed ?? 0, color: "var(--severity-info)" },
+              ]}
+            />
+          </CardContent>
+        </Card>
+
+        <Card className="flex flex-col">
+          <CardHeader className="items-center pb-0">
+            <CardTitle>SCA Status</CardTitle>
+            <CardDescription>Dependency remediation state</CardDescription>
+          </CardHeader>
+          <CardContent className="flex-1 pb-0">
+            <ChartContainer config={scaStatusConfig} className="mx-auto aspect-square max-h-44">
+              <RadialBarChart
+                data={[
+                  {
+                    open: sca?.status.open ?? 0,
+                    ignore: sca?.status.ignore ?? 0,
+                    fixed: sca?.status.fixed ?? 0,
+                  },
+                ]}
+                endAngle={360}
+                innerRadius="72%"
+                outerRadius="100%"
+              >
+                <PolarAngleAxis type="number" domain={[0, scaStatusTotal || 1]} tick={false} axisLine={false} />
+                <ChartTooltip cursor={false} itemSorter={rankItem} content={<ChartTooltipContent hideLabel />} />
+                <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
+                  <Label
+                    content={({ viewBox }) => {
+                      if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                        return (
+                          <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle">
+                            <tspan x={viewBox.cx} y={(viewBox.cy || 0) - 6} className="fill-foreground text-2xl font-bold">
+                              {scaStatusTotal.toLocaleString()}
+                            </tspan>
+                            <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 14} className="fill-muted-foreground text-xs">
+                              Packages
+                            </tspan>
+                          </text>
+                        );
+                      }
+                    }}
+                  />
+                </PolarRadiusAxis>
+                {(["open", "ignore", "fixed"] as const).map((key) => (
+                  <RadialBar
+                    key={key}
+                    dataKey={key}
+                    stackId="status"
+                    cornerRadius={4}
+                    fill={`var(--color-${key})`}
+                    className="stroke-transparent stroke-2"
+                  />
+                ))}
+              </RadialBarChart>
+            </ChartContainer>
+            <StatusBreakdown
+              items={[
+                { key: "open", label: "Open", value: sca?.status.open ?? 0, color: "var(--muted-foreground)" },
+                { key: "ignore", label: "Accepted Risk", value: sca?.status.ignore ?? 0, color: "var(--severity-high)" },
+                { key: "fixed", label: "Fixed", value: sca?.status.fixed ?? 0, color: "var(--severity-info)" },
+              ]}
+            />
+          </CardContent>
+        </Card>
+
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle>Daily Activity</CardTitle>
+            <CardDescription>New SAST findings vs SCA packages</CardDescription>
+          </CardHeader>
+          <CardContent className="flex-1">
+            <ChartContainer config={compareConfig} className="aspect-auto h-56 w-full">
+              <LineChart data={lineData} margin={{ top: 12, left: -20, right: 12 }}>
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  minTickGap={32}
+                  tickFormatter={tickFormatter}
+                />
+                <YAxis tickLine={false} axisLine={false} allowDecimals={false} />
+                <ChartTooltip
+                  cursor={false}
+                  content={
+                    <ChartTooltipContent
+                      labelFormatter={(value) => format(parseISO(value as string), "MMM d, yyyy")}
+                    />
+                  }
+                />
+                <Line dataKey="sast" type="monotone" stroke="var(--color-sast)" strokeWidth={2} dot={false} />
+                <Line dataKey="sca" type="monotone" stroke="var(--color-sca)" strokeWidth={2} dot={false} />
+                <ChartLegend itemSorter={rankItem} content={<ChartLegendContent />} />
+              </LineChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* top lists ------------------------------------------------------------ */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Top Findings</CardTitle>
+            <CardDescription>Most frequent SAST categories</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={topFindingConfig} className="aspect-auto h-72 w-full">
+              <BarChart
+                data={topFindings}
+                layout="vertical"
+                margin={{ left: 8, right: 32 }}
+              >
+                <CartesianGrid horizontal={false} />
+                <XAxis type="number" hide />
+                <YAxis
+                  dataKey="category"
+                  type="category"
+                  tickLine={false}
+                  axisLine={false}
+                  width={150}
+                  tickFormatter={(v: string) => (v.length > 20 ? `${v.slice(0, 20)}…` : v)}
+                />
+                <ChartTooltip cursor={false} itemSorter={rankItem} content={<ChartTooltipContent hideLabel />} />
+                <Bar
+                  dataKey="count"
+                  fill="var(--color-count)"
+                  radius={4}
+                  className="cursor-pointer"
+                  onClick={() => router.push("/finding")}
+                >
+                  <LabelList dataKey="count" position="right" className="fill-foreground" fontSize={12} />
+                </Bar>
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Top Vulnerable Packages</CardTitle>
+            <CardDescription>Dependencies stacked by severity</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={severityConfig} className="aspect-auto h-72 w-full">
+              <BarChart data={topPackages} layout="vertical" margin={{ left: 8, right: 16 }}>
+                <CartesianGrid horizontal={false} />
+                <XAxis type="number" hide />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  tickLine={false}
+                  axisLine={false}
+                  width={150}
+                  tickFormatter={(v: string) => (v.length > 20 ? `${v.slice(0, 20)}…` : v)}
+                />
+                <ChartTooltip cursor={false} itemSorter={rankItem} content={<ChartTooltipContent />} />
+                {SEVERITY_KEYS.map((key, i) => (
+                  <Bar
+                    key={key}
+                    dataKey={key}
+                    stackId="severity"
+                    fill={`var(--color-${key})`}
+                    radius={i === SEVERITY_KEYS.length - 1 ? [0, 4, 4, 0] : 0}
+                  />
+                ))}
+                <ChartLegend itemSorter={rankItem} content={<ChartLegendContent />} />
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

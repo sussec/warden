@@ -1,7 +1,4 @@
 @import "tailwindcss";
-/* Cloudflare Kumo component styles — additive + scoped ([data-kumo-*]);
-   only the package's exported style entry is importable. */
-@import "@cloudflare/kumo/styles";
 
 @custom-variant dark (&:is(.dark *));
 
