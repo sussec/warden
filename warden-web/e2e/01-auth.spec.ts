@@ -15,7 +15,7 @@ test.describe("auth", () => {
   test("logs in and reaches dashboard", async ({ page }) => {
     const errors = trackErrors(page);
     await login(page);
-    await expect(page.getByRole("heading", { name: /Static Application Security Testing/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Security Overview/i })).toBeVisible();
     expect(errors, errors.join("\n")).toEqual([]);
   });
 

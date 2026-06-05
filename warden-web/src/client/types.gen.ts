@@ -1076,6 +1076,19 @@ export type TopFinding = {
     count: number;
 };
 
+export type TrendPoint = {
+    date: string;
+    critical: number;
+    high: number;
+    medium: number;
+    low: number;
+};
+
+export type TrendStatistic = {
+    sast: Array<TrendPoint>;
+    sca: Array<TrendPoint>;
+};
+
 export type UpdateCiScanRequest = {
     status?: ScanStatus;
     description?: string | null;
@@ -1515,6 +1528,22 @@ export type ScaStatisticResponses = {
 };
 
 export type ScaStatisticResponse = ScaStatisticResponses[keyof ScaStatisticResponses];
+
+export type TrendStatisticData = {
+    body?: StatisticFilter;
+    path?: never;
+    query?: never;
+    url: '/api/dashboard/trend';
+};
+
+export type TrendStatisticResponses = {
+    /**
+     * OK
+     */
+    200: TrendStatistic;
+};
+
+export type TrendStatisticResponse = TrendStatisticResponses[keyof TrendStatisticResponses];
 
 export type GetAiSuggestionData = {
     body?: never;
