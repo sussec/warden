@@ -159,6 +159,24 @@ function severityPie(series?: {
   }));
 }
 
+function StatusBreakdown({
+  items,
+}: {
+  items: { key: string; label: string; value: number; color: string }[];
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 px-4 pt-3">
+      {items.map((s) => (
+        <div key={s.key} className="flex items-center gap-2 text-sm">
+          <span className="size-2 shrink-0 rounded-full" style={{ background: s.color }} />
+          <span className="truncate text-muted-foreground">{s.label}</span>
+          <span className="ml-auto font-medium tabular-nums">{s.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [days, setDays] = useState<string>("30");
@@ -506,7 +524,7 @@ export default function DashboardPage() {
             <CardDescription>Remediation workflow state</CardDescription>
           </CardHeader>
           <CardContent className="flex-1 pb-0">
-            <ChartContainer config={sastStatusConfig} className="mx-auto aspect-square max-h-56">
+            <ChartContainer config={sastStatusConfig} className="mx-auto aspect-square max-h-44">
               <RadialBarChart
                 data={[
                   {
@@ -520,6 +538,7 @@ export default function DashboardPage() {
                 innerRadius={70}
                 outerRadius={105}
               >
+                <PolarAngleAxis type="number" domain={[0, sastStatusTotal || 1]} tick={false} axisLine={false} />
                 <ChartTooltip cursor={false} itemSorter={rankItem} content={<ChartTooltipContent hideLabel />} />
                 <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
                   <Label
@@ -549,9 +568,16 @@ export default function DashboardPage() {
                     className="stroke-transparent stroke-2"
                   />
                 ))}
-                <ChartLegend itemSorter={rankItem} content={<ChartLegendContent />} />
               </RadialBarChart>
             </ChartContainer>
+            <StatusBreakdown
+              items={[
+                { key: "open", label: "Open", value: sast?.status.open ?? 0, color: "var(--muted-foreground)" },
+                { key: "confirmed", label: "Fixing", value: sast?.status.confirmed ?? 0, color: "var(--chart-1)" },
+                { key: "acceptedRisk", label: "Accepted Risk", value: sast?.status.acceptedRisk ?? 0, color: "var(--severity-high)" },
+                { key: "fixed", label: "Fixed", value: sast?.status.fixed ?? 0, color: "var(--severity-info)" },
+              ]}
+            />
           </CardContent>
         </Card>
 
@@ -561,7 +587,7 @@ export default function DashboardPage() {
             <CardDescription>Dependency remediation state</CardDescription>
           </CardHeader>
           <CardContent className="flex-1 pb-0">
-            <ChartContainer config={scaStatusConfig} className="mx-auto aspect-square max-h-56">
+            <ChartContainer config={scaStatusConfig} className="mx-auto aspect-square max-h-44">
               <RadialBarChart
                 data={[
                   {
@@ -574,6 +600,7 @@ export default function DashboardPage() {
                 innerRadius={70}
                 outerRadius={105}
               >
+                <PolarAngleAxis type="number" domain={[0, scaStatusTotal || 1]} tick={false} axisLine={false} />
                 <ChartTooltip cursor={false} itemSorter={rankItem} content={<ChartTooltipContent hideLabel />} />
                 <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
                   <Label
@@ -603,9 +630,15 @@ export default function DashboardPage() {
                     className="stroke-transparent stroke-2"
                   />
                 ))}
-                <ChartLegend itemSorter={rankItem} content={<ChartLegendContent />} />
               </RadialBarChart>
             </ChartContainer>
+            <StatusBreakdown
+              items={[
+                { key: "open", label: "Open", value: sca?.status.open ?? 0, color: "var(--muted-foreground)" },
+                { key: "ignore", label: "Accepted Risk", value: sca?.status.ignore ?? 0, color: "var(--severity-high)" },
+                { key: "fixed", label: "Fixed", value: sca?.status.fixed ?? 0, color: "var(--severity-info)" },
+              ]}
+            />
           </CardContent>
         </Card>
 
