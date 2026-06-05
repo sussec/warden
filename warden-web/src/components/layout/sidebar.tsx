@@ -7,6 +7,7 @@ import {
   FolderGit2,
   SearchCode,
   Package,
+  Radar,
   Shield,
   Users,
   Settings,
@@ -21,6 +22,7 @@ const groups = [
       { href: "/project", label: "Project", icon: FolderGit2 },
       { href: "/finding", label: "Finding", icon: SearchCode },
       { href: "/dependency", label: "Dependency", icon: Package },
+      { href: "/scanner", label: "Scanner", icon: Radar },
     ],
   },
   {

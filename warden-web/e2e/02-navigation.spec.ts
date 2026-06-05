@@ -7,6 +7,7 @@ const ROUTES = [
   "/project",
   "/finding",
   "/dependency",
+  "/scanner",
   "/rule",
   "/user",
   "/setting/general",
