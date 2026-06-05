@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { getAuthConfig, login } from "@/client/sdk.gen";
 import { session } from "@/lib/auth/session";
 import { GuestGuard } from "@/lib/auth/guard";
+import { WardenLogo } from "@/components/layout/logo";
 
 function LoginForm() {
   const router = useRouter();
@@ -47,6 +48,7 @@ function LoginForm() {
 
   return (
     <div className="flex flex-col items-center gap-2">
+      <WardenLogo className="mb-2 size-14 text-primary" />
       <h1 className="text-2xl font-bold">Welcome to Techanv Warden!</h1>
       <p className="text-muted-foreground">Sign in to continue</p>
       <form

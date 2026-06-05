@@ -19,7 +19,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
       <Topbar onMenuToggle={() => setMenuOpen((v) => !v)} />
-      <Sidebar open={menuOpen} />
+      <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
       <main
         className={
           "min-h-dvh bg-muted pt-18 pb-4 pr-4 transition-[padding] duration-200 " +
