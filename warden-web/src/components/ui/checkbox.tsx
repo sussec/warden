@@ -1,31 +1,36 @@
 "use client"
 
 import * as React from "react"
-import { CheckIcon } from "lucide-react"
-import { Checkbox as CheckboxPrimitive } from "radix-ui"
+import { Checkbox as KumoCheckbox } from "@cloudflare/kumo/components/checkbox"
 
 import { cn } from "@/lib/utils"
 
-function Checkbox({
-  className,
-  ...props
-}: React.ComponentProps<typeof CheckboxPrimitive.Root>) {
+/**
+ * Kumo-backed Checkbox shim.
+ *
+ * Preserves the previous shadcn/Radix public API: a single `Checkbox` export
+ * that accepts `className`, `checked`, `onCheckedChange`, `aria-label`,
+ * `disabled`, and forwards any extra DOM attributes (e.g. `onClick`) to the
+ * underlying control. Kumo's `<Checkbox>` destructures its known props and
+ * spreads the rest onto the Base UI checkbox root, so passthrough props work.
+ *
+ * Note: Radix exposed an internal Indicator/check icon; Kumo renders its own
+ * check/indeterminate indicator, so no sub-parts are needed here.
+ */
+type KumoCheckboxProps = React.ComponentProps<typeof KumoCheckbox>
+
+// Widen the type so consumers can keep passing DOM attributes (onClick, etc.)
+// that Radix accepted and that Kumo forwards via its rest-prop spread.
+type CheckboxProps = KumoCheckboxProps &
+  Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, keyof KumoCheckboxProps>
+
+function Checkbox({ className, ...props }: CheckboxProps) {
   return (
-    <CheckboxPrimitive.Root
+    <KumoCheckbox
       data-slot="checkbox"
-      className={cn(
-        "peer size-4 shrink-0 rounded-[4px] border border-input shadow-xs transition-shadow outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground dark:bg-input/30 dark:aria-invalid:ring-destructive/40 dark:data-[state=checked]:bg-primary",
-        className
-      )}
+      className={cn(className)}
       {...props}
-    >
-      <CheckboxPrimitive.Indicator
-        data-slot="checkbox-indicator"
-        className="grid place-content-center text-current transition-none"
-      >
-        <CheckIcon className="size-3.5" />
-      </CheckboxPrimitive.Indicator>
-    </CheckboxPrimitive.Root>
+    />
   )
 }
 

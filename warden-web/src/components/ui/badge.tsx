@@ -1,23 +1,42 @@
+"use client"
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
+import { KUMO_BADGE_BASE_STYLES } from "@cloudflare/kumo/components/badge"
 
 import { cn } from "@/lib/utils"
 
+// Kumo-backed badge shim.
+//
+// The granular Kumo `Badge` only accepts `{ variant, appearance, className,
+// children }` — it does not forward arbitrary span props nor support
+// `asChild`. To preserve this file's existing public API
+// (`React.ComponentProps<"span"> & { asChild }`), we render Kumo's exported
+// base-style constant (`KUMO_BADGE_BASE_STYLES`) plus per-variant Kumo
+// semantic-token classes onto our own span/Slot element. Variant names map
+// the old shadcn set onto Kumo's color tokens; no raw tailwind colors are
+// used.
 const badgeVariants = cva(
-  "inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3",
+  cn(
+    KUMO_BADGE_BASE_STYLES,
+    "shrink-0 gap-1 overflow-hidden border border-transparent transition-[color,box-shadow] [&>svg]:pointer-events-none [&>svg]:size-3"
+  ),
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
-        secondary:
-          "bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
-        destructive:
-          "bg-destructive text-white focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40 [a&]:hover:bg-destructive/90",
+        // shadcn "default" -> Kumo primary (inverted fill)
+        default: "bg-kumo-badge-inverted text-kumo-badge-inverted",
+        // shadcn "secondary" -> Kumo secondary (neutral fill)
+        secondary: "bg-kumo-fill text-kumo-badge-neutral-subtle",
+        // shadcn "destructive" -> Kumo destructive/red
+        destructive: "bg-kumo-badge-red text-white",
+        // shadcn "outline" -> Kumo outline (transparent + hairline border)
         outline:
-          "border-border text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
-        ghost: "[a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 [a&]:hover:underline",
+          "border-kumo-fill bg-transparent text-kumo-default",
+        // No Kumo equivalent for ghost/link: keep thin semantic fallbacks.
+        ghost: "bg-transparent text-kumo-default",
+        link: "bg-transparent text-kumo-link underline-offset-4 [a&]:hover:underline",
       },
     },
     defaultVariants: {
