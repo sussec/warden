@@ -12,30 +12,70 @@ copyright: Copyright &copy; 2026 Techanv Consulting
 
 theme:
   name: material
-  logo: assets/images/logo.png
-  favicon: assets/images/logo.png
+  logo: assets/images/logo.svg
+  favicon: assets/images/logo.svg
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+  palette:
+    # auto — follows the OS preference, with a manual toggle
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep orange
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep orange
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
   features:
-    - navigation.tabs.sticky
-    - navigation.footer
-    - navigation.indexes
-    - navigation.sections
+    - navigation.instant
+    - navigation.instant.progress
     - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.indexes
     - navigation.top
     - navigation.tracking
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - search.share
     - content.action.edit
+    - content.action.view
     - content.tabs.link
     - content.code.annotate
     - content.code.copy
-  highlightjs: true
-  hljs_languages:
-    - yaml
+    - content.tooltips
   font:
     text: Inter
+    code: JetBrains Mono
+
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/sussec/warden
+      name: Warden on GitHub
+  generator: false
 
 plugins:
   - blog
   - search:
-      separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+      separator: '[\s​\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   - minify:
       minify_html: true
 
@@ -46,6 +86,7 @@ markdown_extensions:
   - def_list
   - footnotes
   - md_in_html
+  - tables
   - toc:
       permalink: true
   - pymdownx.arithmatex:
@@ -54,6 +95,28 @@ markdown_extensions:
       smart_enable: all
   - pymdownx.caret
   - pymdownx.details
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.keys
+  - pymdownx.smartsymbols
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.inlinehilite
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
 nav:
   - Getting Started:
@@ -63,11 +126,23 @@ nav:
       - General: setting/general.md
       - Access Token: setting/ci-token.md
       - Integration: setting/integration.md
-    - Security Integration:
-      - security-integration/index.md
-      - Environment Variables: security-integration/environment-variables.md
-      - Static Application Security Testing (SAST):
-        - Semgrep: security-integration/sast/semgrep.md
-        - Gitleaks: security-integration/sast/gitleaks.md
-      - Software Composition Analysis (SCA):
-        - Trivy: security-integration/sca/trivy.md
+  - Using Warden:
+    - Dashboard: usage/dashboard.md
+    - Scanners: usage/scanners.md
+  - Security Integration:
+    - security-integration/index.md
+    - Environment Variables: security-integration/environment-variables.md
+    - Static Application Security Testing (SAST):
+      - Semgrep: security-integration/sast/semgrep.md
+      - Gitleaks: security-integration/sast/gitleaks.md
+      - TruffleHog: security-integration/sast/trufflehog.md
+      - Trivy IaC: security-integration/sast/trivy-iac.md
+    - Software Composition Analysis (SCA):
+      - Trivy: security-integration/sca/trivy.md
+      - Grype: security-integration/sca/grype.md
+    - Container & DAST:
+      - Trivy Image: security-integration/container/trivy-image.md
+      - OWASP ZAP: security-integration/dast/zap.md
+      - Nuclei: security-integration/dast/nuclei.md
+  - Blog:
+    - blog/index.md

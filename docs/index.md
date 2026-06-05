@@ -9,6 +9,7 @@ Techanv Warden is a self-hosted Application Security Posture Management (ASPM) a
 | Capability | Description |
 |---|---|
 | Unified findings | One dashboard for SAST, secrets, dependency, and container findings across every repository and branch. |
+| On-demand scanning | A nine-scanner fleet (Semgrep, Gitleaks, TruffleHog, Trivy, Grype, Trivy IaC, Trivy Image, ZAP, Nuclei) you can launch from the UI or CLI — no pipeline required. |
 | Deduplication | Findings are fingerprinted per project. The same issue reported across repeated pipeline runs is tracked as a single finding. |
 | Fix detection | When a confirmed finding disappears from the default branch, Warden marks it fixed, and reopens it if the fix is reverted. |
 | Shift-left feedback | Scan results are posted directly on merge requests so developers see security issues before merge. |
@@ -29,10 +30,11 @@ Warden deploys as three services orchestrated with Docker Compose:
 | `warden` | Backend API: findings, projects, integrations, authentication, scheduling | .NET 10, ASP.NET Core, EF Core, Quartz.NET |
 | `db` | Data store with vector search support for AI-assisted features | PostgreSQL with pgvector |
 
-Scanner wrapper images run inside your existing CI pipelines and push results to Warden over HTTPS using scoped CI access tokens. Warden never requires access to your source code or build infrastructure.
+Scanner wrapper images run inside your existing CI pipelines and push results to Warden over HTTPS using scoped CI access tokens. Warden never requires access to your source code or build infrastructure. The same images can also be launched on demand — from the CLI via the Compose `scan` profile, or directly from the [Scanner page](usage/scanners.md) in the UI.
 
 ## Next steps
 
 - [Installation](installation.md): run the platform with Docker Compose.
+- [Dashboard](usage/dashboard.md) and [Scanners](usage/scanners.md): the day-to-day UI.
 - [System settings](setting/general.md): SMTP, authentication, and SLA configuration.
-- [Security integration](security-integration/index.md): connect Semgrep, Gitleaks, and Trivy from your pipelines.
+- [Security integration](security-integration/index.md): connect the scanner fleet from your pipelines.

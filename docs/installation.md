@@ -20,6 +20,8 @@ Techanv Warden ships as container images and is deployed with Docker Compose. A 
 | `DB_SERVER`, `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME` | yes | PostgreSQL connection settings. |
 | `AI_ENDPOINT`, `AI_MODEL`, `WARDEN_AI_API_KEY` | no | OpenAI-compatible endpoint for AI-assisted triage and semantic search. Leave empty to disable AI features. |
 | `TRUSTED_PROXIES` | no | Comma-separated IPs or CIDR blocks of reverse proxies whose forwarded headers should be trusted. |
+| `WARDEN_TOKEN` | no | CI access token (**Setting → Access Token**) used by UI-triggered scans to ingest results. Required only for the [Scanner page](usage/scanners.md) run buttons. |
+| `DOCKER_GID` | no | Group ID of the host Docker socket, granting the non-root API user access for UI-triggered scans. See [UI-triggered scans](#ui-triggered-scans). |
 
 ## Docker Compose
 
@@ -92,6 +94,41 @@ Open `http://localhost:8080` and sign in with the username `system` and the pass
 - The web service proxies all API traffic same-origin, so no CORS configuration is required for standard deployments. Sessions are delivered as httpOnly cookies.
 - The backend API can additionally be exposed directly (for example on an internal port) for CI access tokens, the MCP endpoint at `/mcp`, and OpenAPI tooling at `/openapi/v1.json`.
 - For production, terminate TLS at a reverse proxy in front of the `web` service and set `FRONTEND_URL` to the public HTTPS URL. List the proxy in `TRUSTED_PROXIES`.
+
+## UI-triggered scans
+
+Warden can launch the bundled scanner images on demand from the **Scanner** page (see [Using Warden → Scanners](usage/scanners.md)). The API container does this by talking to the host Docker daemon and starting each scanner as a **sibling container** (docker-out-of-docker) — no Docker-in-Docker, no `--privileged`.
+
+To enable it, mount the Docker socket into the `warden` service and grant the non-root app user the socket's group:
+
+```yaml
+  warden:
+    # ...
+    environment:
+      # ...
+      WARDEN_TOKEN: ${WARDEN_TOKEN:-}
+      SCAN_IMAGE_PREFIX: ${SCAN_IMAGE_PREFIX:-warden-}
+      SCAN_NETWORK: ${SCAN_NETWORK:-warden_default}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    group_add:
+      - "${DOCKER_GID:-957}"
+```
+
+Find the socket's group id and set it in `.env`:
+
+```bash
+echo "DOCKER_GID=$(stat -c %g /var/run/docker.sock)" >> .env
+```
+
+Build the scanner images so the runner can launch them by name:
+
+```bash
+docker compose --profile scan build
+```
+
+!!! note "Security & opt-out"
+    Access to the Docker socket is root-equivalent on the host. This is appropriate for local-first and trusted single-tenant deployments. To disable UI scans entirely, omit the socket mount — the runner detects the missing socket and stays idle (the CLI `--profile scan` commands keep working). The dialog's **Run** buttons will report an error when the socket is absent.
 
 ## Building from source
 
