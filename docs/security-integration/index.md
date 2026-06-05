@@ -70,6 +70,15 @@ SCAN_TARGET_URL=https://staging.example.com docker compose --profile scan run --
 SCAN_TARGET_URL=https://staging.example.com docker compose --profile scan run --rm nuclei
 ```
 
+## Merge-request feedback (shift-left)
+
+When a scanner runs inside a merge-/pull-request pipeline, Warden comments each **newly introduced** finding inline on the exact changed line, so developers see issues before merge. This is automatic for every SAST scanner — no extra wiring — and is driven entirely by the CI environment:
+
+- **GitHub Actions**: runs on `pull_request` events. Requires `GITHUB_TOKEN` with `pull-requests: write` permission (the default `secrets.GITHUB_TOKEN` is sufficient). Comments are posted as a pull-request review.
+- **GitLab CI**: runs on merge-request pipelines (`CI_MERGE_REQUEST_IID` present). Requires a project/personal access token in `GITLAB_TOKEN` with `api` scope (the default `CI_JOB_TOKEN` cannot create discussions). Comments are posted as MR discussions anchored to the diff.
+
+The scanner sends the merge request as `gitAction: MergeRequest` with the target branch, so the backend diffs against the target and returns only the findings this change introduces — those, and only those, are commented. Outside a merge request (branch pushes, tags, local runs) no comments are posted.
+
 ## SARIF import
 
 Any tool that emits SARIF 2.1.0 (CodeQL, Bandit, gosec, Checkov, and dozens more) can push findings without a wrapper:

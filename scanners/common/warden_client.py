@@ -13,6 +13,8 @@ import subprocess
 import sys
 import urllib.request
 
+import source_manager
+
 
 def env(name: str, default: str | None = None) -> str:
     value = os.environ.get(name, default)
@@ -36,6 +38,8 @@ class WardenClient:
     def __init__(self) -> None:
         self.base = env("WARDEN_URL", "http://warden:8080").rstrip("/")
         self.token = env("WARDEN_TOKEN")
+        # CI source context (GitHub/GitLab) for merge-request comments
+        self.source = source_manager.detect()
 
     def _request(self, method: str, path: str, body: dict) -> dict | None:
         data = json.dumps(body).encode()
@@ -81,18 +85,42 @@ class WardenClient:
             "type": scanner_type,
             "isDefault": os.environ.get("IS_DEFAULT", "true").lower() != "false",
         }
+        # Merge-request context: the backend diffs against the target branch and
+        # returns NewFindings so we can comment only on what this MR introduces.
+        if self.source.is_merge_request():
+            body["gitAction"] = "MergeRequest"
+            body["mergeRequestId"] = self.source.merge_request_id()
+            target = self.source.target_branch()
+            if target:
+                body["targetBranch"] = target
+            body["isDefault"] = False
         info = self._request("POST", "/api/ci/scan", body)
         scan_id = info["scanId"]
         print(f"[warden] scan {scan_id} created for {repo_name}@{branch} ({commit[:12]})")
         return scan_id
 
-    def upload_findings(self, scan_id: str, findings: list[dict]) -> None:
-        self._request(
+    def upload_findings(self, scan_id: str, findings: list[dict]) -> dict | None:
+        response = self._request(
             "POST",
             "/api/ci/finding",
             {"scanId": scan_id, "findings": findings, "strategy": "AllFiles"},
         )
         print(f"[warden] uploaded {len(findings)} finding(s)")
+        if response:
+            new = response.get("newFindings") or []
+            fixed = response.get("fixedFindings") or []
+            if new:
+                print(f"[warden] {len(new)} new finding(s) introduced")
+            if fixed:
+                print(f"[warden] {len(fixed)} finding(s) fixed")
+            # Shift-left: comment new findings on the merge request, if any.
+            try:
+                source_manager.post_new_findings(
+                    self.source, new, response.get("findingUrl") or self.base
+                )
+            except Exception as exc:  # never fail the scan on a comment error
+                print(f"[warden] merge-request comment skipped: {exc}", file=sys.stderr)
+        return response
 
     def upload_dependencies(
         self, scan_id: str, packages: list[dict], vulnerabilities: list[dict]
