@@ -1,30 +1,21 @@
-"use client"
-
 import * as React from "react"
-import { Input as KumoInput, type InputProps as KumoInputProps } from "@cloudflare/kumo/components/input"
 
 import { cn } from "@/lib/utils"
 
-/**
- * Kumo-backed shim for the legacy shadcn `Input`.
- *
- * Preserves the original public API: a single `Input` export accepting every
- * native `<input>` prop the codebase already passes (`type`, `value`,
- * `onChange`, `placeholder`, `id`, `readOnly`, `disabled`, `className`, ...).
- * Rendering is delegated to `@cloudflare/kumo`'s `Input`, which is itself a
- * `forwardRef` over Base UI's input, so refs are forwarded transparently.
- */
-const Input = React.forwardRef<HTMLInputElement, KumoInputProps>(
-  function Input({ className, ...props }, ref) {
-    return (
-      <KumoInput
-        ref={ref}
-        data-slot="input"
-        className={cn("w-full", className)}
-        {...props}
-      />
-    )
-  }
-)
+function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+  return (
+    <input
+      type={type}
+      data-slot="input"
+      className={cn(
+        "h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30",
+        "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
+        "aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40",
+        className
+      )}
+      {...props}
+    />
+  )
+}
 
 export { Input }
