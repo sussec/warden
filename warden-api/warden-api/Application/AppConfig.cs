@@ -55,6 +55,18 @@ public class AppConfig
     [Option(Env = "WARDEN_TOKEN", Default = "")]
     public string ScanToken { get; set; } = string.Empty;
 
+    // Shared volume into which the runner clones git-URL targets, mounted into
+    // both this container and the scanner containers it launches.
+    [Option(Env = "SCAN_WORKSPACE_VOLUME", Default = "warden_scan_workspace")]
+    public string ScanWorkspaceVolume { get; set; } = string.Empty;
+
+    [Option(Env = "SCAN_WORKSPACE_PATH", Default = "/scan-workspace")]
+    public string ScanWorkspacePath { get; set; } = string.Empty;
+
+    // Optional token for cloning private https git repos (x-access-token).
+    [Option(Env = "SCAN_GIT_TOKEN", Default = "")]
+    public string ScanGitToken { get; set; } = string.Empty;
+
     [JsonIgnore] internal SecurityKey AccessTokenSecurityKey = null!;
     [JsonIgnore] internal SecurityKey RefreshTokenSecurityKey = null!;
 

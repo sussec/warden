@@ -36,8 +36,8 @@ public class ScanJobService(AppDbContext context) : IScanJobService
         var target = request.Target.Trim();
         if (string.IsNullOrEmpty(target))
             throw new ArgumentException("Target is required");
-        if (targetType == ScanTargetType.Repository && !target.StartsWith('/'))
-            throw new ArgumentException("Repository target must be an absolute host path");
+        if (targetType == ScanTargetType.Repository && !target.StartsWith('/') && !ScanRunnerWorker.IsGitUrl(target))
+            throw new ArgumentException("Repository target must be an absolute host path or a git URL");
         if (targetType == ScanTargetType.Url && !Uri.TryCreate(target, UriKind.Absolute, out _))
             throw new ArgumentException("Target must be an absolute URL");
 

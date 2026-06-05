@@ -40,8 +40,14 @@ services:
       WARDEN_TOKEN: ${WARDEN_TOKEN:-}
       SCAN_IMAGE_PREFIX: ${SCAN_IMAGE_PREFIX:-warden-}
       SCAN_NETWORK: ${SCAN_NETWORK:-warden_default}
+      # git-URL scan targets are cloned into this shared volume (mounted into
+      # both this container and the scanner containers the runner launches).
+      SCAN_WORKSPACE_VOLUME: ${SCAN_WORKSPACE_VOLUME:-warden_scan_workspace}
+      SCAN_WORKSPACE_PATH: /scan-workspace
+      SCAN_GIT_TOKEN: ${SCAN_GIT_TOKEN:-}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - scan_workspace:/scan-workspace
     # docker group id of the host socket (`stat -c %g /var/run/docker.sock`)
     # so the non-root app user may talk to the daemon
     group_add:
@@ -281,3 +287,4 @@ services:
 
 volumes:
   warden_db:
+  scan_workspace:

@@ -21,6 +21,9 @@ public static class Configuration
     public static string ScanNetwork => Config.ScanNetwork;
     public static string ScanWardenUrl => Config.ScanWardenUrl;
     public static string ScanToken => Config.ScanToken;
+    public static string ScanWorkspaceVolume => Config.ScanWorkspaceVolume;
+    public static string ScanWorkspacePath => Config.ScanWorkspacePath;
+    public static string ScanGitToken => Config.ScanGitToken;
     public static SecurityKey AccessTokenKey => Config.AccessTokenSecurityKey;
     public static SecurityKey RefreshTokenKey => Config.RefreshTokenSecurityKey;
 }

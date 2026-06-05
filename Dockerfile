@@ -1,5 +1,10 @@
 # warden-api — backend-only (the UI lives in warden-web/)
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+# git: the scan runner clones git-URL targets into the shared workspace volume
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /scan-workspace && chown $APP_UID /scan-workspace
 USER $APP_UID
 WORKDIR /app
 EXPOSE 8080

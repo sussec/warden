@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Docker.DotNet;
 using Docker.DotNet.Models;
 using Warden.Core.Entity;
@@ -131,11 +132,32 @@ public class ScanRunnerWorker(IServiceScopeFactory scopeFactory, ILogger<ScanRun
             $"WARDEN_TOKEN={Configuration.ScanToken}"
         };
         var binds = new List<string>();
+        var mounts = new List<Mount>();
+        string? cloneDir = null; // workspace subdir to clean up after a git-URL clone
         switch (job.TargetType)
         {
             case ScanTargetType.Repository:
-                binds.Add($"{job.Target}:/src:ro");
-                if (!string.IsNullOrEmpty(job.RepoName)) env.Add($"REPO_NAME={job.RepoName}");
+                if (IsGitUrl(job.Target))
+                {
+                    // Clone the repo into the shared workspace volume, then point the
+                    // scanner at it via PROJECT_PATH. The volume is mounted into both
+                    // this container (we clone here) and the scanner container.
+                    cloneDir = $"{Configuration.ScanWorkspacePath.TrimEnd('/')}/{job.Id}";
+                    await CloneRepoAsync(job.Target, job.Branch, cloneDir, cancellationToken);
+                    mounts.Add(new Mount
+                    {
+                        Type = "volume",
+                        Source = Configuration.ScanWorkspaceVolume,
+                        Target = Configuration.ScanWorkspacePath,
+                    });
+                    env.Add($"PROJECT_PATH={cloneDir}");
+                    env.Add($"REPO_NAME={(string.IsNullOrEmpty(job.RepoName) ? RepoNameFromUrl(job.Target) : job.RepoName)}");
+                }
+                else
+                {
+                    binds.Add($"{job.Target}:/src:ro");
+                    if (!string.IsNullOrEmpty(job.RepoName)) env.Add($"REPO_NAME={job.RepoName}");
+                }
                 if (!string.IsNullOrEmpty(job.Branch)) env.Add($"BRANCH={job.Branch}");
                 break;
             case ScanTargetType.Image:
@@ -154,6 +176,7 @@ public class ScanRunnerWorker(IServiceScopeFactory scopeFactory, ILogger<ScanRun
             HostConfig = new HostConfig
             {
                 Binds = binds,
+                Mounts = mounts,
                 NetworkMode = Configuration.ScanNetwork,
                 AutoRemove = false
             }
@@ -188,6 +211,70 @@ public class ScanRunnerWorker(IServiceScopeFactory scopeFactory, ILogger<ScanRun
             {
                 // best-effort cleanup
             }
+            if (cloneDir != null)
+            {
+                try
+                {
+                    if (Directory.Exists(cloneDir)) Directory.Delete(cloneDir, recursive: true);
+                }
+                catch
+                {
+                    // best-effort cleanup of the cloned working tree
+                }
+            }
+        }
+    }
+
+    /// <summary>A repository target that is a git URL (clone) rather than a host path (bind mount).</summary>
+    public static bool IsGitUrl(string target) =>
+        target.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+        target.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+        target.StartsWith("git@", StringComparison.OrdinalIgnoreCase) ||
+        target.StartsWith("ssh://", StringComparison.OrdinalIgnoreCase);
+
+    private static string RepoNameFromUrl(string url)
+    {
+        var name = url.TrimEnd('/');
+        var slash = name.LastIndexOf('/');
+        if (slash >= 0) name = name[(slash + 1)..];
+        return name.EndsWith(".git", StringComparison.OrdinalIgnoreCase) ? name[..^4] : name;
+    }
+
+    /// <summary>
+    /// Shallow-clones a git repo into <paramref name="dest"/>. For private HTTPS repos,
+    /// injects SCAN_GIT_TOKEN as an x-access-token credential. Throws on failure.
+    /// </summary>
+    private static async Task CloneRepoAsync(string url, string? branch, string dest, CancellationToken cancellationToken)
+    {
+        var cloneUrl = url;
+        var token = Configuration.ScanGitToken;
+        if (!string.IsNullOrEmpty(token) && url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            cloneUrl = "https://x-access-token:" + token + "@" + url["https://".Length..];
+        }
+
+        var args = new List<string> { "clone", "--depth", "1" };
+        if (!string.IsNullOrEmpty(branch)) { args.Add("--branch"); args.Add(branch); }
+        args.Add(cloneUrl);
+        args.Add(dest);
+
+        var psi = new ProcessStartInfo("git")
+        {
+            RedirectStandardError = true,
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+        };
+        foreach (var a in args) psi.ArgumentList.Add(a);
+        psi.Environment["GIT_TERMINAL_PROMPT"] = "0"; // never block on credential prompts
+
+        using var proc = Process.Start(psi) ?? throw new InvalidOperationException("git not available");
+        var stderr = await proc.StandardError.ReadToEndAsync(cancellationToken);
+        await proc.WaitForExitAsync(cancellationToken);
+        if (proc.ExitCode != 0)
+        {
+            // Scrub the token from any echoed URL before surfacing the error.
+            var safe = string.IsNullOrEmpty(token) ? stderr : stderr.Replace(token, "***");
+            throw new InvalidOperationException($"git clone failed: {safe.Trim()}");
         }
     }
 

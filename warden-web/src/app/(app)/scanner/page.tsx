@@ -249,7 +249,10 @@ const FLEET: FleetScanner[] = [
 ];
 
 const TARGET_FIELD: Record<TargetKind, { label: string; placeholder: string }> = {
-  repository: { label: "Repository path (on the docker host)", placeholder: "/home/me/projects/my-repo" },
+  repository: {
+    label: "Repository — git URL or host path",
+    placeholder: "https://github.com/org/repo.git  ·  or  /home/me/projects/my-repo",
+  },
   image: { label: "Image reference", placeholder: "nginx:1.27" },
   url: { label: "Target URL", placeholder: "https://staging.example.com" },
 };
