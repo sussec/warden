@@ -35,6 +35,17 @@ services:
       AI_ENDPOINT: ${AI_ENDPOINT:-}
       AI_MODEL: ${AI_MODEL:-}
       WARDEN_AI_API_KEY: ${WARDEN_AI_API_KEY:-}
+      # UI-triggered scans: runner launches scan-profile images as sibling
+      # containers over the docker socket below (omit the mount to disable).
+      WARDEN_TOKEN: ${WARDEN_TOKEN:-}
+      SCAN_IMAGE_PREFIX: ${SCAN_IMAGE_PREFIX:-warden-}
+      SCAN_NETWORK: ${SCAN_NETWORK:-warden_default}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    # docker group id of the host socket (`stat -c %g /var/run/docker.sock`)
+    # so the non-root app user may talk to the daemon
+    group_add:
+      - "${DOCKER_GID:-957}"
     ports:
       - "5272:8080" # direct API access for dev tooling (bun run gen-api)
 
