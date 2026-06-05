@@ -21,6 +21,10 @@ public static class AiSettingExtension
         {
             request.ApiKey = currentSetting.ApiKey;
         }
+        if (string.IsNullOrEmpty(request.EmbeddingApiKey))
+        {
+            request.EmbeddingApiKey = currentSetting.EmbeddingApiKey;
+        }
 
         var setting = await context.GetAppSettingsAsync();
         setting.AiSetting = JSONSerializer.Serialize(request);

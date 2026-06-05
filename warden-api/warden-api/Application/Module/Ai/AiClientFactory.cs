@@ -1,5 +1,6 @@
 using System.ClientModel;
 using Warden.Application.Module.Setting;
+using Warden.Core.Enum;
 using Microsoft.Extensions.AI;
 using OpenAI;
 
@@ -14,7 +15,7 @@ public class AiClientFactory(AppDbContext context) : IAiClientFactory
         {
             return null;
         }
-        return CreateOpenAiClient(setting).GetChatClient(setting.Model).AsIChatClient();
+        return CreateChatClient(setting);
     }
 
     public IChatClient? CreateChatClient(AiSetting setting)
@@ -23,7 +24,12 @@ public class AiClientFactory(AppDbContext context) : IAiClientFactory
         {
             return null;
         }
-        return CreateOpenAiClient(setting).GetChatClient(setting.Model).AsIChatClient();
+        return setting.Provider switch
+        {
+            AiProvider.Anthropic => CreateAnthropicClient(setting),
+            _ => CreateOpenAiClient(setting.Endpoint, setting.ApiKey)
+                .GetChatClient(setting.Model).AsIChatClient(),
+        };
     }
 
     public async Task<IEmbeddingGenerator<string, Embedding<float>>?> CreateEmbeddingGeneratorAsync()
@@ -33,18 +39,38 @@ public class AiClientFactory(AppDbContext context) : IAiClientFactory
         {
             return null;
         }
-        return CreateOpenAiClient(setting).GetEmbeddingClient(setting.EmbeddingModel).AsIEmbeddingGenerator();
+        // Embeddings always use an OpenAI-compatible endpoint (Anthropic has none).
+        // Use the dedicated embedding endpoint/key when set, otherwise reuse the chat
+        // endpoint — only valid when the chat provider is itself OpenAI-compatible.
+        if (setting.Provider == AiProvider.Anthropic && string.IsNullOrEmpty(setting.EmbeddingEndpoint))
+        {
+            // No OpenAI-compatible endpoint available for embeddings — semantic search off.
+            return null;
+        }
+        var endpoint = string.IsNullOrEmpty(setting.EmbeddingEndpoint)
+            ? setting.Endpoint
+            : setting.EmbeddingEndpoint;
+        var apiKey = string.IsNullOrEmpty(setting.EmbeddingApiKey)
+            ? setting.ApiKey
+            : setting.EmbeddingApiKey;
+        return CreateOpenAiClient(endpoint, apiKey)
+            .GetEmbeddingClient(setting.EmbeddingModel).AsIEmbeddingGenerator();
     }
 
-    private static OpenAIClient CreateOpenAiClient(AiSetting setting)
+    private static OpenAIClient CreateOpenAiClient(string endpoint, string apiKey)
     {
         // Local OpenAI-compatible servers (Ollama, LM Studio, Foundry Local) accept any key.
-        var credential = new ApiKeyCredential(string.IsNullOrEmpty(setting.ApiKey) ? "warden" : setting.ApiKey);
+        var credential = new ApiKeyCredential(string.IsNullOrEmpty(apiKey) ? "warden" : apiKey);
         var options = new OpenAIClientOptions();
-        if (!string.IsNullOrEmpty(setting.Endpoint))
+        if (!string.IsNullOrEmpty(endpoint))
         {
-            options.Endpoint = new Uri(setting.Endpoint);
+            options.Endpoint = new Uri(endpoint);
         }
         return new OpenAIClient(credential, options);
+    }
+
+    private static IChatClient CreateAnthropicClient(AiSetting setting)
+    {
+        return new AnthropicChatClient(setting.Endpoint, setting.ApiKey, setting.Model);
     }
 }

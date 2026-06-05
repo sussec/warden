@@ -4,12 +4,17 @@ export type ClientOptions = {
     baseUrl: 'http://localhost:5272' | (string & {});
 };
 
+export type AiProvider = 'OpenAiCompatible' | 'Anthropic' | 'AzureOpenAi';
+
 export type AiSetting = {
     enabled?: boolean;
+    provider?: AiProvider;
     endpoint?: string | null;
     apiKey?: string | null;
     model?: string | null;
     embeddingModel?: string | null;
+    embeddingEndpoint?: string | null;
+    embeddingApiKey?: string | null;
 };
 
 export type AiSuggestion = {
