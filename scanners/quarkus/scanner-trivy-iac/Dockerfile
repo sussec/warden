@@ -1,6 +1,6 @@
-# Gitleaks — GraalVM native build, Quarkus port of the Python wrapper.
+# Trivy IaC — GraalVM native build, Quarkus port of the Python wrapper.
 # Build from the scanners/quarkus directory:
-#   docker build -f scanner-gitleaks/Dockerfile -t warden-gitleaks-quarkus .
+#   docker build -f scanner-trivy-iac/Dockerfile -t warden-trivy-iac-quarkus .
 
 # ---- build: Mandrel (GraalVM) + Gradle ------------------------------------
 FROM quay.io/quarkus/ubi-quarkus-mandrel-builder-image:jdk-21 AS build
@@ -12,19 +12,14 @@ RUN microdnf install -y unzip tar gzip && microdnf clean all && \
     rm /tmp/gradle.zip
 WORKDIR /app
 COPY . .
-RUN gradle --no-daemon :scanner-gitleaks:quarkusBuild -Dquarkus.native.enabled=true \
+RUN gradle --no-daemon :scanner-trivy-iac:quarkusBuild -Dquarkus.native.enabled=true \
         -Dquarkus.native.container-build=false -Dquarkus.package.jar.enabled=false
 
-# ---- runtime: glibc + git + gitleaks + native scanner ---------------------
+# ---- runtime: glibc + git + trivy + native scanner -----------------------
 FROM debian:stable-slim AS runtime
-ARG GITLEAKS_VERSION=8.21.2
-ARG TARGETARCH=amd64
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates git curl && \
-    arch="x64"; [ "$TARGETARCH" = "arm64" ] && arch="arm64"; \
-    curl -fsSL -o /tmp/gitleaks.tar.gz \
-        "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_${arch}.tar.gz" && \
-    tar -xzf /tmp/gitleaks.tar.gz -C /usr/local/bin gitleaks && rm /tmp/gitleaks.tar.gz && \
+    curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin && \
     apt-get purge -y curl && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
-COPY --from=build /app/scanner-gitleaks/build/*-runner /opt/warden/gitleaks-scanner
+COPY --from=build /app/scanner-trivy-iac/build/*-runner /opt/warden/trivy-iac-scanner
 WORKDIR /src
-ENTRYPOINT ["/opt/warden/gitleaks-scanner"]
+ENTRYPOINT ["/opt/warden/trivy-iac-scanner"]

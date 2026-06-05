@@ -56,8 +56,14 @@ public class WardenClient {
     }
 
     public String createScan(String scanner, String scannerType, String projectPath) throws Exception {
+        return createScan(scanner, scannerType, projectPath, null);
+    }
+
+    /** {@code repoNameOverride} sets the repo identity for targets without a checkout (DAST URL, image ref). */
+    public String createScan(String scanner, String scannerType, String projectPath, String repoNameOverride) throws Exception {
         String repoName = Env.get("REPO_NAME",
-                new java.io.File(projectPath).getAbsoluteFile().getName());
+                repoNameOverride != null ? repoNameOverride
+                        : new java.io.File(projectPath).getAbsoluteFile().getName());
         String branch = firstNonNull(System.getenv("BRANCH"),
                 Env.git(projectPath, "rev-parse", "--abbrev-ref", "HEAD"), "main");
         String commit = firstNonNull(System.getenv("COMMIT"),
@@ -110,6 +116,17 @@ public class WardenClient {
             }
         }
         return response;
+    }
+
+    public void uploadDependencies(String scanId, java.util.Collection<com.techanv.warden.client.model.PackageInfo> packages,
+            java.util.Collection<com.techanv.warden.client.model.VulnerabilityInfo> vulnerabilities) throws Exception {
+        var body = new java.util.HashMap<String, Object>();
+        body.put("scanId", scanId);
+        body.put("packages", packages);
+        body.put("vulnerabilities", vulnerabilities);
+        request("POST", "/api/ci/dependency", body, null);
+        System.out.printf("[warden] uploaded %d package(s), %d vulnerability(ies)%n",
+                packages.size(), vulnerabilities.size());
     }
 
     public void completeScan(String scanId, String error) throws Exception {

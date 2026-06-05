@@ -1,0 +1,23 @@
+plugins {
+    id 'java'
+    id 'io.quarkus'
+}
+
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
+    implementation 'io.quarkus:quarkus-picocli'
+    implementation 'io.quarkus:quarkus-jackson'
+    implementation project(':warden-client')
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
