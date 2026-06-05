@@ -31,4 +31,15 @@ public class DashboardController(AppDbContext context)
             TopDependencies = await context.StatsTopDependenciesAsync(filter, top: 10)
         };
     }
+
+    [HttpPost]
+    [Route("trend")]
+    public async Task<TrendStatistic> TrendStatistic(StatisticFilter filter)
+    {
+        return new TrendStatistic
+        {
+            Sast = await context.StatsSastFindingTrendAsync(filter),
+            Sca = await context.StatsPackageProjectTrendAsync(filter)
+        };
+    }
 }
