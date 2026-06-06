@@ -420,7 +420,7 @@ export function PackageDetailDrawer({ target, onOpenChange }: PackageDetailDrawe
                             {a.id}
                             <ExternalLink className="size-3.5" />
                           </a>
-                          <SeverityBadge severity={(a.severity as Vulnerabilities["severity"]) ?? null} />
+                          <SeverityBadge severity={a.severity ?? null} />
                         </div>
                         {(a.aliases?.length ?? 0) > 0 && (
                           <p className="font-mono text-[11px] text-muted-foreground">
