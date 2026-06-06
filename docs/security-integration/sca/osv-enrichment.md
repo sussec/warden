@@ -42,6 +42,26 @@ osv-api:
 
 Cache freshness is tunable with `OSV_CACHE_TTL` (default `1h`).
 
+## Exploit intelligence: EPSS + CISA KEV
+
+`warden-osv` layers two exploit signals onto every advisory it serves, so triage can rank by *real-world risk* instead of CVSS alone:
+
+- **EPSS** ([FIRST.org](https://www.first.org/epss/)) — probability the CVE is exploited in the wild within 30 days, shown as a percentage badge on the finding advisory panel and package drawer.
+- **CISA KEV** ([Known Exploited Vulnerabilities](https://www.cisa.gov/known-exploited-vulnerabilities-catalog)) — a red **KEV** badge (plus a *Ransomware* variant) means active exploitation has been observed; the finding panel adds a prioritize-remediation call-out.
+
+GHSA/OSV ids resolve to their CVE alias automatically. Enrichment is best-effort: an EPSS or KEV outage degrades gracefully and never breaks advisory serving.
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `EPSS_URL` | `https://api.first.org/data/v1/epss` | EPSS API (point at an internal mirror if needed) |
+| `KEV_URL` | CISA feed URL | KEV catalog JSON (the CISA CDN blocks some automated networks — point at the [`cisagov/kev-data`](https://github.com/cisagov/kev-data) mirror or an internal copy if refresh fails) |
+| `KEV_REFRESH` | `6h` | KEV catalog background refresh interval |
+| `ENRICH` | `true` | Set `false` to disable EPSS/KEV entirely |
+
+## VEX export
+
+`GET /api/project/{projectId}/vex` downloads the project's triage decisions as an [OpenVEX v0.2.0](https://github.com/openvex/spec) document: false positives become `not_affected`, accepted risks `affected`, fixed findings `fixed`. Feed it to Grype (`--vex`), Trivy, or osv-scanner so CI stops re-reporting advisories your team has already assessed.
+
 ## How it relates to the SCA scanners
 
 [OSV-Scanner](osv.md), [CVE Lite CLI](cve-lite.md), Trivy, and Grype produce **point-in-time** findings during scans. Enrichment complements them: it answers "what does OSV say about this advisory/package *right now*?" — fresher fix versions, newly published advisories, withdrawals — without waiting for the next pipeline run.
