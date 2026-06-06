@@ -175,10 +175,19 @@ export default function DashboardPage() {
     queryFn: async () => (await trendStatistic({ body: range.body, throwOnError: true })).data,
   });
 
-  const areaData = useMemo(
-    () => fillTrend(trendView === "sast" ? trend?.sast : trend?.sca, range.start, range.end),
-    [trend, trendView, range],
-  );
+  // Cumulative running totals per severity — a smooth rising "posture over time"
+  // curve that fills the chart even when raw daily findings cluster on a few days.
+  const areaData = useMemo(() => {
+    const daily = fillTrend(trendView === "sast" ? trend?.sast : trend?.sca, range.start, range.end);
+    const acc = { critical: 0, high: 0, medium: 0, low: 0 };
+    return daily.map((d) => {
+      acc.critical += d.critical;
+      acc.high += d.high;
+      acc.medium += d.medium;
+      acc.low += d.low;
+      return { date: d.date, ...acc };
+    });
+  }, [trend, trendView, range]);
   const sevPie = useMemo(() => severityPie(sast?.severity, sca?.severity), [sast, sca]);
   const sevTotal = sevPie.reduce((a, c) => a + c.count, 0);
 
@@ -285,7 +294,7 @@ export default function DashboardPage() {
         {/* Trend hero */}
         <Tile
           title="Findings Trend"
-          desc={`New ${trendView === "sast" ? "findings" : "vulnerable packages"} per day by severity`}
+          desc={`Cumulative ${trendView === "sast" ? "findings" : "vulnerable packages"} by severity`}
           className="col-span-12 min-h-[300px] lg:col-span-8 lg:min-h-0"
           action={
             <ToggleGroup
