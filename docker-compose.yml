@@ -45,6 +45,8 @@ services:
       SCAN_WORKSPACE_VOLUME: ${SCAN_WORKSPACE_VOLUME:-warden_scan_workspace}
       SCAN_WORKSPACE_PATH: /scan-workspace
       SCAN_GIT_TOKEN: ${SCAN_GIT_TOKEN:-}
+      # OSV.dev advisory enrichment (warden-osv sidecar; empty disables)
+      OSV_SERVICE_URL: ${OSV_SERVICE_URL:-http://osv-api:9000}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - scan_workspace:/scan-workspace
@@ -54,6 +56,19 @@ services:
       - "${DOCKER_GID:-957}"
     ports:
       - "5272:8080" # direct API access for dev tooling (bun run gen-api)
+
+  # OSV.dev advisory enrichment sidecar (Go) — cached, typed facade over
+  # https://api.osv.dev consumed by warden-api for finding/package drill-down.
+  osv-api:
+    image: ghcr.io/sussec/warden-osv:latest
+    build:
+      context: ./warden-osv
+      dockerfile: Dockerfile
+    pull_policy: build
+    environment:
+      OSV_URL: ${OSV_URL:-https://api.osv.dev}
+      CACHE_TTL: ${OSV_CACHE_TTL:-1h}
+    restart: unless-stopped
 
   db:
     image: pgvector/pgvector:pg18
@@ -169,6 +184,22 @@ services:
       dockerfile: scanner-osv/Dockerfile
     pull_policy: build
     environment: *scanner-env
+    volumes:
+      - ${SCAN_TARGET:-.}:/src:ro
+
+  # JS/TS lockfile SCA (OWASP CVE Lite CLI) — validated fix versions,
+  # direct vs transitive classification, OSV.dev advisories
+  cve-lite:
+    profiles: ["scan"]
+    build:
+      context: ./scanners/quarkus
+      dockerfile: scanner-cve-lite/Dockerfile
+    pull_policy: build
+    environment:
+      <<: *scanner-env
+      CVE_LITE_OSV_URL: ${CVE_LITE_OSV_URL:-}
+      CVE_LITE_OFFLINE: ${CVE_LITE_OFFLINE:-}
+      CVE_LITE_OFFLINE_DB: ${CVE_LITE_OFFLINE_DB:-}
     volumes:
       - ${SCAN_TARGET:-.}:/src:ro
 
