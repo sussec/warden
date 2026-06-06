@@ -136,7 +136,7 @@ func (s *Server) packageAdvisories(w http.ResponseWriter, r *http.Request) {
 // query proxies POST /v1/query (single package/commit lookup, full records).
 func (s *Server) query(w http.ResponseWriter, r *http.Request) {
 	var q osv.Query
-	if err := decode(r, &q); err != nil {
+	if err := decode(w, r, &q); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -177,7 +177,7 @@ func (s *Server) query(w http.ResponseWriter, r *http.Request) {
 // queryBatch proxies POST /v1/querybatch (id-only results, mirrors OSV).
 func (s *Server) queryBatch(w http.ResponseWriter, r *http.Request) {
 	var q osv.BatchQuery
-	if err := decode(r, &q); err != nil {
+	if err := decode(w, r, &q); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -229,10 +229,24 @@ func flatten(v *osv.Vulnerability) *Advisory {
 		a.Affected = append(a.Affected, AffectedPackage{
 			Ecosystem:    aff.Package.Ecosystem,
 			Name:         aff.Package.Name,
-			FixedVersion: osv.FirstFixedVersion(v, aff.Package.Name),
+			FixedVersion: firstFixedInEntry(aff),
 		})
 	}
 	return a
+}
+
+// firstFixedInEntry scans only this Affected entry's own ranges — advisories
+// often repeat one package name across ecosystems/registries, and a fix in
+// one entry must not leak onto another that has none.
+func firstFixedInEntry(a osv.Affected) string {
+	for _, r := range a.Ranges {
+		for _, e := range r.Events {
+			if e.Fixed != "" {
+				return e.Fixed
+			}
+		}
+	}
+	return ""
 }
 
 func (s *Server) fail(w http.ResponseWriter, err error) {
@@ -247,8 +261,10 @@ func (s *Server) fail(w http.ResponseWriter, err error) {
 	}
 }
 
-func decode(r *http.Request, out any) error {
-	dec := json.NewDecoder(http.MaxBytesReader(nil, r.Body, 1<<20))
+// decode limits the body and passes w so the server closes the connection
+// (instead of draining) when the limit is exceeded.
+func decode(w http.ResponseWriter, r *http.Request, out any) error {
+	dec := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20))
 	dec.DisallowUnknownFields()
 	return dec.Decode(out)
 }

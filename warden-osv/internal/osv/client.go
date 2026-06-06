@@ -156,8 +156,13 @@ func (c *Client) do(ctx context.Context, method, path string, in, out any) error
 	return fmt.Errorf("osv: retries exhausted after %d attempts: %w", c.maxRetries+1, lastErr)
 }
 
-// backoff returns an exponential delay with jitter: ~0.5s, 1s, 2s, …
+// backoff returns an exponential delay with jitter: ~0.5s, 1s, 2s, … capped
+// so the shift can never overflow into rand.Int64N(<=0) panic territory.
 func backoff(attempt int) time.Duration {
+	const maxExp = 10 // caps the base at ~4.3 minutes
+	if attempt > maxExp {
+		attempt = maxExp
+	}
 	base := 250 * time.Millisecond * time.Duration(1<<attempt)
 	return base + time.Duration(rand.Int64N(int64(base)))
 }

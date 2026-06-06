@@ -92,6 +92,40 @@ func TestGetAdvisoryFlattens(t *testing.T) {
 	}
 }
 
+// A fix in one Affected entry must not leak onto another entry for the same
+// package name that has no fix (advisories repeat names across registries).
+func TestFlattenDoesNotLeakFixAcrossEntries(t *testing.T) {
+	f := &fakeOSV{vulns: map[string]*osv.Vulnerability{
+		"GHSA-dup": {
+			ID: "GHSA-dup",
+			Affected: []osv.Affected{
+				{
+					Package: osv.Package{Ecosystem: "npm", Name: "x"},
+					Ranges:  []osv.Range{{Type: "SEMVER", Events: []osv.Event{{Introduced: "0"}, {Fixed: "2.0.0"}}}},
+				},
+				{
+					Package: osv.Package{Ecosystem: "GSD", Name: "x"},
+					Ranges:  []osv.Range{{Type: "ECOSYSTEM", Events: []osv.Event{{Introduced: "0"}}}},
+				},
+			},
+		},
+	}}
+	srv := newTestServer(f)
+	defer srv.Close()
+
+	_, body := get(t, srv.URL+"/v1/advisory/GHSA-dup")
+	var a Advisory
+	if err := json.Unmarshal(body, &a); err != nil {
+		t.Fatal(err)
+	}
+	if a.Affected[0].FixedVersion != "2.0.0" {
+		t.Errorf("npm entry should keep its fix, got %q", a.Affected[0].FixedVersion)
+	}
+	if a.Affected[1].FixedVersion != "" {
+		t.Errorf("GSD entry has no fix but reported %q", a.Affected[1].FixedVersion)
+	}
+}
+
 func TestGetVulnCaches(t *testing.T) {
 	f := &fakeOSV{vulns: map[string]*osv.Vulnerability{"OSV-1": {ID: "OSV-1"}}}
 	srv := newTestServer(f)
