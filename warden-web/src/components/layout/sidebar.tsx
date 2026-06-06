@@ -5,15 +5,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ChevronRight,
+  History,
   KeyRound,
   LayoutDashboard,
   FolderGit2,
   Lock,
   Plug,
   Radar,
+  ScanSearch,
   SearchCode,
   Settings,
   Shield,
+  ShieldCheck,
   SlidersHorizontal,
   Sparkles,
   Timer,
@@ -33,7 +36,16 @@ const groups: { label: string; items: NavItem[] }[] = [
       { href: "/project", label: "Project", icon: FolderGit2 },
       { href: "/finding", label: "Finding", icon: SearchCode },
       { href: "/dependency", label: "Dependency", icon: Package },
-      { href: "/scanner", label: "Scanner", icon: Radar },
+      {
+        href: "/scanner",
+        label: "Scanner",
+        icon: Radar,
+        children: [
+          { href: "/scanner", label: "Scan Fleet", icon: ScanSearch },
+          { href: "/scanner/runs", label: "Scan Runs", icon: History },
+          { href: "/scanner/registered", label: "Registered", icon: ShieldCheck },
+        ],
+      },
     ],
   },
   {
@@ -142,7 +154,9 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose?: () => void
                     {isOpen && (
                       <div className="ml-5 mt-1 flex flex-col gap-1 border-l border-sidebar-border pl-3">
                         {item.children.map((child) => {
-                          const childActive = isActive(child.href);
+                          // exact match — child routes are leaves (avoids /scanner
+                          // matching /scanner/runs via startsWith)
+                          const childActive = pathname === child.href;
                           return (
                             <Link
                               key={child.href}
