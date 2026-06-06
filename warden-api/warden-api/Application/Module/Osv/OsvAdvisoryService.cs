@@ -25,29 +25,46 @@ public partial class OsvAdvisoryService : IOsvAdvisoryService
     [GeneratedRegex(@"^[A-Za-z]{2,16}-[A-Za-z0-9][A-Za-z0-9.-]*$")]
     private static partial Regex AdvisoryIdPattern();
 
-    /// Warden package Type → OSV ecosystem naming.
+    /// Warden package Type → OSV ecosystem naming. Scanners disagree on type
+    /// strings (osv-scanner emits OSV ecosystems, grype emits "java-archive"/
+    /// "go-module"/…, trivy emits "gobinary"/"jar"/…), so alias them all.
     private static readonly Dictionary<string, string> EcosystemMap = new(StringComparer.OrdinalIgnoreCase)
     {
         ["npm"] = "npm",
         ["node"] = "npm",
         ["maven"] = "Maven",
         ["java"] = "Maven",
+        ["java-archive"] = "Maven",
+        ["java-jar"] = "Maven",
+        ["jar"] = "Maven",
+        ["pom"] = "Maven",
         ["pip"] = "PyPI",
         ["pypi"] = "PyPI",
         ["python"] = "PyPI",
         ["go"] = "Go",
         ["golang"] = "Go",
+        ["go-module"] = "Go",
+        ["go-binary"] = "Go",
+        ["gomodule"] = "Go",
+        ["gobinary"] = "Go",
         ["cargo"] = "crates.io",
         ["crates.io"] = "crates.io",
         ["rust"] = "crates.io",
+        ["rust-crate"] = "crates.io",
         ["gem"] = "RubyGems",
         ["rubygems"] = "RubyGems",
         ["nuget"] = "NuGet",
+        ["dotnet"] = "NuGet",
         ["composer"] = "Packagist",
         ["packagist"] = "Packagist",
         ["hex"] = "Hex",
         ["pub"] = "Pub",
+        ["dart-pub"] = "Pub",
         ["swift"] = "SwiftURL",
+        ["debian"] = "Debian",
+        ["ubuntu"] = "Ubuntu",
+        ["alpine"] = "Alpine",
+        ["apk"] = "Alpine",
     };
 
     private readonly string _baseUrl = Configuration.OsvServiceUrl.TrimEnd('/');
@@ -77,7 +94,9 @@ public partial class OsvAdvisoryService : IOsvAdvisoryService
         EnsureEnabled();
         if (!EcosystemMap.TryGetValue(type.Trim(), out var ecosystem))
         {
-            throw new BadRequestException($"Unsupported package ecosystem '{type}'");
+            // OS-level / unknown package types ("Unknown", "deb", "rpm", …)
+            // simply have no OSV ecosystem — no advisories, not an error.
+            return [];
         }
         var osvName = OsvPackageName(ecosystem, group, name);
         var url = $"{_baseUrl}/v1/packages/{Uri.EscapeDataString(ecosystem)}/" +
