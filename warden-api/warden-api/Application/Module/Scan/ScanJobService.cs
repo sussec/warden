@@ -25,6 +25,7 @@ public class ScanJobService(AppDbContext context) : IScanJobService
             ["grype"] = ScanTargetType.Repository,
             ["osv"] = ScanTargetType.Repository,
             ["cve-lite"] = ScanTargetType.Repository,
+            ["cargo-audit"] = ScanTargetType.Repository,
             ["syft"] = ScanTargetType.Repository,
             ["checkov"] = ScanTargetType.Repository,
             ["guarddog"] = ScanTargetType.Repository,

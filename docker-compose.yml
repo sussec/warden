@@ -209,6 +209,18 @@ services:
     volumes:
       - ${SCAN_TARGET:-.}:/src:ro
 
+  # Rust/Cargo SCA (RustSec cargo-audit) — a Rust-native scanner that talks the
+  # same HTTP+JSON CI contract as the Quarkus scanners (build context: rust).
+  cargo-audit:
+    profiles: ["scan"]
+    build:
+      context: ./scanners/rust
+      dockerfile: scanner-cargo-audit/Dockerfile
+    pull_policy: build
+    environment: *scanner-env
+    volumes:
+      - ${SCAN_TARGET:-.}:/src:ro
+
   # SBOM generation — full dependency inventory (CycloneDX/SPDX-grade)
   syft:
     profiles: ["scan"]

@@ -146,6 +146,7 @@ nav:
       - Grype: security-integration/sca/grype.md
       - OSV-Scanner: security-integration/sca/osv.md
       - CVE Lite CLI: security-integration/sca/cve-lite.md
+      - cargo-audit (Rust): security-integration/sca/cargo-audit.md
       - OWASP Dependency-Check: security-integration/sca/dependency-check.md
       - Syft (SBOM): security-integration/sca/syft.md
       - GuardDog: security-integration/sca/guarddog.md
