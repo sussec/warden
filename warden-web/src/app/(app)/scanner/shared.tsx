@@ -67,6 +67,7 @@ const TYPE_STYLE: Record<ScannerType, string> = {
   Container: "bg-medium/15 text-medium",
   Dast: "bg-info/15 text-info",
   Iast: "bg-muted text-muted-foreground",
+  Ai: "bg-primary/15 text-primary",
 };
 
 export function TypeBadge({ type }: { type: ScannerType }) {
@@ -97,7 +98,7 @@ export function StatusBadge({ status }: { status: ScanJobStatus }) {
 
 // ---- fleet ----------------------------------------------------------------
 
-type TargetKind = "repository" | "image" | "url";
+type TargetKind = "repository" | "image" | "url" | "llm";
 
 type FleetScanner = {
   service: string;
@@ -128,6 +129,10 @@ const FLEET: FleetScanner[] = [
   { service: "trivy-image", match: ["trivy-image", "trivy image"], type: "Container", targetKind: "image", description: "Container image vulnerability scanning for any local or remote image ref.", icon: Container, command: `SCAN_IMAGE_REF=nginx:latest ${RUN} trivy-image` },
   { service: "zap", match: ["zap", "owasp zap"], type: "Dast", targetKind: "url", description: "DAST baseline scan against a running target (passive + spider).", icon: Globe, command: `SCAN_TARGET_URL=https://target ${RUN} zap` },
   { service: "nuclei", match: ["nuclei"], type: "Dast", targetKind: "url", description: "Template-based vulnerability scanning against a running target.", icon: Radar, command: `SCAN_TARGET_URL=https://target ${RUN} nuclei` },
+  { service: "nikto", match: ["nikto"], type: "Dast", targetKind: "url", description: "Web server DAST — dangerous files/CGIs, outdated server software, and misconfigurations across thousands of checks.", icon: ScanSearch, command: `SCAN_TARGET_URL=https://target ${RUN} nikto` },
+  { service: "dependency-check", match: ["dependency-check", "owasp dependency-check"], type: "Dependency", targetKind: "repository", description: "SCA via CPE/NVD matching (OWASP Dependency-Check) — catches bundled libraries purl-based scanners miss. NVD API key recommended.", icon: PackageSearch, command: `NVD_API_KEY=... ${TARGET} ${RUN} dependency-check` },
+  { service: "kingfisher", match: ["kingfisher"], type: "Secret", targetKind: "repository", description: "Secret detection with live validation (MongoDB Kingfisher) — confirms whether a leaked credential is still active; validated keys are Critical.", icon: KeyRound, command: `${TARGET} ${RUN} kingfisher` },
+  { service: "augustus", match: ["augustus"], type: "Ai", targetKind: "llm", description: "LLM red-team (Praetorian Augustus) — jailbreaks, prompt injection, encoding exploits, data extraction against a model or OpenAI-compatible endpoint.", icon: Sparkles, command: `AUGUSTUS_GENERATOR=openai.OpenAI ${RUN} augustus` },
 ];
 
 const TARGET_FIELD: Record<TargetKind, { label: string; placeholder: string }> = {
@@ -137,6 +142,7 @@ const TARGET_FIELD: Record<TargetKind, { label: string; placeholder: string }> =
   },
   image: { label: "Image reference", placeholder: "nginx:1.27" },
   url: { label: "Target URL", placeholder: "https://staging.example.com" },
+  llm: { label: "LLM generator / endpoint", placeholder: "openai.OpenAI  ·  or  rest.Rest (set AUGUSTUS_CONFIG)" },
 };
 
 // ---- helpers / dialogs ----------------------------------------------------
