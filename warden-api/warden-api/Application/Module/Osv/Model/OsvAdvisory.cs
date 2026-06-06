@@ -20,6 +20,27 @@ public record OsvAdvisory
     public string? Withdrawn { get; set; }
     public List<OsvReference>? References { get; set; }
     public List<OsvAffectedPackage>? Affected { get; set; }
+    /// EPSS exploit-prediction score; null when the CVE is unscored.
+    public OsvEpss? Epss { get; set; }
+    /// CISA KEV entry; non-null means active exploitation has been observed.
+    public OsvKev? Kev { get; set; }
+}
+
+/// <summary>FIRST.org EPSS block: probability of exploitation within 30 days.</summary>
+public record OsvEpss
+{
+    public double Score { get; set; }
+    public double Percentile { get; set; }
+    public string? Date { get; set; }
+}
+
+/// <summary>CISA Known Exploited Vulnerabilities catalog entry.</summary>
+public record OsvKev
+{
+    public string? DateAdded { get; set; }
+    public string? DueDate { get; set; }
+    /// "Known" when used in ransomware campaigns, else "Unknown".
+    public string? RansomwareUse { get; set; }
 }
 
 public record OsvReference
