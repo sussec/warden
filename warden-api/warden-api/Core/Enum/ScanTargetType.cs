@@ -7,5 +7,8 @@ public enum ScanTargetType
 {
     Repository,
     Image,
-    Url
+    Url,
+    // LLM generator/endpoint target (e.g. Augustus AUGUSTUS_GENERATOR).
+    // Appended last so existing persisted int values are unchanged — no migration.
+    Llm
 }

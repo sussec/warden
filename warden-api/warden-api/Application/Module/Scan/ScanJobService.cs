@@ -30,9 +30,13 @@ public class ScanJobService(AppDbContext context) : IScanJobService
             ["guarddog"] = ScanTargetType.Repository,
             ["deepsec"] = ScanTargetType.Repository,
             ["trivy-iac"] = ScanTargetType.Repository,
+            ["dependency-check"] = ScanTargetType.Repository,
+            ["kingfisher"] = ScanTargetType.Repository,
             ["trivy-image"] = ScanTargetType.Image,
             ["zap"] = ScanTargetType.Url,
             ["nuclei"] = ScanTargetType.Url,
+            ["nikto"] = ScanTargetType.Url,
+            ["augustus"] = ScanTargetType.Llm,
         };
 
     public async Task<ScanJobInfo> CreateAsync(CreateScanJobRequest request)

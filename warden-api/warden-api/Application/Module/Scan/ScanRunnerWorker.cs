@@ -166,6 +166,11 @@ public class ScanRunnerWorker(IServiceScopeFactory scopeFactory, ILogger<ScanRun
             case ScanTargetType.Url:
                 env.Add($"TARGET_URL={job.Target}");
                 break;
+            case ScanTargetType.Llm:
+                // The target is the LLM generator (e.g. openai.OpenAI, rest.Rest);
+                // provider keys / AUGUSTUS_CONFIG come from the scanner image env.
+                env.Add($"AUGUSTUS_GENERATOR={job.Target}");
+                break;
         }
 
         var created = await docker.Containers.CreateContainerAsync(new CreateContainerParameters
