@@ -231,6 +231,22 @@ services:
     volumes:
       - ${SCAN_TARGET:-.}:/src:ro
 
+  # semantic SAST (GitHub CodeQL) — data-flow/taint queries, build-mode none.
+  # Resource-heavy (~2-3GB bundle, several GB RAM/language).
+  codeql:
+    profiles: ["scan"]
+    build:
+      context: ./scanners/quarkus
+      dockerfile: scanner-codeql/Dockerfile
+    pull_policy: build
+    environment:
+      <<: *scanner-env
+      CODEQL_LANGUAGES: ${CODEQL_LANGUAGES:-}
+      CODEQL_THREADS: ${CODEQL_THREADS:-}
+      CODEQL_RAM: ${CODEQL_RAM:-}
+    volumes:
+      - ${SCAN_TARGET:-.}:/src:ro
+
   # malicious-package detection in dependency manifests (typosquatting, etc.)
   guarddog:
     profiles: ["scan"]

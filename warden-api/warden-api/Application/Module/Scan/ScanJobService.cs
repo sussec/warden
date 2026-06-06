@@ -29,6 +29,7 @@ public class ScanJobService(AppDbContext context) : IScanJobService
             ["checkov"] = ScanTargetType.Repository,
             ["guarddog"] = ScanTargetType.Repository,
             ["deepsec"] = ScanTargetType.Repository,
+            ["codeql"] = ScanTargetType.Repository,
             ["trivy-iac"] = ScanTargetType.Repository,
             ["dependency-check"] = ScanTargetType.Repository,
             ["kingfisher"] = ScanTargetType.Repository,

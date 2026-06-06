@@ -139,6 +139,7 @@ nav:
       - Kingfisher: security-integration/sast/kingfisher.md
       - Trivy IaC: security-integration/sast/trivy-iac.md
       - Checkov: security-integration/sast/checkov.md
+      - CodeQL: security-integration/sast/codeql.md
       - deepsec (AI SAST): security-integration/sast/deepsec.md
     - Software Composition Analysis (SCA):
       - Trivy: security-integration/sca/trivy.md
