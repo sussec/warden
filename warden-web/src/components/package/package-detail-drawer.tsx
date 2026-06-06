@@ -69,6 +69,25 @@ function hasTicket(ticket?: Tickets | null): ticket is Tickets {
 
 const VULN_TICKET_TYPES: TicketType[] = ["Jira", "Redmine", "GitHub"];
 
+// Flattened OSV advisory served by GET /api/package/{id}/advisories
+// (warden-api → warden-osv sidecar; empty when enrichment is disabled).
+type OsvAdvisory = {
+  id: string;
+  aliases?: string[] | null;
+  summary?: string | null;
+  severity?: string | null;
+  withdrawn?: string | null;
+  affected?: { ecosystem: string; name: string; fixedVersion?: string | null }[] | null;
+};
+
+async function fetchPackageAdvisories(packageId: string): Promise<OsvAdvisory[]> {
+  const res = await fetch(`/api/package/${packageId}/advisories`, {
+    credentials: "same-origin",
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return (await res.json()) as OsvAdvisory[];
+}
+
 /** Slide-over showing a package's metadata, vulnerabilities, dependency path, and actions. */
 export function PackageDetailDrawer({ target, onOpenChange }: PackageDetailDrawerProps) {
   const open = target !== null;
@@ -117,6 +136,16 @@ export function PackageDetailDrawer({ target, onOpenChange }: PackageDetailDrawe
           throwOnError: true,
         })
       ).data,
+  });
+
+  // Live OSV.dev advisories for this exact version — catches advisories
+  // published after the last scan. Silently absent on failure/disabled.
+  const osvAdvisories = useQuery({
+    queryKey: ["package-osv-advisories", packageId],
+    enabled: open && !!packageId,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+    queryFn: () => fetchPackageAdvisories(packageId!),
   });
 
   const { data: trackerStatus } = useQuery({
@@ -367,6 +396,54 @@ export function PackageDetailDrawer({ target, onOpenChange }: PackageDetailDrawe
               </ul>
             )}
           </section>
+
+          {/* Live OSV.dev advisories (only rendered when the service returns data) */}
+          {(osvAdvisories.data?.length ?? 0) > 0 && (
+            <>
+              <Separator />
+              <section className="flex flex-col gap-2">
+                <h3 className="text-sm font-semibold">
+                  Live OSV advisories ({osvAdvisories.data!.length})
+                </h3>
+                <ul className="flex flex-col gap-3">
+                  {osvAdvisories.data!.map((a) => {
+                    const fixed = a.affected?.find((p) => p.fixedVersion)?.fixedVersion;
+                    return (
+                      <li key={a.id} className="flex flex-col gap-1 rounded-md border p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <a
+                            href={`https://osv.dev/vulnerability/${a.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 font-mono text-sm font-medium text-primary hover:underline"
+                          >
+                            {a.id}
+                            <ExternalLink className="size-3.5" />
+                          </a>
+                          <SeverityBadge severity={(a.severity as Vulnerabilities["severity"]) ?? null} />
+                        </div>
+                        {(a.aliases?.length ?? 0) > 0 && (
+                          <p className="font-mono text-[11px] text-muted-foreground">
+                            {a.aliases!.join(" · ")}
+                          </p>
+                        )}
+                        {a.summary ? (
+                          <p className="line-clamp-3 text-xs text-muted-foreground">{a.summary}</p>
+                        ) : null}
+                        {a.withdrawn ? (
+                          <p className="text-xs text-medium">Withdrawn upstream.</p>
+                        ) : fixed ? (
+                          <p className="text-xs text-muted-foreground">
+                            Fixed in <span className="font-mono">{fixed}</span>
+                          </p>
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            </>
+          )}
 
           <Separator />
 

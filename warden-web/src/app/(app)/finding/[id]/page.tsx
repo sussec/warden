@@ -35,6 +35,7 @@ import { FindingStatusBadge } from "@/components/findings/finding-status-badge";
 import { FindingStatusMenu } from "@/components/findings/finding-status-menu";
 import { TicketMenu } from "@/components/findings/ticket-menu";
 import { FindingActivityTimeline } from "@/components/findings/finding-activity-timeline";
+import { OsvAdvisoryCard } from "@/components/findings/osv-advisory-card";
 import { findingStatusMeta } from "@/components/findings/finding-status";
 import {
   addComment,
@@ -304,6 +305,10 @@ export default function FindingDetailPage() {
           <MarkdownView content={finding.recommendation} />
         </Card>
       )}
+
+      {/* Live OSV.dev advisory drill-down (CVE/GHSA identities only). */}
+      <OsvAdvisoryCard findingId={findingId} identity={finding.identity} />
+
 
       <Card className="flex items-center justify-between gap-4 p-6">
         <div className="min-w-0">
