@@ -258,6 +258,50 @@ services:
     volumes:
       - ${SCAN_TARGET:-.}:/src:ro
 
+  # Secret detection with live validation (MongoDB Kingfisher) — confirms
+  # whether a leaked credential is still active; validated keys → Critical.
+  kingfisher:
+    profiles: ["scan"]
+    build:
+      context: ./scanners/quarkus
+      dockerfile: scanner-kingfisher/Dockerfile
+    pull_policy: build
+    environment:
+      <<: *scanner-env
+      KINGFISHER_NO_VALIDATE: ${KINGFISHER_NO_VALIDATE:-}
+    volumes:
+      - ${SCAN_TARGET:-.}:/src:ro
+
+  # SCA via CPE/NVD matching (OWASP Dependency-Check). An NVD API key is
+  # strongly recommended; persist the data cache to avoid re-downloading the NVD.
+  dependency-check:
+    profiles: ["scan"]
+    build:
+      context: ./scanners/quarkus
+      dockerfile: scanner-dependency-check/Dockerfile
+    pull_policy: build
+    environment:
+      <<: *scanner-env
+      NVD_API_KEY: ${NVD_API_KEY:-}
+      DEPENDENCY_CHECK_NOUPDATE: ${DEPENDENCY_CHECK_NOUPDATE:-}
+    volumes:
+      - ${SCAN_TARGET:-.}:/src:ro
+      - dependency_check_data:/usr/share/dependency-check/data
+
+  # Web server DAST (Nikto) — probes a live HTTP(S) target. Set TARGET_URL:
+  #   TARGET_URL=https://example.com docker compose --profile scan run --rm nikto
+  nikto:
+    profiles: ["scan"]
+    build:
+      context: ./scanners/quarkus
+      dockerfile: scanner-nikto/Dockerfile
+    pull_policy: build
+    environment:
+      <<: *scanner-env
+      TARGET_URL: ${TARGET_URL:-}
+      NIKTO_TUNING: ${NIKTO_TUNING:-}
+      NIKTO_MAXTIME: ${NIKTO_MAXTIME:-}
+
   # git-history secret detection (complements gitleaks working-tree scan)
   trufflehog:
     profiles: ["scan"]
@@ -319,3 +363,4 @@ services:
 volumes:
   warden_db:
   scan_workspace:
+  dependency_check_data:
