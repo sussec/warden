@@ -4,10 +4,10 @@
 
 ## Local scan (Docker Compose)
 
-Nikto scans a **URL**, not a checkout — set `TARGET_URL`:
+Nikto scans a **URL**, not a checkout — set `SCAN_TARGET_URL` (same convention as ZAP/Nuclei):
 
 ```bash
-TARGET_URL=https://example.com docker compose --profile scan run --rm nikto
+SCAN_TARGET_URL=https://example.com docker compose --profile scan run --rm nikto
 ```
 
 The wrapper runs Nikto with JSON output, maps each `vulnerabilities[]` entry to a finding (id, message, affected URL+method), and uploads them through the CI finding API. Launch it from the UI on the **Scanner** page — see [Using Warden → Scanners](../../usage/scanners.md).
@@ -26,7 +26,7 @@ Warden triage can refine from there. Each finding's location is `METHOD url` so 
 
 | Variable | Effect |
 |---|---|
-| `TARGET_URL` | **Required** — the target host/URL to scan |
+| `SCAN_TARGET_URL` | **Required** — the target host/URL to scan |
 | `NIKTO_TUNING` | Nikto `-Tuning` string to select/skip test classes (e.g. `x6` to skip the DoS tests) |
 | `NIKTO_MAXTIME` | Maximum testing time per host (e.g. `600s`, `10m`) — bound long scans in CI |
 

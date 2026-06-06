@@ -154,5 +154,7 @@ nav:
       - OWASP ZAP: security-integration/dast/zap.md
       - Nuclei: security-integration/dast/nuclei.md
       - Nikto: security-integration/dast/nikto.md
+    - AI / LLM Security:
+      - Augustus (LLM red-team): security-integration/ai/augustus.md
   - Blog:
     - blog/index.md
