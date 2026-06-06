@@ -4,10 +4,14 @@
 //
 // Configuration (environment):
 //
-//	PORT       listen port                          (default 9000)
-//	OSV_URL    OSV-compatible API base URL          (default https://api.osv.dev)
-//	CACHE_TTL  advisory cache TTL, Go duration      (default 1h)
-//	CACHE_MAX  max cached entries per cache         (default 10000)
+//	PORT         listen port                          (default 9000)
+//	OSV_URL      OSV-compatible API base URL          (default https://api.osv.dev)
+//	CACHE_TTL    advisory cache TTL, Go duration      (default 1h)
+//	CACHE_MAX    max cached entries per cache         (default 10000)
+//	EPSS_URL     FIRST.org EPSS API base URL          (default https://api.first.org/data/v1/epss)
+//	KEV_URL      CISA KEV catalog JSON feed URL       (default cisa.gov feed)
+//	KEV_REFRESH  KEV catalog refresh interval         (default 6h)
+//	ENRICH       set "false" to disable EPSS/KEV      (default true)
 package main
 
 import (
@@ -21,6 +25,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/sussec/warden/warden-osv/internal/enrich"
 	"github.com/sussec/warden/warden-osv/internal/osv"
 	"github.com/sussec/warden/warden-osv/internal/server"
 )
@@ -33,8 +38,18 @@ func main() {
 	ttl := durationOr(log, "CACHE_TTL", time.Hour)
 	maxEntries := intOr(log, "CACHE_MAX", 10_000)
 
+	var enricher *enrich.Enricher
+	rootCtx, rootCancel := context.WithCancel(context.Background())
+	defer rootCancel()
+	if envOr("ENRICH", "true") != "false" {
+		epss := enrich.NewEpss(envOr("EPSS_URL", enrich.DefaultEpssURL), 12*time.Hour, maxEntries)
+		kev := enrich.NewKev(envOr("KEV_URL", enrich.DefaultKevURL), log)
+		go kev.Run(rootCtx, durationOr(log, "KEV_REFRESH", 6*time.Hour))
+		enricher = enrich.New(epss, kev, log)
+	}
+
 	client := osv.NewClient(osv.WithBaseURL(baseURL))
-	srv := server.New(client, log, server.Config{CacheTTL: ttl, CacheMax: maxEntries})
+	srv := server.New(client, log, server.Config{CacheTTL: ttl, CacheMax: maxEntries, Enricher: enricher})
 
 	httpSrv := &http.Server{
 		Addr:              ":" + port,

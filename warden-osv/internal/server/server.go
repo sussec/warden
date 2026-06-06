@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/sussec/warden/warden-osv/internal/cache"
+	"github.com/sussec/warden/warden-osv/internal/enrich"
 	"github.com/sussec/warden/warden-osv/internal/osv"
 )
 
@@ -24,16 +25,19 @@ type OsvAPI interface {
 
 // Server routes warden-osv endpoints.
 type Server struct {
-	osv     OsvAPI
-	log     *slog.Logger
-	vulns   *cache.Cache[*osv.Vulnerability]
-	queries *cache.Cache[[]osv.Vulnerability]
+	osv      OsvAPI
+	log      *slog.Logger
+	vulns    *cache.Cache[*osv.Vulnerability]
+	queries  *cache.Cache[[]osv.Vulnerability]
+	enricher *enrich.Enricher
 }
 
 // Config tunes the server.
 type Config struct {
 	CacheTTL time.Duration
 	CacheMax int
+	// Enricher adds EPSS/KEV exploit intelligence to advisories; nil disables.
+	Enricher *enrich.Enricher
 }
 
 // New builds a Server.
@@ -45,10 +49,11 @@ func New(client OsvAPI, log *slog.Logger, cfg Config) *Server {
 		cfg.CacheMax = 10_000
 	}
 	return &Server{
-		osv:     client,
-		log:     log,
-		vulns:   cache.New[*osv.Vulnerability](cfg.CacheTTL, cfg.CacheMax),
-		queries: cache.New[[]osv.Vulnerability](cfg.CacheTTL, cfg.CacheMax),
+		osv:      client,
+		log:      log,
+		vulns:    cache.New[*osv.Vulnerability](cfg.CacheTTL, cfg.CacheMax),
+		queries:  cache.New[[]osv.Vulnerability](cfg.CacheTTL, cfg.CacheMax),
+		enricher: cfg.Enricher,
 	}
 }
 
@@ -93,6 +98,9 @@ type Advisory struct {
 	Withdrawn  string            `json:"withdrawn,omitempty"`
 	References []osv.Ref         `json:"references,omitempty"`
 	Affected   []AffectedPackage `json:"affected,omitempty"`
+	// Exploit intelligence (best-effort; omitted when unavailable).
+	Epss *enrich.EpssInfo `json:"epss,omitempty"`
+	Kev  *enrich.KevInfo  `json:"kev,omitempty"`
 }
 
 // AffectedPackage is one affected package with its first published fix.
@@ -109,7 +117,9 @@ func (s *Server) getAdvisory(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, flatten(v))
+	a := flatten(v)
+	s.enrichAll(r.Context(), []*Advisory{a})
+	writeJSON(w, http.StatusOK, a)
 }
 
 // packageAdvisories lists flattened advisories for one package version.
@@ -130,6 +140,11 @@ func (s *Server) packageAdvisories(w http.ResponseWriter, r *http.Request) {
 	for i := range vulns {
 		out = append(out, *flatten(&vulns[i]))
 	}
+	refs := make([]*Advisory, len(out))
+	for i := range out {
+		refs[i] = &out[i]
+	}
+	s.enrichAll(r.Context(), refs)
 	writeJSON(w, http.StatusOK, map[string]any{"advisories": out})
 }
 
@@ -247,6 +262,27 @@ func firstFixedInEntry(a osv.Affected) string {
 		}
 	}
 	return ""
+}
+
+// enrichAll attaches EPSS/KEV intel to advisories in one batched lookup.
+// Best-effort: a nil enricher or upstream failure leaves advisories bare.
+func (s *Server) enrichAll(ctx context.Context, advisories []*Advisory) {
+	if s.enricher == nil || len(advisories) == 0 {
+		return
+	}
+	cves := make([]string, 0, len(advisories))
+	for _, a := range advisories {
+		if cve := enrich.CveOf(a.ID, a.Aliases); cve != "" {
+			cves = append(cves, cve)
+		}
+	}
+	results := s.enricher.Lookup(ctx, cves)
+	for _, a := range advisories {
+		cve := enrich.CveOf(a.ID, a.Aliases)
+		if r, ok := results[cve]; ok {
+			a.Epss, a.Kev = r.Epss, r.Kev
+		}
+	}
 }
 
 func (s *Server) fail(w http.ResponseWriter, err error) {
