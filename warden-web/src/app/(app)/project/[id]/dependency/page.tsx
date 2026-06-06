@@ -26,12 +26,6 @@ import type { ProjectPackage, PackageStatus, RiskLevel } from "@/client/types.ge
 const STATUSES: PackageStatus[] = ["Open", "Ignore", "Fixed"];
 const SEVERITIES: RiskLevel[] = ["Critical", "High", "Medium", "Low", "None"];
 
-const STATUS_VARIANT: Record<PackageStatus, "secondary" | "outline" | "default"> = {
-  Open: "secondary",
-  Ignore: "outline",
-  Fixed: "default",
-};
-
 export default function ProjectDependencyPage() {
   const { id } = useParams<{ id: string }>();
   const [page, setPage] = useState<PageState>({ page: 1, size: 20 });

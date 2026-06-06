@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { login, trackErrors, USER, PASSWORD } from "./helpers";
+import { login, trackErrors } from "./helpers";
 
 test.describe("auth", () => {
   test("rejects bad credentials", async ({ page }) => {

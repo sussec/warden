@@ -43,7 +43,7 @@ test.describe("project", () => {
 
   test("export SBOM button present", async ({ page }) => {
     await login(page);
-    const id = await openFirstProject(page);
+    await openFirstProject(page);
     await expect(page.getByRole("button", { name: /Export SBOM/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /Upload SARIF/i })).toBeVisible();
   });
