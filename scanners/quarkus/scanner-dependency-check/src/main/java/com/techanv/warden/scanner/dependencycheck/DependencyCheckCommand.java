@@ -161,7 +161,13 @@ public class DependencyCheckCommand implements Callable<Integer> {
         if (purl.isBlank()) return stripVersion(fallback);
         String body = purl.contains("/") ? purl.substring(purl.indexOf('/') + 1) : purl;
         int at = body.indexOf('@');
-        return at >= 0 ? body.substring(0, at) : body;
+        String name = at >= 0 ? body.substring(0, at) : body;
+        // Maven coordinates are group/artifact in the purl; show them as the
+        // canonical group:artifact rather than a path-looking group/artifact.
+        if (purl.startsWith("pkg:maven/")) {
+            name = name.replace('/', ':');
+        }
+        return name;
     }
 
     private static String versionFromPurl(String purl) {

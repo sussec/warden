@@ -15,13 +15,21 @@ COPY . .
 RUN gradle --no-daemon :scanner-dependency-check:quarkusBuild -Dquarkus.native.enabled=true \
         -Dquarkus.native.container-build=false -Dquarkus.package.jar.enabled=false
 
-# ---- runtime: official Dependency-Check image (carries the JRE + tool) ----
-# Dependency-Check is a Java tool, so we reuse its official image as the runtime
-# base (dependency-check.sh + bundled JRE on PATH) and drop the native scanner
-# binary in. The native binary is glibc-linked, matching the glibc-based base.
-FROM owasp/dependency-check:latest AS runtime
-USER root
+# ---- runtime: glibc (Debian) + JRE + Dependency-Check CLI + native scanner --
+# The official owasp/dependency-check image is Alpine/musl, which CANNOT exec our
+# glibc Mandrel native binary. So we build a glibc runtime: Debian + a headless
+# JRE (Dependency-Check is a Java tool, needs Java 11+) + the Dependency-Check
+# release zip from GitHub. This keeps the native scanner and the tool on the
+# same glibc base.
+FROM debian:stable-slim AS runtime
+ARG DC_VERSION=12.2.2
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates curl unzip default-jre-headless && \
+    curl -fsSL -o /tmp/dc.zip \
+        "https://github.com/dependency-check/DependencyCheck/releases/download/v${DC_VERSION}/dependency-check-${DC_VERSION}-release.zip" && \
+    unzip -q /tmp/dc.zip -d /opt && rm /tmp/dc.zip && \
+    ln -s /opt/dependency-check/bin/dependency-check.sh /usr/local/bin/dependency-check.sh && \
+    apt-get purge -y curl unzip && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 COPY --from=build /app/scanner-dependency-check/build/*-runner /opt/warden/dependency-check-scanner
-ENV PATH="/usr/share/dependency-check/bin:${PATH}"
 WORKDIR /src
 ENTRYPOINT ["/opt/warden/dependency-check-scanner"]
