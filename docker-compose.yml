@@ -288,8 +288,9 @@ services:
       - ${SCAN_TARGET:-.}:/src:ro
       - dependency_check_data:/usr/share/dependency-check/data
 
-  # Web server DAST (Nikto) — probes a live HTTP(S) target. Set TARGET_URL:
-  #   TARGET_URL=https://example.com docker compose --profile scan run --rm nikto
+  # Web server DAST (Nikto) — probes a live HTTP(S) target. Set SCAN_TARGET_URL
+  # (same convention as zap/nuclei):
+  #   SCAN_TARGET_URL=https://example.com docker compose --profile scan run --rm nikto
   nikto:
     profiles: ["scan"]
     build:
@@ -298,9 +299,32 @@ services:
     pull_policy: build
     environment:
       <<: *scanner-env
-      TARGET_URL: ${TARGET_URL:-}
+      TARGET_URL: ${SCAN_TARGET_URL:-}
       NIKTO_TUNING: ${NIKTO_TUNING:-}
       NIKTO_MAXTIME: ${NIKTO_MAXTIME:-}
+
+  # LLM / GenAI red-team (Augustus) — probes a target model or OpenAI-compatible
+  # endpoint for jailbreaks, prompt injection, encoding exploits, data leakage.
+  # Targets an endpoint, not a checkout. Set AUGUSTUS_GENERATOR (+ AUGUSTUS_CONFIG
+  # for rest.Rest, or a provider API key env var). Smoke test with no key:
+  #   AUGUSTUS_GENERATOR=test.Repeat AUGUSTUS_PROBES='exploitation.*' \
+  #     docker compose --profile scan run --rm augustus
+  augustus:
+    profiles: ["scan"]
+    build:
+      context: ./scanners/quarkus
+      dockerfile: scanner-augustus/Dockerfile
+    pull_policy: build
+    environment:
+      <<: *scanner-env
+      AUGUSTUS_GENERATOR: ${AUGUSTUS_GENERATOR:-}
+      AUGUSTUS_CONFIG: ${AUGUSTUS_CONFIG:-}
+      AUGUSTUS_PROBES: ${AUGUSTUS_PROBES:-}
+      AUGUSTUS_DETECTORS: ${AUGUSTUS_DETECTORS:-}
+      AUGUSTUS_ARGS: ${AUGUSTUS_ARGS:-}
+      # provider keys Augustus reads directly when targeting a hosted model
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
 
   # git-history secret detection (complements gitleaks working-tree scan)
   trufflehog:
