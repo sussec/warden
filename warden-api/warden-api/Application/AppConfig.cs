@@ -67,6 +67,10 @@ public class AppConfig
     [Option(Env = "SCAN_GIT_TOKEN", Default = "")]
     public string ScanGitToken { get; set; } = string.Empty;
 
+    // warden-osv sidecar for OSV.dev advisory enrichment; empty disables.
+    [Option(Env = "OSV_SERVICE_URL", Default = "")]
+    public string OsvServiceUrl { get; set; } = string.Empty;
+
     [JsonIgnore] internal SecurityKey AccessTokenSecurityKey = null!;
     [JsonIgnore] internal SecurityKey RefreshTokenSecurityKey = null!;
 

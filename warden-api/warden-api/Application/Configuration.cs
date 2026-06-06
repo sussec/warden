@@ -24,6 +24,7 @@ public static class Configuration
     public static string ScanWorkspaceVolume => Config.ScanWorkspaceVolume;
     public static string ScanWorkspacePath => Config.ScanWorkspacePath;
     public static string ScanGitToken => Config.ScanGitToken;
+    public static string OsvServiceUrl => Config.OsvServiceUrl;
     public static SecurityKey AccessTokenKey => Config.AccessTokenSecurityKey;
     public static SecurityKey RefreshTokenKey => Config.RefreshTokenSecurityKey;
 }

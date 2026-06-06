@@ -1,7 +1,10 @@
 using System.Net.Mime;
+using Warden.Application.Exceptions;
 using Warden.Application.Module.Ai;
 using Warden.Application.Module.Finding;
 using Warden.Application.Module.Finding.Model;
+using Warden.Application.Module.Osv;
+using Warden.Application.Module.Osv.Model;
 using Warden.Authentication;
 using Warden.Core.Entity;
 using Warden.Core.EntityFramework;
@@ -14,9 +17,29 @@ namespace Warden.Api.Finding;
 public class FindingController(
     IFindingService findingService,
     IFindingAuthorize findingAuthorize,
-    IFindingAiService findingAiService
+    IFindingAiService findingAiService,
+    IOsvAdvisoryService osvAdvisoryService
 ) : BaseController
 {
+    /// <summary>
+    /// OSV.dev advisory details for a finding whose identity is an advisory id
+    /// (CVE/GHSA/OSV/…). 404 when enrichment is disabled, the identity is not
+    /// an advisory id, or OSV has no record for it.
+    /// </summary>
+    [HttpGet]
+    [Route("{findingId:guid}/advisory")]
+    public async Task<OsvAdvisory> GetOsvAdvisory(Guid findingId, CancellationToken cancellationToken)
+    {
+        findingAuthorize.Authorize(findingId, CurrentUser, PermissionAction.Read);
+        var finding = await findingService.GetFindingByIdAsync(findingId);
+        if (!osvAdvisoryService.Enabled || !osvAdvisoryService.IsAdvisoryIdentity(finding.Identity))
+        {
+            throw new NotFoundException("Finding has no OSV advisory identity");
+        }
+        var advisory = await osvAdvisoryService.GetAdvisoryAsync(finding.Identity, cancellationToken);
+        return advisory ?? throw new NotFoundException($"No OSV record for {finding.Identity}");
+    }
+
     [HttpPost]
     [Route("{findingId:guid}/ai-suggestion")]
     public async Task<AiSuggestion> GetAiSuggestion(Guid findingId)
