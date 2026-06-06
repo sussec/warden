@@ -20,7 +20,7 @@ public class CreateCiScanCommand(AppDbContext context)
         // SAST/DAST/secret/IaC report findings; dependency/container report packages.
         // Ingestion routes by scan id, not type, so all modeled types are accepted.
         if ((request.Type is ScannerType.Sast or ScannerType.Dependency or ScannerType.Secret
-                or ScannerType.Container or ScannerType.Dast or ScannerType.Iast) == false)
+                or ScannerType.Container or ScannerType.Dast or ScannerType.Iast or ScannerType.Ai) == false)
         {
             return Result.Fail($"Not implemented {request.Type.ToString()}");
         }

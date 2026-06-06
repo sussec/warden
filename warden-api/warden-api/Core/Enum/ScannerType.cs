@@ -10,5 +10,8 @@ public enum ScannerType
     Iast,
     Dependency,
     Container,
-    Secret
+    Secret,
+    // LLM/GenAI red-team findings (prompt injection, jailbreak, data leakage).
+    // Appended last so existing persisted int values are unchanged — no migration.
+    Ai
 }
