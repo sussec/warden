@@ -31,6 +31,7 @@ public class JiraTest
     }
 
     [Test]
+    [Explicit("Hits a live Jira webhook; run manually with a configured instance.")]
     public void TestJiraWebhook()
     {
         var token = "";
@@ -47,6 +48,7 @@ public class JiraTest
         client.PostAsync(webhook, content).Wait();
     }
     [Test]
+    [Explicit("Hits a live Jira instance; run manually with a configured instance.")]
     public void TestCreateIssueJira()
     {
         var issueTypes = jira.IssueTypes.GetIssueTypesAsync().Result;
@@ -57,6 +59,7 @@ public class JiraTest
     }
 
     [Test]
+    [Explicit("Hits a live Jira instance (issue ATTT-504); run manually.")]
     public void TestUpdateIssueJira()
     {
         var issue = jira.Issues.GetIssueAsync("ATTT-504").Result;
@@ -66,6 +69,7 @@ public class JiraTest
     }
 
     [Test]
+    [Explicit("Hits a live Jira instance (project ATTT); run manually.")]
     public void TestGetProjectJira()
     {
         try

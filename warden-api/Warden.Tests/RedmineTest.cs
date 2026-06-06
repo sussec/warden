@@ -23,6 +23,7 @@ public class RedmineTest
     }
 
     [Test]
+    [Explicit("Hits a live Redmine instance (localhost:8300); run manually.")]
     public void GetProjectsTest()
     {
         var projects = Rm.Get<Project>();
@@ -33,6 +34,7 @@ public class RedmineTest
         }
     }
     [Test]
+    [Explicit("Hits a live Redmine instance (localhost:8300); run manually.")]
     public void FindingIssueBySubjectTest()
     {
         var parameters = new NameValueCollection
@@ -50,6 +52,7 @@ public class RedmineTest
     }
     
     [Test]
+    [Explicit("Hits a live Redmine instance (localhost:8300); run manually.")]
     public void GetProjectByIdTest()
     {
         var project = Rm.Get<Project>("2");
@@ -59,6 +62,7 @@ public class RedmineTest
     }
 
     [Test]
+    [Explicit("Hits a live Redmine instance (localhost:8300); run manually.")]
     public void CreateIssueTest()
     {
         var project = Rm.Get<Project>("attt");
