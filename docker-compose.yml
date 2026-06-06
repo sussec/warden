@@ -200,6 +200,12 @@ services:
       CVE_LITE_OSV_URL: ${CVE_LITE_OSV_URL:-}
       CVE_LITE_OFFLINE: ${CVE_LITE_OFFLINE:-}
       CVE_LITE_OFFLINE_DB: ${CVE_LITE_OFFLINE_DB:-}
+      # CI policy gates (exit 3 on violation, after upload). KEV/EPSS gates need
+      # WARDEN_OSV_URL to reach the warden-osv enrichment sidecar.
+      CVE_LITE_FAIL_ON_SEVERITY: ${CVE_LITE_FAIL_ON_SEVERITY:-}
+      CVE_LITE_FAIL_ON_KEV: ${CVE_LITE_FAIL_ON_KEV:-}
+      CVE_LITE_FAIL_ON_EPSS: ${CVE_LITE_FAIL_ON_EPSS:-}
+      WARDEN_OSV_URL: ${WARDEN_OSV_URL:-http://osv-api:9000}
     volumes:
       - ${SCAN_TARGET:-.}:/src:ro
 

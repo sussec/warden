@@ -4,7 +4,10 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -102,7 +105,11 @@ public class AugustusCommand implements Callable<Integer> {
                         : t.substring(Math.max(0, t.length() - 600)));
             }
 
-            List<Finding> findings = new ArrayList<>();
+            // A probe runs many attempts (varied payloads); collapse them to one
+            // finding per probe+detector, keeping the worst-scoring attempt — so
+            // one upload never carries duplicate identities.
+            Map<String, Finding> byIdentity = new LinkedHashMap<>();
+            Map<String, Double> worst = new HashMap<>();
             for (String line : Files.readAllLines(Path.of(output))) {
                 String l = line.strip();
                 if (l.isEmpty()) continue;
@@ -114,9 +121,14 @@ public class AugustusCommand implements Callable<Integer> {
                 String probe = a.path("probe").asText("unknown");
                 String detector = a.path("detector").asText("");
                 double score = maxScore(a.path("scores"));
+                String identity = "augustus:" + probe + ":" + detector;
+                if (byIdentity.containsKey(identity) && score <= worst.get(identity)) {
+                    continue; // keep the existing, worse-or-equal finding
+                }
+                worst.put(identity, score);
 
                 Finding f = new Finding();
-                f.identity = "augustus:" + probe + ":" + detector;
+                f.identity = identity;
                 f.ruleId = probe;
                 f.name = probe + (detector.isBlank() ? "" : " (" + detector + ")");
                 f.category = family(probe);
@@ -125,10 +137,10 @@ public class AugustusCommand implements Callable<Integer> {
                 FindingLocation loc = new FindingLocation();
                 loc.path = targetLabel(generator) + " · probe=" + probe;
                 f.location = loc;
-                findings.add(f);
+                byIdentity.put(identity, f);
             }
 
-            client.uploadFindings(scanId, findings);
+            client.uploadFindings(scanId, new ArrayList<>(byIdentity.values()));
             client.completeScan(scanId, null);
             return 0;
         } catch (Exception exc) {

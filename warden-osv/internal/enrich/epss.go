@@ -122,7 +122,12 @@ func (e *Epss) Scores(ctx context.Context, cves []string) (map[string]EpssScore,
 }
 
 func (e *Epss) fetch(ctx context.Context, cves []string) ([]epssRow, error) {
-	q := url.Values{"cve": {strings.Join(cves, ",")}}
+	// Set limit to the batch size: the EPSS API defaults to 100 rows/page, so a
+	// full batch would otherwise risk truncation without an explicit limit.
+	q := url.Values{
+		"cve":   {strings.Join(cves, ",")},
+		"limit": {strconv.Itoa(len(cves))},
+	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, e.url+"?"+q.Encode(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("epss: build request: %w", err)
