@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -181,9 +181,11 @@ function GitHubDialog({
       (await getGitHubIntegrationProject({ path: { projectId }, throwOnError: true })).data,
   });
   const [form, setForm] = useState<GitHubProjectSetting>({ active: false });
-  useEffect(() => {
-    if (data) setForm(data);
-  }, [data]);
+  const [seededFrom, setSeededFrom] = useState<unknown>(null);
+  if (data && data !== seededFrom) {
+    setSeededFrom(data);
+    setForm(data);
+  }
 
   const mut = useMutation({
     mutationFn: async () =>
@@ -266,9 +268,11 @@ function WebhookDialog({
     scanCompletedEvent: false,
     scanFailedEvent: false,
   });
-  useEffect(() => {
-    if (data) setForm(data);
-  }, [data]);
+  const [seededFrom, setSeededFrom] = useState<unknown>(null);
+  if (data && data !== seededFrom) {
+    setSeededFrom(data);
+    setForm(data);
+  }
 
   const mut = useMutation({
     mutationFn: async () =>
@@ -355,9 +359,11 @@ function JiraDialog({
       (await getJiraIntegrationProject({ path: { projectId }, throwOnError: true })).data,
   });
   const [form, setForm] = useState<JiraProjectSetting>({ active: false, projectKey: "", issueType: "" });
-  useEffect(() => {
-    if (data) setForm(data);
-  }, [data]);
+  const [seededFrom, setSeededFrom] = useState<unknown>(null);
+  if (data && data !== seededFrom) {
+    setSeededFrom(data);
+    setForm(data);
+  }
 
   const mut = useMutation({
     mutationFn: async () =>
@@ -423,9 +429,11 @@ function RedmineDialog({
       (await getRedmineIntegrationProject({ path: { projectId }, throwOnError: true })).data,
   });
   const [form, setForm] = useState<RedmineProjectSetting>({ active: false });
-  useEffect(() => {
-    if (data) setForm(data);
-  }, [data]);
+  const [seededFrom, setSeededFrom] = useState<unknown>(null);
+  if (data && data !== seededFrom) {
+    setSeededFrom(data);
+    setForm(data);
+  }
 
   const mut = useMutation({
     mutationFn: async () =>
@@ -492,9 +500,11 @@ function TeamsDialog({
     ...DEFAULT_MAIL,
     webhook: "",
   } as TeamsProjectSetting);
-  useEffect(() => {
-    if (data) setForm(data);
-  }, [data]);
+  const [seededFrom, setSeededFrom] = useState<unknown>(null);
+  if (data && data !== seededFrom) {
+    setSeededFrom(data);
+    setForm(data);
+  }
 
   const mut = useMutation({
     mutationFn: async () =>
@@ -586,9 +596,11 @@ function MailDialog({
       (await getMailIntegrationProject({ path: { projectId }, throwOnError: true })).data,
   });
   const [form, setForm] = useState<MailProjectAlertSetting>(DEFAULT_MAIL);
-  useEffect(() => {
-    if (data) setForm(data);
-  }, [data]);
+  const [seededFrom, setSeededFrom] = useState<unknown>(null);
+  if (data && data !== seededFrom) {
+    setSeededFrom(data);
+    setForm(data);
+  }
 
   const mut = useMutation({
     mutationFn: async () =>

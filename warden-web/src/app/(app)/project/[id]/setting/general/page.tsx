@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -110,16 +110,18 @@ export default function ProjectGeneralSettingPage() {
   const [sast, setSast] = useState<ThresholdSetting>({});
   const [sca, setSca] = useState<ThresholdSetting>({});
 
-  useEffect(() => {
-    if (branchesData) setBranches(branchesData.filter((b): b is string => !!b));
-  }, [branchesData]);
+  const [branchesSeededFrom, setBranchesSeededFrom] = useState<unknown>(null);
+  if (branchesData && branchesData !== branchesSeededFrom) {
+    setBranchesSeededFrom(branchesData);
+    setBranches(branchesData.filter((b): b is string => !!b));
+  }
 
-  useEffect(() => {
-    if (thresholdData) {
-      setSast(thresholdData.sast ?? {});
-      setSca(thresholdData.sca ?? {});
-    }
-  }, [thresholdData]);
+  const [thresholdSeededFrom, setThresholdSeededFrom] = useState<unknown>(null);
+  if (thresholdData && thresholdData !== thresholdSeededFrom) {
+    setThresholdSeededFrom(thresholdData);
+    setSast(thresholdData.sast ?? {});
+    setSca(thresholdData.sca ?? {});
+  }
 
   const saveBranches = useMutation({
     mutationFn: async () =>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { FaEnvelope, FaGithub, FaJira, FaMicrosoft } from "react-icons/fa6";
@@ -177,9 +177,11 @@ function JiraCard() {
     queryKey: ["integration-jira"],
     queryFn: async () => (await getJiraIntegrationSetting({ throwOnError: true })).data,
   });
-  useEffect(() => {
-    if (data) setForm(data);
-  }, [data]);
+  const [seededFrom, setSeededFrom] = useState<unknown>(null);
+  if (data && data !== seededFrom) {
+    setSeededFrom(data);
+    setForm(data);
+  }
 
   const save = useMutation({
     mutationFn: async (body: JiraSetting) => {
@@ -362,9 +364,11 @@ function RedmineCard() {
     queryKey: ["integration-redmine"],
     queryFn: async () => (await getRedmineIntegrationSetting({ throwOnError: true })).data,
   });
-  useEffect(() => {
-    if (data) setForm(data);
-  }, [data]);
+  const [seededFrom, setSeededFrom] = useState<unknown>(null);
+  if (data && data !== seededFrom) {
+    setSeededFrom(data);
+    setForm(data);
+  }
 
   const save = useMutation({
     mutationFn: async (body: RedmineSetting) => {
@@ -524,9 +528,11 @@ function TeamsCard() {
     queryKey: ["integration-teams"],
     queryFn: async () => (await getTeamsIntegrationSetting({ throwOnError: true })).data,
   });
-  useEffect(() => {
-    if (data) setForm(data);
-  }, [data]);
+  const [seededFrom, setSeededFrom] = useState<unknown>(null);
+  if (data && data !== seededFrom) {
+    setSeededFrom(data);
+    setForm(data);
+  }
 
   const save = useMutation({
     mutationFn: async (body: TeamsAlertSetting) => {
@@ -651,9 +657,11 @@ function MailCard() {
     queryKey: ["integration-mail"],
     queryFn: async () => (await getMailIntegrationSetting({ throwOnError: true })).data,
   });
-  useEffect(() => {
-    if (data) setForm(data);
-  }, [data]);
+  const [seededFrom, setSeededFrom] = useState<unknown>(null);
+  if (data && data !== seededFrom) {
+    setSeededFrom(data);
+    setForm(data);
+  }
 
   const save = useMutation({
     mutationFn: async (body: MailAlertSetting) => {
@@ -759,9 +767,11 @@ function GitHubCard() {
     queryKey: ["integration-github"],
     queryFn: async () => (await getGitHubIntegrationSetting({ throwOnError: true })).data,
   });
-  useEffect(() => {
-    if (data) setForm(data);
-  }, [data]);
+  const [seededFrom, setSeededFrom] = useState<unknown>(null);
+  if (data && data !== seededFrom) {
+    setSeededFrom(data);
+    setForm(data);
+  }
 
   const save = useMutation({
     mutationFn: async (body: GitHubSetting) => {
@@ -938,9 +948,11 @@ function JiraWebhookCard() {
     queryKey: ["integration-jira-webhook"],
     queryFn: async () => (await getJiraWebhookIntegrationSetting({ throwOnError: true })).data,
   });
-  useEffect(() => {
-    if (data) setForm(data);
-  }, [data]);
+  const [seededFrom, setSeededFrom] = useState<unknown>(null);
+  if (data && data !== seededFrom) {
+    setSeededFrom(data);
+    setForm(data);
+  }
 
   const save = useMutation({
     mutationFn: async (body: JiraWebhookSetting) => {
@@ -1039,9 +1051,11 @@ function WebhookCard() {
     queryKey: ["integration-webhook"],
     queryFn: async () => (await getWebhookIntegrationSetting({ throwOnError: true })).data,
   });
-  useEffect(() => {
-    if (data) setForm(data);
-  }, [data]);
+  const [seededFrom, setSeededFrom] = useState<unknown>(null);
+  if (data && data !== seededFrom) {
+    setSeededFrom(data);
+    setForm(data);
+  }
 
   const save = useMutation({
     mutationFn: async (body: WebhookSetting) => {

@@ -14,6 +14,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     if (!session.isAuthenticated()) {
       router.replace(`/auth/login?returnUrl=${encodeURIComponent(pathname)}`);
     } else {
+      // Primary action is router.replace(); setReady is the else-branch guard only.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setReady(true);
     }
   }, [router, pathname]);
@@ -32,6 +34,8 @@ export function GuestGuard({ children }: { children: React.ReactNode }) {
     if (session.isAuthenticated()) {
       router.replace(search.get("returnUrl") ?? "/dashboard");
     } else {
+      // Same rationale as AuthGuard: router.replace() is primary; setReady is the else-branch guard.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setReady(true);
     }
   }, [router, search]);

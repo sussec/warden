@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { getAuthConfig, login } from "@/client/sdk.gen";
-import { session } from "@/lib/auth/session";
 import { GuestGuard } from "@/lib/auth/guard";
 import { WardenLogo } from "@/components/layout/logo";
 

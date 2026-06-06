@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -26,9 +26,11 @@ export default function AuthenticationSettingPage() {
     queryKey: ["setting-auth"],
     queryFn: async () => (await getAuthSetting({ throwOnError: true })).data,
   });
-  useEffect(() => {
-    if (data) setForm(data);
-  }, [data]);
+  const [seededFrom, setSeededFrom] = useState<unknown>(null);
+  if (data && data !== seededFrom) {
+    setSeededFrom(data);
+    setForm(data);
+  }
 
   const save = useMutation({
     mutationFn: async () => {

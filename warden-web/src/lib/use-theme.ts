@@ -11,6 +11,8 @@ export function useTheme() {
   useEffect(() => {
     const stored = localStorage.getItem(KEY);
     const isDark = stored ? stored === "dark" : true;
+    // localStorage/document unavailable during SSR; render-phase pattern would cause hydration mismatch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDark(isDark);
     document.documentElement.classList.toggle("dark", isDark);
   }, []);

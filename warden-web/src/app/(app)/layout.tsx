@@ -13,6 +13,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   // default: open on desktop, closed on mobile (991px parity with Angular)
   useEffect(() => {
+    // window is unavailable during SSR; reading at render time causes hydration mismatch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMenuOpen(window.innerWidth > 991);
   }, []);
 

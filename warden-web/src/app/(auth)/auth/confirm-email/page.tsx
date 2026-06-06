@@ -27,6 +27,8 @@ function ConfirmEmailHandler() {
   // run once when arriving with a token link
   useEffect(() => {
     if (token && username) confirm.mutate();
+    // fallback of a one-shot mutation trigger; cannot be a render-phase pattern.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     else setState("failed");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
