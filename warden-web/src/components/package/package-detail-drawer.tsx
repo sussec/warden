@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SeverityBadge } from "@/components/severity";
+import { EpssBadge, KevBadge, type EpssBlock, type KevBlock } from "@/components/findings/exploit-intel";
 import {
   createProjectPackageTicket,
   deleteProjectTicket,
@@ -78,6 +79,8 @@ type OsvAdvisory = {
   severity?: string | null;
   withdrawn?: string | null;
   affected?: { ecosystem: string; name: string; fixedVersion?: string | null }[] | null;
+  epss?: EpssBlock | null;
+  kev?: KevBlock | null;
 };
 
 async function fetchPackageAdvisories(packageId: string): Promise<OsvAdvisory[]> {
@@ -420,7 +423,11 @@ export function PackageDetailDrawer({ target, onOpenChange }: PackageDetailDrawe
                             {a.id}
                             <ExternalLink className="size-3.5" />
                           </a>
-                          <SeverityBadge severity={a.severity ?? null} />
+                          <span className="flex items-center gap-1.5">
+                            <KevBadge kev={a.kev} />
+                            <EpssBadge epss={a.epss} />
+                            <SeverityBadge severity={a.severity ?? null} />
+                          </span>
                         </div>
                         {(a.aliases?.length ?? 0) > 0 && (
                           <p className="font-mono text-[11px] text-muted-foreground">

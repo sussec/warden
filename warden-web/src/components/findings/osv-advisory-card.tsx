@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MarkdownView } from "@/components/markdown/markdown-view";
+import { EpssBadge, KevBadge, type EpssBlock, type KevBlock } from "@/components/findings/exploit-intel";
 
 // Mirrors warden-api's OsvAdvisory DTO (GET /api/finding/{id}/advisory),
 // which mirrors the warden-osv flattened advisory shape.
@@ -21,6 +22,8 @@ type OsvAdvisory = {
   withdrawn?: string | null;
   references?: { type: string; url: string }[] | null;
   affected?: { ecosystem: string; name: string; fixedVersion?: string | null }[] | null;
+  epss?: EpssBlock | null;
+  kev?: KevBlock | null;
 };
 
 // Finding identities that can resolve to an OSV record (CVE/GHSA/OSV/PYSEC/…).
@@ -98,7 +101,18 @@ export function OsvAdvisoryCard({
             {advisory.severity}
           </Badge>
         )}
+        <KevBadge kev={advisory.kev} />
+        <EpssBadge epss={advisory.epss} />
       </div>
+
+      {advisory.kev && (
+        <p className="rounded-md bg-critical/10 px-3 py-2 text-sm text-critical">
+          Listed in the CISA Known Exploited Vulnerabilities catalog
+          {advisory.kev.dateAdded ? ` since ${advisory.kev.dateAdded}` : ""}
+          {advisory.kev.ransomwareUse === "Known" ? " and used in ransomware campaigns" : ""} —
+          prioritize remediation.
+        </p>
+      )}
 
       {advisory.withdrawn && (
         <p className="rounded-md bg-medium/10 px-3 py-2 text-sm text-medium">
