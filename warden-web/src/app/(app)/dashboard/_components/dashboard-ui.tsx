@@ -47,6 +47,14 @@ export function fmt(v: number): string {
   return v.toLocaleString();
 }
 
+/** ISO date string -> compact "Jun 5" (UTC, avoids tz drift). */
+export function fmtDay(d: string): string {
+  const iso = d.length >= 10 ? d.slice(0, 10) : d;
+  const date = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(date.getTime())) return d.slice(5, 10);
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
+}
+
 /** Card wrapper with a header row. */
 export function Panel({
   title,
@@ -182,7 +190,7 @@ export function TrendArea({ data }: { data: TrendDatum[] }) {
   }
   return (
     <ResponsiveContainer width="100%" height="100%" minHeight={220}>
-      <AreaChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+      <AreaChart data={data} margin={{ top: 8, right: 12, left: 4, bottom: 0 }}>
         <defs>
           {SEV.map((s) => (
             <linearGradient key={s.key} id={`g-${s.key}`} x1="0" y1="0" x2="0" y2="1">
@@ -194,18 +202,21 @@ export function TrendArea({ data }: { data: TrendDatum[] }) {
         <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" strokeOpacity={0.4} vertical={false} />
         <XAxis
           dataKey="date"
-          tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
-          tickFormatter={(d: string) => d.slice(5)}
-          minTickGap={24}
+          tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+          tickFormatter={fmtDay}
+          interval="preserveStartEnd"
+          minTickGap={40}
+          padding={{ left: 8, right: 8 }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
-          tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
+          tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
           axisLine={false}
           tickLine={false}
-          width={32}
+          width={36}
           allowDecimals={false}
+          tickCount={5}
         />
         <Tooltip
           contentStyle={{
@@ -214,6 +225,7 @@ export function TrendArea({ data }: { data: TrendDatum[] }) {
             borderRadius: 8,
             fontSize: 12,
           }}
+          labelFormatter={(label) => fmtDay(String(label))}
           labelStyle={{ color: "var(--muted-foreground)" }}
         />
         {SEV.map((s) => (
@@ -226,6 +238,7 @@ export function TrendArea({ data }: { data: TrendDatum[] }) {
             stroke={s.color}
             strokeWidth={1.5}
             fill={`url(#g-${s.key})`}
+            dot={data.length <= 8 ? { r: 2, fill: s.color, strokeWidth: 0 } : false}
           />
         ))}
       </AreaChart>

@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
 import { HBarChart } from "@/components/charts/hbar-chart";
 import { getFindings, sastStatistic, scaStatistic } from "@/client/sdk.gen";
-import { CATEGORY_META, Panel, SeverityChip, fmt, n } from "./dashboard-ui";
+import { Bar, CATEGORY_META, Panel, SeverityChip, n } from "./dashboard-ui";
 
 const RISK_FILTER = {
   severity: ["Critical", "High"] as const,
@@ -56,6 +56,16 @@ export function FindingsTab({ body }: { body: { startDate: string; endDate: stri
 
   const topCats = (sast?.topFindings ?? []).slice(0, 8);
 
+  const catBars = [...(sast?.categories ?? [])]
+    .map((c) => ({
+      category: c.category,
+      label: CATEGORY_META[c.category]?.label ?? c.category,
+      color: CATEGORY_META[c.category]?.color ?? "#9ca3af",
+      count: n(c.count),
+    }))
+    .sort((a, b) => b.count - a.count);
+  const catMax = Math.max(1, ...catBars.map((c) => c.count));
+
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -104,31 +114,22 @@ export function FindingsTab({ body }: { body: { startDate: string; endDate: stri
           )}
         </Panel>
 
-        {/* category coverage quick list */}
-        <Panel title="By category" subtitle="Findings per pillar">
-          <div className="space-y-1.5">
-            {(sast?.categories ?? []).length === 0 ? (
+        {/* category coverage */}
+        <Panel title="By category" subtitle="Findings per scanner pillar" className="self-start">
+          <div className="space-y-2.5">
+            {catBars.length === 0 ? (
               <p className="text-sm text-muted-foreground">No categorised findings.</p>
             ) : (
-              [...(sast?.categories ?? [])]
-                .sort((a, b) => n(b.count) - n(a.count))
-                .map((c) => {
-                  const meta = CATEGORY_META[c.category] ?? { label: c.category, color: "#9ca3af" };
-                  return (
-                    <button
-                      key={c.category}
-                      type="button"
-                      onClick={() => router.push(`/finding?type=${c.category}`)}
-                      className="flex w-full items-center justify-between gap-2 rounded px-1 py-1 text-sm transition-colors hover:bg-muted/40"
-                    >
-                      <span className="flex items-center gap-2">
-                        <span className="size-2.5 rounded-full" style={{ background: meta.color }} />
-                        {meta.label}
-                      </span>
-                      <span className="tabular-nums text-muted-foreground">{fmt(n(c.count))}</span>
-                    </button>
-                  );
-                })
+              catBars.map((c) => (
+                <Bar
+                  key={c.category}
+                  label={c.label}
+                  value={c.count}
+                  total={catMax}
+                  color={c.color}
+                  onClick={() => router.push(`/finding?type=${c.category}`)}
+                />
+              ))
             )}
           </div>
         </Panel>
