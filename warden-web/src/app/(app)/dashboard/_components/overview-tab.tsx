@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { DonutChart } from "@/components/charts/donut-chart";
 import { Stagger } from "@/components/ui/reveal";
-import { mttrStatistic, sastStatistic, scaStatistic, trendStatistic } from "@/client/sdk.gen";
+import {
+  getProjectByFilter,
+  mttrStatistic,
+  sastStatistic,
+  scaStatistic,
+  trendStatistic,
+} from "@/client/sdk.gen";
 import {
   Bar,
   CATEGORY_META,
@@ -37,6 +43,21 @@ export function OverviewTab({ body }: { body: { startDate: string; endDate: stri
     queryKey: ["dashboard", "mttr", body],
     queryFn: async () => (await mttrStatistic({ body, throwOnError: true })).data,
   });
+  const { data: projectPage } = useQuery({
+    queryKey: ["dashboard", "projects"],
+    queryFn: async () =>
+      (await getProjectByFilter({ body: { page: 1, size: 50 }, throwOnError: true })).data,
+  });
+
+  // Top projects ranked by weighted risk (critical heaviest).
+  const projectCount = projectPage?.count ?? projectPage?.items?.length ?? 0;
+  const topProjects = (projectPage?.items ?? [])
+    .map((p) => ({
+      ...p,
+      risk: n(p.severityCritical) * 4 + n(p.severityHigh) * 3 + n(p.severityMedium) * 2 + n(p.severityLow),
+    }))
+    .sort((a, b) => b.risk - a.risk)
+    .slice(0, 8);
 
   const sevTotals = SEV.map((s) => ({
     ...s,
@@ -136,42 +157,35 @@ export function OverviewTab({ body }: { body: { startDate: string; endDate: stri
         ))}
       </Stagger>
 
-      {/* trend (wide) + severity donut — hero panels carry a slow, low-opacity
-          rotating gradient ring (warden-anim-border). The ring sits on an outer
-          rounded wrapper that owns the grid placement so it traces the panel
-          edge without colliding with the glow-card's own glow layer. */}
+      {/* trend (wide) + severity donut */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="warden-anim-border rounded-xl lg:col-span-2">
-          <Panel
-            title="Findings over time"
-            subtitle="New findings by severity"
-            className="h-full"
-            glow
-          >
-            <div className="h-[260px]">
-              <TrendArea data={trendData} />
-            </div>
-          </Panel>
-        </div>
-        <div className="warden-anim-border rounded-xl">
-          <Panel title="Severity distribution" subtitle={`${fmt(grand)} total`} className="h-full" glow>
-            <div className="h-[260px]">
-              {grand > 0 ? (
-                <DonutChart
-                  title=""
-                  labels={sevTotals.map((s) => s.label)}
-                  values={sevTotals.map((s) => s.total)}
-                  colors={sevTotals.map((s) => s.color)}
-                  onSegmentClick={(i) => router.push(`/finding?severity=${sevTotals[i].label}`)}
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                  No findings in this window.
-                </div>
-              )}
-            </div>
-          </Panel>
-        </div>
+        <Panel
+          title="Findings over time"
+          subtitle="New findings by severity"
+          className="lg:col-span-2"
+          glow
+        >
+          <div className="h-[260px]">
+            <TrendArea data={trendData} />
+          </div>
+        </Panel>
+        <Panel title="Severity distribution" subtitle={`${fmt(grand)} total`} glow>
+          <div className="h-[260px]">
+            {grand > 0 ? (
+              <DonutChart
+                title=""
+                labels={sevTotals.map((s) => s.label)}
+                values={sevTotals.map((s) => s.total)}
+                colors={sevTotals.map((s) => s.color)}
+                onSegmentClick={(i) => router.push(`/finding?severity=${sevTotals[i].label}`)}
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                No findings in this window.
+              </div>
+            )}
+          </div>
+        </Panel>
       </div>
 
       {/* remediation + coverage + severity table */}
@@ -251,6 +265,52 @@ export function OverviewTab({ body }: { body: { startDate: string; endDate: stri
           </table>
         </Panel>
       </div>
+
+      {/* top projects by risk */}
+      <Panel title="Top projects by risk" subtitle={`${fmt(projectCount)} projects`} glow>
+        {topProjects.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No projects yet.</p>
+        ) : (
+          <div className="space-y-0.5">
+            {topProjects.map((p) => {
+              const segs = [
+                { v: n(p.severityCritical), c: SEV[0].color },
+                { v: n(p.severityHigh), c: SEV[1].color },
+                { v: n(p.severityMedium), c: SEV[2].color },
+                { v: n(p.severityLow), c: SEV[3].color },
+              ];
+              const segTotal = segs.reduce((a, s) => a + s.v, 0) || 1;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => router.push(`/project/${p.id}/overview`)}
+                  className="group flex w-full items-center gap-3 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-muted/50"
+                >
+                  <span className="w-44 shrink-0 truncate text-sm font-medium group-hover:text-primary">
+                    {p.name}
+                  </span>
+                  <div className="flex h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                    {segs.map((s, i) =>
+                      s.v > 0 ? (
+                        <div key={i} style={{ width: `${(s.v / segTotal) * 100}%`, background: s.c }} />
+                      ) : null,
+                    )}
+                  </div>
+                  <span className="w-16 shrink-0 text-right text-xs tabular-nums">
+                    <span style={{ color: SEV[0].color }}>{n(p.severityCritical)}</span>
+                    <span className="text-muted-foreground"> / </span>
+                    <span style={{ color: SEV[1].color }}>{n(p.severityHigh)}</span>
+                  </span>
+                  <span className="hidden w-16 shrink-0 text-right text-xs text-muted-foreground tabular-nums sm:inline">
+                    {fmt(n(p.open))} open
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </Panel>
     </div>
   );
 }
