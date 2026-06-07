@@ -68,6 +68,7 @@ const TYPE_STYLE: Record<ScannerType, string> = {
   Dast: "bg-info/15 text-info",
   Iast: "bg-muted text-muted-foreground",
   Ai: "bg-primary/15 text-primary",
+  Cloud: "bg-info/15 text-info",
 };
 
 export function TypeBadge({ type }: { type: ScannerType }) {
@@ -98,7 +99,7 @@ export function StatusBadge({ status }: { status: ScanJobStatus }) {
 
 // ---- fleet ----------------------------------------------------------------
 
-type TargetKind = "repository" | "image" | "url" | "llm";
+type TargetKind = "repository" | "image" | "url" | "llm" | "cloud";
 
 type FleetScanner = {
   service: string;
@@ -122,6 +123,11 @@ const FLEET: FleetScanner[] = [
   { service: "osv", match: ["osv", "osv-scanner"], type: "Dependency", targetKind: "repository", description: "Supply-chain SCA across many ecosystems via Google's OSV.dev advisories, including malicious-package detection.", icon: ShieldAlert, command: `${TARGET} ${RUN} osv` },
   { service: "cve-lite", match: ["cve-lite", "cve-lite-cli"], type: "Dependency", targetKind: "repository", description: "JS/TS lockfile SCA (OWASP CVE Lite CLI) — validated fix versions, direct vs transitive classification, npm/pnpm/Yarn/Bun.", icon: PackageCheck, command: `${TARGET} ${RUN} cve-lite` },
   { service: "cargo-audit", match: ["cargo-audit"], type: "Dependency", targetKind: "repository", description: "Rust/Cargo SCA (RustSec cargo-audit) — audits Cargo.lock against the RustSec advisory DB. Rust-native scanner.", icon: PackageSearch, command: `${TARGET} ${RUN} cargo-audit` },
+  { service: "cargo-deny", match: ["cargo-deny"], type: "Dependency", targetKind: "repository", description: "Rust advisories + OSS license policy + banned/duplicate crates (EmbarkStudios cargo-deny). Closes the license-compliance gap. Rust-native.", icon: ShieldCheck, command: `${TARGET} ${RUN} cargo-deny` },
+  { service: "cargo-geiger", match: ["cargo-geiger"], type: "Sast", targetKind: "repository", description: "Rust unsafe-code usage counter across the dependency tree (advisory; compiles the project). Rust-native.", icon: Bug, command: `${TARGET} ${RUN} cargo-geiger` },
+  { service: "trivy-license", match: ["trivy-license"], type: "Dependency", targetKind: "repository", description: "OSS license findings (Trivy license scanner) — per-package license policy by category (Forbidden/Restricted/Reciprocal/...).", icon: ScrollText, command: `${TARGET} ${RUN} trivy-license` },
+  { service: "kubescape", match: ["kubescape"], type: "Sast", targetKind: "repository", description: "Kubernetes manifest posture (ARMO kubescape) — NSA/MITRE/CIS misconfiguration controls over YAML/Helm/Kustomize.", icon: Container, command: `${TARGET} ${RUN} kubescape` },
+  { service: "prowler", match: ["prowler"], type: "Cloud", targetKind: "cloud", description: "Cloud security posture (CSPM) — Prowler audits a live AWS/Azure/GCP account against CIS/SOC2/PCI. Credentials via env.", icon: ShieldAlert, command: `PROWLER_PROVIDER=aws AWS_ACCESS_KEY_ID=... ${RUN} prowler` },
   { service: "syft", match: ["syft"], type: "Dependency", targetKind: "repository", description: "SBOM generation — a full dependency inventory of every component (CycloneDX/SPDX-grade supply-chain baseline).", icon: ScrollText, command: `${TARGET} ${RUN} syft` },
   { service: "checkov", match: ["checkov"], type: "Sast", targetKind: "repository", description: "IaC misconfiguration scanning with a large ruleset — Terraform, CloudFormation, Kubernetes, Helm, Dockerfile, ARM.", icon: ShieldCheck, command: `${TARGET} ${RUN} checkov` },
   { service: "guarddog", match: ["guarddog"], type: "Sast", targetKind: "repository", description: "Malicious-package detection in dependency manifests — typosquatting, suspicious install scripts, obfuscation, exfiltration.", icon: Bug, command: `${TARGET} ${RUN} guarddog` },
@@ -145,6 +151,7 @@ const TARGET_FIELD: Record<TargetKind, { label: string; placeholder: string }> =
   image: { label: "Image reference", placeholder: "nginx:1.27" },
   url: { label: "Target URL", placeholder: "https://staging.example.com" },
   llm: { label: "LLM generator / endpoint", placeholder: "openai.OpenAI  ·  or  rest.Rest (set AUGUSTUS_CONFIG)" },
+  cloud: { label: "Cloud provider", placeholder: "aws  ·  azure  ·  gcp (credentials via env)" },
 };
 
 // ---- helpers / dialogs ----------------------------------------------------

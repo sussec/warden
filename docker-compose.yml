@@ -221,6 +221,76 @@ services:
     volumes:
       - ${SCAN_TARGET:-.}:/src:ro
 
+  # Rust advisories + OSS license policy + banned crates (cargo-deny). Rust-native.
+  cargo-deny:
+    profiles: ["scan"]
+    build:
+      context: ./scanners/rust
+      dockerfile: scanner-cargo-deny/Dockerfile
+    pull_policy: build
+    environment:
+      <<: *scanner-env
+      CARGO_DENY_CHECKS: ${CARGO_DENY_CHECKS:-}
+    volumes:
+      - ${SCAN_TARGET:-.}:/src:ro
+
+  # Rust unsafe-usage counter (cargo-geiger). Compiles the project — heavier.
+  cargo-geiger:
+    profiles: ["scan"]
+    build:
+      context: ./scanners/rust
+      dockerfile: scanner-cargo-geiger/Dockerfile
+    pull_policy: build
+    environment: *scanner-env
+    volumes:
+      - ${SCAN_TARGET:-.}:/src:ro
+
+  # OSS license findings (Trivy license scanner) — per-package license policy.
+  trivy-license:
+    profiles: ["scan"]
+    build:
+      context: ./scanners/quarkus
+      dockerfile: scanner-trivy-license/Dockerfile
+    pull_policy: build
+    environment:
+      <<: *scanner-env
+      TRIVY_LICENSE_FULL: ${TRIVY_LICENSE_FULL:-}
+    volumes:
+      - ${SCAN_TARGET:-.}:/src:ro
+
+  # Kubernetes manifest posture (kubescape) — NSA/MITRE/CIS misconfig controls.
+  kubescape:
+    profiles: ["scan"]
+    build:
+      context: ./scanners/quarkus
+      dockerfile: scanner-kubescape/Dockerfile
+    pull_policy: build
+    environment:
+      <<: *scanner-env
+      KUBESCAPE_FRAMEWORK: ${KUBESCAPE_FRAMEWORK:-}
+      KUBESCAPE_ARGS: ${KUBESCAPE_ARGS:-}
+    volumes:
+      - ${SCAN_TARGET:-.}:/src:ro
+
+  # Cloud security posture (Prowler CSPM) — audits a live AWS/Azure/GCP account.
+  # Targets a provider, not a checkout; credentials come from the environment:
+  #   PROWLER_PROVIDER=aws AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... \
+  #     docker compose --profile scan run --rm prowler
+  prowler:
+    profiles: ["scan"]
+    build:
+      context: ./scanners/quarkus
+      dockerfile: scanner-prowler/Dockerfile
+    pull_policy: build
+    environment:
+      <<: *scanner-env
+      PROWLER_PROVIDER: ${PROWLER_PROVIDER:-aws}
+      PROWLER_ARGS: ${PROWLER_ARGS:-}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-}
+
   # SBOM generation — full dependency inventory (CycloneDX/SPDX-grade)
   syft:
     profiles: ["scan"]

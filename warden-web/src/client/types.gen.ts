@@ -957,7 +957,7 @@ export type ScannerFilter = {
     name?: string | null;
 };
 
-export type ScannerType = 'Sast' | 'Dast' | 'Iast' | 'Dependency' | 'Container' | 'Secret' | 'Ai';
+export type ScannerType = 'Sast' | 'Dast' | 'Iast' | 'Dependency' | 'Container' | 'Secret' | 'Ai' | 'Cloud';
 
 export type Scanners = {
     id?: string;
