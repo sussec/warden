@@ -484,3 +484,120 @@
     transition: none;
   }
 }
+
+/* ===========================================================================
+   Warden motion (Tier 4) — animate EVERYTHING, bold but tasteful
+   Shared mount/route-change motion consumed by the shared primitives (cards,
+   tables, page transition, hero panels) so all ~30 routes inherit motion with
+   no per-page edits. Everything resolves from theme tokens (--card / --border /
+   --primary / --muted-foreground / --severity-* / --sidebar) so it reads
+   correctly in BOTH light and dark. Motion runs ONCE on mount / route-change —
+   quick (300-500ms), ease-out, never on every re-render — and never obscures
+   security data. ALL motion below is disabled under prefers-reduced-motion.
+   =========================================================================== */
+
+/* Core entrance keyframes ---------------------------------------------------
+   warden-rise: fade up (the default surface reveal — cards, KPIs, rows).
+   warden-fade: plain opacity fade (chart wrappers, lighter elements). */
+@keyframes warden-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes warden-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   .warden-reveal — one-shot entrance. Runs warden-rise a single time on mount
+   (or on route-change when the element is re-keyed). `animation-fill-mode:
+   both` holds the start frame before and the end frame after, so there is no
+   flash of un-animated content and the element settles at rest. Stagger lists
+   by setting `--reveal-i` (0,1,2…) per item → 60ms cascade. Quick & ease-out.
+   --------------------------------------------------------------------------- */
+.warden-reveal {
+  animation: warden-rise 0.42s ease-out both;
+  animation-delay: calc(var(--reveal-i, 0) * 60ms);
+}
+
+/* ---------------------------------------------------------------------------
+   .warden-row-reveal — gentle one-shot fade for table rows. Opacity only (no
+   transform) so dense security data never jitters or shifts as it settles, and
+   `animation-fill-mode: both` avoids any flash of un-faded content. Runs once
+   on mount / route-change (re-key); never on re-render. Quick & ease-out.
+   --------------------------------------------------------------------------- */
+.warden-row-reveal {
+  animation: warden-fade 0.36s ease-out both;
+  animation-delay: calc(var(--reveal-i, 0) * 40ms);
+}
+
+/* ---------------------------------------------------------------------------
+   .warden-anim-border — hero panel treatment: a slow, low-opacity conic ring
+   that rotates continuously behind the panel border. Tinted --primary and kept
+   subtle (~6s sweep, faint) so it reads premium at rest without competing with
+   the data inside. Pair with a positioned, rounded container (HeroPanel uses
+   this around the bumped glow-card).
+   --------------------------------------------------------------------------- */
+.warden-anim-border {
+  position: relative;
+  isolation: isolate;
+}
+.warden-anim-border::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px; /* ring thickness */
+  background: conic-gradient(
+    from var(--anim-border-from, 0deg),
+    transparent 0deg,
+    color-mix(in oklab, var(--primary) 60%, transparent) 70deg,
+    color-mix(in oklab, var(--primary) 22%, transparent) 150deg,
+    transparent 230deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  /* Low opacity so the rotating ring stays a whisper, not a spotlight. */
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: -1;
+  animation: warden-anim-border-spin 6s linear infinite;
+}
+@keyframes warden-anim-border-spin {
+  to {
+    --anim-border-from: 360deg;
+    transform: rotate(1turn);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Reduced-motion: disable all Tier 4 motion. Elements settle at their final
+   resting state — opacity 1, no transform — and the rotating hero ring holds
+   static (still legible, just no spin).
+   --------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .warden-reveal,
+  .warden-row-reveal {
+    animation: none;
+    animation-delay: 0ms;
+    opacity: 1;
+    transform: none;
+  }
+  .warden-anim-border::before {
+    animation: none;
+    transform: none;
+  }
+}

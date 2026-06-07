@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { DonutChart } from "@/components/charts/donut-chart";
+import { Stagger } from "@/components/ui/reveal";
 import { mttrStatistic, sastStatistic, scaStatistic, trendStatistic } from "@/client/sdk.gen";
 import {
   Bar,
@@ -128,42 +129,49 @@ export function OverviewTab({ body }: { body: { startDate: string; endDate: stri
 
   return (
     <div className="flex flex-col gap-4">
-      {/* KPI strip */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
+      {/* KPI strip — cascades in once on mount via staggered reveal. */}
+      <Stagger className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
         {kpis.map((k) => (
           <KpiCard key={k.label} {...k} />
         ))}
-      </div>
+      </Stagger>
 
-      {/* trend (wide) + severity donut */}
+      {/* trend (wide) + severity donut — hero panels carry a slow, low-opacity
+          rotating gradient ring (warden-anim-border). The ring sits on an outer
+          rounded wrapper that owns the grid placement so it traces the panel
+          edge without colliding with the glow-card's own glow layer. */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <Panel
-          title="Findings over time"
-          subtitle="New findings by severity"
-          className="lg:col-span-2"
-          glow
-        >
-          <div className="h-[260px]">
-            <TrendArea data={trendData} />
-          </div>
-        </Panel>
-        <Panel title="Severity distribution" subtitle={`${fmt(grand)} total`} glow>
-          <div className="h-[260px]">
-            {grand > 0 ? (
-              <DonutChart
-                title=""
-                labels={sevTotals.map((s) => s.label)}
-                values={sevTotals.map((s) => s.total)}
-                colors={sevTotals.map((s) => s.color)}
-                onSegmentClick={(i) => router.push(`/finding?severity=${sevTotals[i].label}`)}
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                No findings in this window.
-              </div>
-            )}
-          </div>
-        </Panel>
+        <div className="warden-anim-border rounded-xl lg:col-span-2">
+          <Panel
+            title="Findings over time"
+            subtitle="New findings by severity"
+            className="h-full"
+            glow
+          >
+            <div className="h-[260px]">
+              <TrendArea data={trendData} />
+            </div>
+          </Panel>
+        </div>
+        <div className="warden-anim-border rounded-xl">
+          <Panel title="Severity distribution" subtitle={`${fmt(grand)} total`} className="h-full" glow>
+            <div className="h-[260px]">
+              {grand > 0 ? (
+                <DonutChart
+                  title=""
+                  labels={sevTotals.map((s) => s.label)}
+                  values={sevTotals.map((s) => s.total)}
+                  colors={sevTotals.map((s) => s.color)}
+                  onSegmentClick={(i) => router.push(`/finding?severity=${sevTotals[i].label}`)}
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                  No findings in this window.
+                </div>
+              )}
+            </div>
+          </Panel>
+        </div>
       </div>
 
       {/* remediation + coverage + severity table */}

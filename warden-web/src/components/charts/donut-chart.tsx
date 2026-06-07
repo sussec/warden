@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { Doughnut } from "react-chartjs-2";
-import { chartText, registerCharts } from "./chart-helpers";
+import { chartText, mountAnimation, registerCharts } from "./chart-helpers";
 
 interface DonutChartProps {
   title: string;
@@ -34,6 +34,9 @@ export function DonutChart({ title, labels, values, colors, onSegmentClick }: Do
   const options = useMemo(
     () => ({
       maintainAspectRatio: false,
+      // Grow/sweep on mount: arcs rotate + scale in once, ease-out. Reduced-motion
+      // collapses duration to 0 (snaps to final state).
+      animation: { ...mountAnimation(), animateRotate: true, animateScale: true },
       plugins: {
         legend: {
           position: "top" as const,

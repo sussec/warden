@@ -5,6 +5,7 @@ import { AuthGuard } from "@/lib/auth/guard";
 import { installAuthInterceptors } from "@/lib/auth/interceptors";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
+import { PageTransition } from "@/components/layout/page-transition";
 
 installAuthInterceptors();
 
@@ -36,7 +37,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           (menuOpen ? "pl-4 lg:pl-72" : "pl-4")
         }
       >
-        {children}
+        <PageTransition>{children}</PageTransition>
       </main>
     </AuthGuard>
   );

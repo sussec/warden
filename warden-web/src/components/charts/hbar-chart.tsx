@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { Bar } from "react-chartjs-2";
-import { chartBorder, chartText, cssVar, registerCharts } from "./chart-helpers";
+import { chartBorder, chartText, cssVar, mountAnimation, registerCharts } from "./chart-helpers";
 
 interface HBarChartProps {
   title: string;
@@ -37,6 +37,9 @@ export function HBarChart({ title, labels, values, color, onBarClick }: HBarChar
     () => ({
       maintainAspectRatio: false,
       indexAxis: "y" as const,
+      // Sweep on mount: bars grow out from the axis once, ease-out. Reduced-motion
+      // collapses duration to 0 (snaps to final state).
+      animation: mountAnimation(),
       plugins: {
         legend: { display: false },
         title: { display: true, text: title, color: textColor, font: { size: 18 } },

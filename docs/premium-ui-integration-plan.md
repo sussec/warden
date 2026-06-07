@@ -133,3 +133,28 @@ section above + "match the existing premium dashboard style (`dashboard-ui.tsx`)
 
 > Deploy after each phase via `docker compose build web && docker compose up -d web`
 > (API unchanged). Verify at `localhost:8080`.
+
+---
+
+## TIER 4 — Animate EVERYTHING (dashboard + all pages, bold but tasteful)
+
+Strategy: animate the **shared primitives** so all ~30 routes inherit motion
+(no per-page edits), plus bolder dashboard motion. All reduced-motion safe.
+
+**Motion foundation (globals.css):** `@keyframes warden-rise` (opacity+translateY),
+`warden-fade`; `.warden-reveal` (runs once, `animation-delay: calc(var(--reveal-i,0)*60ms)`
+for stagger); guarded by prefers-reduced-motion.
+
+**New components:** `Reveal`/`Stagger` (IntersectionObserver mount/scroll reveal),
+`PageTransition` (re-keys + animates children on pathname change).
+
+**Wire shared primitives (high leverage — touches every page):**
+- `ui/card.tsx` → subtle mount rise-in (8px, ~400ms) → cards everywhere animate in.
+- `data-table.tsx` → staggered row reveal (finding/project/dependency lists).
+- `ui/table.tsx` → row fade-in.
+- `charts/donut-chart.tsx` + `hbar-chart.tsx` → enable chart.js mount animation (grow/sweep).
+- `(app)/layout.tsx` → wrap children in `PageTransition` (route-change fade/slide).
+
+**Bolder dashboard:** recharts `isAnimationActive` on TrendArea + donut (draw-in on load),
+KPI strip staggered reveal, bump glow + animated rotating gradient-border on the two hero
+panels (cardsgradientBorder technique), count-up already live.

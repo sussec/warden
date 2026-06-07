@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import { CountUp } from "@/components/ui/count-up";
+import { prefersReducedMotion } from "@/components/charts/chart-helpers";
 import { GlowCard } from "./glow-card";
 
 // Severity palette — single source of truth, ordered most→least severe.
@@ -228,6 +229,18 @@ export type TrendDatum = {
 
 /** Stacked-area trend of findings by severity over time. */
 export function TrendArea({ data }: { data: TrendDatum[] }) {
+  // Draw-in on load, reduced-motion safe. False on the server and the first
+  // client paint (no hydration mismatch); armed in an effect only when the OS
+  // permits motion, so under prefers-reduced-motion the areas snap to final.
+  const [animate, setAnimate] = useState(false);
+  useEffect(() => {
+    if (prefersReducedMotion()) return;
+    // Arm on the next frame (outside the effect body) so the draw-in plays
+    // without a synchronous setState cascading the render.
+    const raf = requestAnimationFrame(() => setAnimate(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
   if (data.length === 0) {
     return (
       <div className="flex h-full min-h-[200px] items-center justify-center text-sm text-muted-foreground">
@@ -286,6 +299,11 @@ export function TrendArea({ data }: { data: TrendDatum[] }) {
             strokeWidth={1.5}
             fill={`url(#g-${s.key})`}
             dot={data.length <= 8 ? { r: 2, fill: s.color, strokeWidth: 0 } : false}
+            // Draw-in on load: a quick ease-out sweep, gated on `animate` so it
+            // only fires post-mount when motion is allowed (reduced-motion snaps).
+            isAnimationActive={animate}
+            animationDuration={700}
+            animationEasing="ease-out"
           />
         ))}
       </AreaChart>

@@ -8,6 +8,13 @@ function Card({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="card"
       className={cn(
         "flex flex-col gap-6 rounded-xl border bg-card py-6 text-card-foreground shadow-sm",
+        // One-shot mount/route-change rise-in (8px, ~420ms, ease-out) so every
+        // <Card> across the app animates in. Theme-safe (uses token-driven
+        // surface) and reduced-motion safe — `.warden-reveal` no-ops to
+        // opacity:1 / no transform under prefers-reduced-motion (globals.css).
+        // Opt out per-instance by passing `className="motion-safe:[animation:none]"`
+        // (or any rule overriding the animation); stagger lists via `--reveal-i`.
+        "warden-reveal",
         className
       )}
       {...props}

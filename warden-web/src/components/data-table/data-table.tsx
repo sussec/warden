@@ -95,7 +95,12 @@ export function DataTable<T>({
             rows?.map((row, i) => (
               <TableRow
                 key={i}
-                className={onRowClick ? "cursor-pointer" : undefined}
+                // Staggered one-shot entrance: TableRow's .warden-row-reveal
+                // fades each row in on mount, offset by --reveal-i. Cap the
+                // cascade (index % 12) so long pages don't delay the last rows.
+                // CSS handles reduced-motion.
+                className={cn(onRowClick && "cursor-pointer")}
+                style={{ "--reveal-i": i % 12 } as React.CSSProperties}
                 onClick={() => onRowClick?.(row)}
               >
                 {columns.map((col) => (

@@ -36,3 +36,18 @@ export function cssVar(name: string): string {
 
 export const chartText = () => cssVar("--foreground");
 export const chartBorder = () => cssVar("--border");
+
+/** True when the user has opted into reduced motion (SSR-safe → false). */
+export function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined" || !window.matchMedia) return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+/**
+ * Mount animation config for chart.js — a tasteful grow/sweep that runs once on
+ * mount/data-change. Honours prefers-reduced-motion by collapsing to duration 0
+ * (charts snap straight to their final state, no transform).
+ */
+export function mountAnimation(): { duration: number; easing: "easeOutQuart" } {
+  return { duration: prefersReducedMotion() ? 0 : 500, easing: "easeOutQuart" };
+}
