@@ -153,7 +153,12 @@ export function KpiCard({
           ) : (
             <>
               {prefix}
-              <CountUp value={count} />
+              {/* Preserve fractional metrics (e.g. 0.5d MTTR); round whole counts. */}
+              <CountUp
+                value={count}
+                round={Number.isInteger(count)}
+                formatOptions={{ maximumFractionDigits: 1 }}
+              />
               {suffix}
             </>
           )}

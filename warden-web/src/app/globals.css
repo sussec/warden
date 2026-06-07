@@ -449,7 +449,8 @@
     linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
-  opacity: 0;
+  /* Faint always-on sheen so cards read premium at rest; brightens on hover. */
+  opacity: 0.4;
   transition: opacity 0.25s ease-out;
   pointer-events: none;
   z-index: -1;
