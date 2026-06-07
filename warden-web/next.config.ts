@@ -15,6 +15,19 @@ const nextConfig: NextConfig = {
       { source: "/healthz", destination: `${API_INTERNAL_URL}/healthz` },
     ];
   },
+  async headers() {
+    return [
+      {
+        // Always revalidate HTML documents so a redeploy is picked up on the
+        // next navigation. Pages are statically prerendered, so the browser
+        // would otherwise serve a cached shell referencing stale JS chunks
+        // (symptom: "login is new but dashboard is old" after a rebuild).
+        // Hashed assets under /_next/static keep their long immutable cache.
+        source: "/((?!_next/static|_next/image|favicon.ico|icon.svg).*)",
+        headers: [{ key: "Cache-Control", value: "no-cache, must-revalidate" }],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
