@@ -171,6 +171,11 @@ public class ScanRunnerWorker(IServiceScopeFactory scopeFactory, ILogger<ScanRun
                 // provider keys / AUGUSTUS_CONFIG come from the scanner image env.
                 env.Add($"AUGUSTUS_GENERATOR={job.Target}");
                 break;
+            case ScanTargetType.Cloud:
+                // The target is the cloud provider/account to assess (aws|azure|gcp);
+                // provider credentials come from the scanner image env.
+                env.Add($"PROWLER_PROVIDER={job.Target}");
+                break;
         }
 
         var created = await docker.Containers.CreateContainerAsync(new CreateContainerParameters
