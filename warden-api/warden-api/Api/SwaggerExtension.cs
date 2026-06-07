@@ -10,7 +10,7 @@ public static class SwaggerExtension
         builder.AddEndpointsApiExplorer();
         builder.AddSwaggerGen(config =>
         {
-            //config.SwaggerDoc("v1", new OpenApiInfo { Title = "API", Version = "v1" });
+            config.SwaggerDoc("v1", new OpenApiInfo { Title = "Warden API", Version = "v1" });
             config.CustomOperationIds(e => e.ActionDescriptor.RouteValues["action"]);
             config.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
