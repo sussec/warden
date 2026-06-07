@@ -43,4 +43,11 @@ public class DashboardController(AppDbContext context)
             Sca = await context.StatsPackageProjectTrendAsync(filter)
         };
     }
+
+    [HttpPost]
+    [Route("mttr")]
+    public async Task<MttrStatistic> MttrStatistic(StatisticFilter filter)
+    {
+        return await context.StatsMttrAsync(filter);
+    }
 }

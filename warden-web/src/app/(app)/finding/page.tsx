@@ -92,7 +92,8 @@ function FindingListPage() {
   const [severity, setSeverity] = useState<FindingSeverity[]>(initialSeverity);
   const [status, setStatus] = useState<FindingStatus[]>(["Open", "Confirmed"]);
   const [scanner, setScanner] = useState<string[]>([]);
-  const [scannerType, setScannerType] = useState<ScannerType[]>(initialTypes);
+  // Seeded from ?type= (dashboard drill-down); no in-page control yet.
+  const [scannerType] = useState<ScannerType[]>(initialTypes);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   // AI semantic search

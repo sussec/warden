@@ -424,6 +424,13 @@ export type MailProjectAlertSetting = {
     scanFailedEvent: boolean;
 };
 
+export type MttrStatistic = {
+    meanDaysToFix: number;
+    fixedCount: number;
+    openCount: number;
+    meanOpenAgeDays: number;
+};
+
 export type OpenIdConnectSetting = {
     displayName?: string | null;
     authority?: string | null;
@@ -1626,6 +1633,22 @@ export type TrendStatisticResponses = {
 };
 
 export type TrendStatisticResponse = TrendStatisticResponses[keyof TrendStatisticResponses];
+
+export type MttrStatisticData = {
+    body?: StatisticFilter;
+    path?: never;
+    query?: never;
+    url: '/api/dashboard/mttr';
+};
+
+export type MttrStatisticResponses = {
+    /**
+     * OK
+     */
+    200: MttrStatistic;
+};
+
+export type MttrStatisticResponse = MttrStatisticResponses[keyof MttrStatisticResponses];
 
 export type GetOsvAdvisoryData = {
     body?: never;
