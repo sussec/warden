@@ -4,8 +4,26 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
 import { HBarChart } from "@/components/charts/hbar-chart";
+import { PulseDot, StatusGlow } from "@/components/ui/pulse-dot";
 import { getFindings, sastStatistic, scaStatistic } from "@/client/sdk.gen";
 import { Bar, CATEGORY_META, Panel, SeverityChip, n } from "./dashboard-ui";
+
+/** Theme-safe severity → CSS-var token for live dots (resolves in both themes). */
+function severityGlowToken(severity: string): string {
+  const key = severity.toLowerCase();
+  switch (key) {
+    case "critical":
+      return "var(--severity-critical)";
+    case "high":
+      return "var(--severity-high)";
+    case "medium":
+      return "var(--severity-medium)";
+    case "low":
+      return "var(--severity-low)";
+    default:
+      return "var(--severity-info)";
+  }
+}
 
 const RISK_FILTER = {
   severity: ["Critical", "High"] as const,
@@ -75,13 +93,16 @@ export function FindingsTab({ body }: { body: { startDate: string; endDate: stri
           subtitle="Open critical & high findings"
           className="lg:col-span-2"
           action={
-            <button
-              type="button"
-              onClick={() => router.push("/finding?severity=Critical&severity=High")}
-              className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              View all →
-            </button>
+            <div className="flex items-center gap-2">
+              <StatusGlow color="var(--severity-critical)">Live</StatusGlow>
+              <button
+                type="button"
+                onClick={() => router.push("/finding?severity=Critical&severity=High")}
+                className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                View all →
+              </button>
+            </div>
           }
         >
           {risksLoading ? (
@@ -99,6 +120,10 @@ export function FindingsTab({ body }: { body: { startDate: string; endDate: stri
                   onClick={() => router.push(`/finding?severity=${f.severity}`)}
                   className="flex w-full items-center gap-3 py-2 text-left transition-colors hover:bg-muted/40"
                 >
+                  <PulseDot
+                    color={severityGlowToken(f.severity)}
+                    label={`${f.severity} — open`}
+                  />
                   <SeverityChip severity={f.severity} />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-medium">{f.name ?? f.identity ?? "—"}</div>

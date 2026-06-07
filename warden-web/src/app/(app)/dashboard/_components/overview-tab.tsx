@@ -85,24 +85,42 @@ export function OverviewTab({ body }: { body: { startDate: string; endDate: stri
   const catMax = Math.max(scaTotal, ...categoryBars.map((c) => c.count), 1);
 
   const kpis = [
-    { label: "Total findings", value: fmt(grand), sub: "across all scans", onClick: () => router.push("/finding") },
+    {
+      label: "Total findings",
+      value: fmt(grand),
+      count: grand,
+      sub: "across all scans",
+      onClick: () => router.push("/finding"),
+    },
     {
       label: "Critical + High",
       value: fmt(criticalHigh),
+      count: criticalHigh,
       sub: "needs attention",
       accent: "#e5484d",
       onClick: () => router.push("/finding?severity=Critical&severity=High"),
     },
-    { label: "Open", value: fmt(open), sub: "awaiting triage", accent: "#eb722a", onClick: () => router.push("/finding") },
+    {
+      label: "Open",
+      value: fmt(open),
+      count: open,
+      sub: "awaiting triage",
+      accent: "#eb722a",
+      onClick: () => router.push("/finding"),
+    },
     {
       label: "Mean time-to-fix",
       value: mttr ? `${mttr.meanDaysToFix}d` : "—",
+      count: mttr ? mttr.meanDaysToFix : undefined,
+      suffix: "d",
       sub: mttr ? `${fmt(mttr.fixedCount)} fixed this period` : "",
       accent: "#30a46c",
     },
     {
       label: "Resolved rate",
       value: `${resolvedRate}%`,
+      count: resolvedRate,
+      suffix: "%",
       sub: mttr ? `${mttr.meanOpenAgeDays}d avg open age` : "",
       accent: "#0ea5e9",
     },
@@ -123,12 +141,13 @@ export function OverviewTab({ body }: { body: { startDate: string; endDate: stri
           title="Findings over time"
           subtitle="New findings by severity"
           className="lg:col-span-2"
+          glow
         >
           <div className="h-[260px]">
             <TrendArea data={trendData} />
           </div>
         </Panel>
-        <Panel title="Severity distribution" subtitle={`${fmt(grand)} total`}>
+        <Panel title="Severity distribution" subtitle={`${fmt(grand)} total`} glow>
           <div className="h-[260px]">
             {grand > 0 ? (
               <DonutChart

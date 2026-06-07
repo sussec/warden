@@ -94,7 +94,10 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose?: () => void
       )}
       <aside
         className={cn(
-          "fixed left-4 top-16 bottom-4 z-40 w-64 overflow-y-auto rounded-lg bg-sidebar p-4 shadow-sm transition-transform duration-200",
+          // Glass treatment: translucent --sidebar over a backdrop blur, hairline
+          // border for definition against the blurred content beneath. Falls back
+          // to the opaque token where backdrop-filter is unsupported.
+          "fixed left-4 top-16 bottom-4 z-40 w-64 overflow-y-auto rounded-lg border border-sidebar-border/60 bg-sidebar p-4 shadow-sm backdrop-blur-xl transition-transform duration-200 supports-[backdrop-filter]:bg-sidebar/70 motion-reduce:transition-none",
           open ? "translate-x-0" : "-translate-x-[120%]",
         )}
       >

@@ -300,3 +300,186 @@
     animation: none;
   }
 }
+
+/* ===========================================================================
+   Warden premium UI — Foundation phase
+   Reusable, token-driven accents for the security dashboard. Every value
+   resolves from existing theme vars (--card / --border / --primary /
+   --muted-foreground / --severity-* / --sidebar) so it reads correctly in
+   BOTH light and dark. Subtle by design — accent, never distract.
+   All non-essential motion is disabled under prefers-reduced-motion (below).
+   =========================================================================== */
+
+/* Spring easing token — gentle elastic settle (no overshoot blowout).
+   Consumed by toggles / thumbs etc. via `transition-timing-function`. */
+:root {
+  --ease-elastic: linear(
+    0, 0.0085 1.7%, 0.0339 3.5%, 0.1265 6.9%, 0.5184 16.6%, 0.6961, 0.8312,
+    0.9275, 0.991 25%, 1.0394, 1.0717, 1.0892 31.5%, 1.0931, 1.0908, 1.0827,
+    1.0701 37.5%, 1.0383, 1.0099 43.3%, 0.997 46.6%, 0.9889, 0.9856, 0.9857,
+    0.9886 56.7%, 1.0006 65.5%, 1.0044 71.4%, 1.0026 80.9%, 0.9995 99.5%, 1
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   .warden-flicker — neon flicker for 404 / error code text. Glow tones to
+   --primary (NOT red) per the plan; flicker is brief & restrained.
+   --------------------------------------------------------------------------- */
+@keyframes warden-flicker {
+  0%, 18%, 22%, 25%, 53%, 57%, 100% {
+    opacity: 1;
+    text-shadow:
+      0 0 4px color-mix(in oklab, var(--primary) 55%, transparent),
+      0 0 12px color-mix(in oklab, var(--primary) 35%, transparent),
+      0 0 28px color-mix(in oklab, var(--primary) 20%, transparent);
+  }
+  20%, 24%, 55% {
+    opacity: 0.72;
+    text-shadow: none;
+  }
+}
+.warden-flicker {
+  color: var(--primary);
+  animation: warden-flicker 4.5s linear infinite;
+}
+
+/* ---------------------------------------------------------------------------
+   .warden-pulse-glow — gentle pulsing box-shadow for live indicators / dots.
+   Tints to `currentColor` so callers set the hue via `color:` (e.g.
+   color:var(--severity-critical)); override with --glow if you want the glow
+   to differ from the element's text color.
+   --------------------------------------------------------------------------- */
+@keyframes warden-pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--glow, currentColor) 45%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--glow, currentColor) 0%, transparent);
+  }
+}
+.warden-pulse-glow {
+  animation: warden-pulse-glow 2.2s ease-in-out infinite;
+}
+
+/* ---------------------------------------------------------------------------
+   .warden-card-accent — thin corner borders that grow in on hover. Tinted
+   --primary. Pair with a positioned, overflow-hidden container (matches the
+   KpiCard/Panel pattern in dashboard-ui.tsx).
+   --------------------------------------------------------------------------- */
+.warden-card-accent {
+  position: relative;
+}
+.warden-card-accent::before,
+.warden-card-accent::after {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-color: color-mix(in oklab, var(--primary) 55%, transparent);
+  border-style: solid;
+  border-width: 0;
+  opacity: 0;
+  transition:
+    width 0.3s var(--ease-elastic, ease-out),
+    height 0.3s var(--ease-elastic, ease-out),
+    opacity 0.25s ease-out;
+  pointer-events: none;
+}
+/* top-left corner */
+.warden-card-accent::before {
+  top: 0;
+  left: 0;
+  border-top-width: 1.5px;
+  border-left-width: 1.5px;
+  border-top-left-radius: inherit;
+}
+/* bottom-right corner */
+.warden-card-accent::after {
+  right: 0;
+  bottom: 0;
+  border-bottom-width: 1.5px;
+  border-right-width: 1.5px;
+  border-bottom-right-radius: inherit;
+}
+.warden-card-accent:hover::before,
+.warden-card-accent:hover::after,
+.warden-card-accent:focus-visible::before,
+.warden-card-accent:focus-visible::after {
+  width: 34%;
+  height: 34%;
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------------------------
+   .glow-card — proximity glow. JS attaches a `pointermove` handler that sets
+   --gx / --gy (px, cursor position relative to the card) and --ga (deg, the
+   conic start angle). A ::before paints a conic+radial glow masked to the
+   border ring only (mask-composite cutout). Token-colored, low-opacity —
+   the standout effect, kept subtle. Falls back to a static state until JS
+   sets the custom props.
+   --------------------------------------------------------------------------- */
+.glow-card {
+  position: relative;
+  isolation: isolate;
+  --gx: 50%;
+  --gy: 50%;
+  --ga: 0deg;
+}
+.glow-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px; /* ring thickness */
+  /* radial spotlight following the pointer, layered over a faint conic sweep */
+  background:
+    radial-gradient(
+      18rem 18rem at var(--gx) var(--gy),
+      color-mix(in oklab, var(--primary) 55%, transparent),
+      transparent 60%
+    ),
+    conic-gradient(
+      from var(--ga),
+      transparent 0deg,
+      color-mix(in oklab, var(--primary) 30%, transparent) 90deg,
+      transparent 180deg
+    );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.25s ease-out;
+  pointer-events: none;
+  z-index: -1;
+}
+.glow-card:hover::before,
+.glow-card:focus-within::before {
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------------------------
+   Reduced-motion: kill all non-essential motion; keep the static glow/border
+   states legible (no animation, but hover affordance still resolves).
+   --------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .warden-flicker {
+    animation: none;
+    opacity: 1;
+    text-shadow:
+      0 0 4px color-mix(in oklab, var(--primary) 45%, transparent),
+      0 0 12px color-mix(in oklab, var(--primary) 25%, transparent);
+  }
+  .warden-pulse-glow {
+    animation: none;
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--glow, currentColor) 35%, transparent);
+  }
+  .warden-card-accent::before,
+  .warden-card-accent::after {
+    transition: opacity 0.2s ease-out;
+  }
+  .glow-card::before {
+    transition: none;
+  }
+}

@@ -10,6 +10,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { CountUp } from "@/components/ui/count-up";
+import { GlowCard } from "./glow-card";
 
 // Severity palette — single source of truth, ordered most→least severe.
 export const SEV = [
@@ -62,28 +64,48 @@ export function Panel({
   action,
   children,
   className,
+  glow = false,
 }: {
   title?: string;
   subtitle?: string;
   action?: ReactNode;
   children: ReactNode;
   className?: string;
+  /** Wrap in the proximity-glow + corner-accent treatment (subtle, opt-in). */
+  glow?: boolean;
 }) {
-  return (
-    <div
-      className={`flex flex-col rounded-xl border border-border/60 bg-card/70 p-4 shadow-sm backdrop-blur-md ${className ?? ""}`}
-    >
-      {(title || action) && (
-        <div className="mb-3 flex items-start justify-between gap-2">
-          <div>
-            {title && <h3 className="text-sm font-semibold leading-tight">{title}</h3>}
-            {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
-          </div>
-          {action}
-        </div>
-      )}
-      {children}
+  const header = (title || action) && (
+    <div className="mb-3 flex items-start justify-between gap-2">
+      <div>
+        {title && <h3 className="text-sm font-semibold leading-tight">{title}</h3>}
+        {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+      </div>
+      {action}
     </div>
+  );
+
+  // Plain (non-glow): the surface itself is the grid item and carries `className`.
+  if (!glow) {
+    return (
+      <div
+        className={`flex flex-col rounded-xl border border-border/60 bg-card/70 p-4 shadow-sm backdrop-blur-md ${className ?? ""}`}
+      >
+        {header}
+        {children}
+      </div>
+    );
+  }
+
+  // Glow: GlowCard becomes the grid item (carries `className` so col-spans land
+  // on it). The inner surface fills the slot (`h-full`) and owns the corner
+  // accent + visual treatment.
+  return (
+    <GlowCard className={`rounded-xl ${className ?? ""}`}>
+      <div className="flex h-full flex-col rounded-xl border border-border/60 bg-card/70 p-4 shadow-sm backdrop-blur-md warden-card-accent">
+        {header}
+        {children}
+      </div>
+    </GlowCard>
   );
 }
 
@@ -91,34 +113,54 @@ export function Panel({
 export function KpiCard({
   label,
   value,
+  count,
+  prefix,
+  suffix,
   sub,
   accent,
   onClick,
 }: {
   label: string;
+  /** Pre-formatted display string. Used when `count` is not supplied (e.g. "—"). */
   value: string;
+  /** Numeric target — when set, the figure animates up via <CountUp>. */
+  count?: number;
+  /** Static text rendered before the animated number (e.g. a unit). */
+  prefix?: string;
+  /** Static text rendered after the animated number (e.g. "%", "d"). */
+  suffix?: string;
   sub?: string;
   accent?: string;
   onClick?: () => void;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={!onClick}
-      className="group flex flex-col items-start rounded-xl border border-border/60 bg-card/70 p-4 text-left shadow-sm backdrop-blur-md transition-colors enabled:hover:border-border enabled:hover:bg-card disabled:cursor-default"
-    >
-      <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-        {label}
-      </span>
-      <span
-        className="mt-1 text-3xl font-bold leading-none tabular-nums"
-        style={accent ? { color: accent } : undefined}
+    <GlowCard className="rounded-xl">
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={!onClick}
+        className="group warden-card-accent flex h-full w-full flex-col items-start rounded-xl border border-border/60 bg-card/70 p-4 text-left shadow-sm backdrop-blur-md transition-colors enabled:hover:border-border enabled:hover:bg-card disabled:cursor-default"
       >
-        {value}
-      </span>
-      {sub && <span className="mt-1 text-xs text-muted-foreground">{sub}</span>}
-    </button>
+        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          {label}
+        </span>
+        <span
+          className="mt-1 text-3xl font-bold leading-none tabular-nums"
+          style={accent ? { color: accent } : undefined}
+        >
+          {count === undefined ? (
+            value
+          ) : (
+            <>
+              {prefix}
+              <CountUp value={count} />
+              {suffix}
+            </>
+          )}
+        </span>
+        {sub && <span className="mt-1 text-xs text-muted-foreground">{sub}</span>}
+      </button>
+    </GlowCard>
   );
 }
 

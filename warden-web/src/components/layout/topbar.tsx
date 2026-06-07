@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ElasticToggle } from "@/components/ui/elastic-toggle";
 import { useTheme } from "@/lib/use-theme";
 import { useLogout, useProfile } from "@/lib/auth/use-session";
 
@@ -33,9 +34,21 @@ export function Topbar({ onMenuToggle }: { onMenuToggle: () => void }) {
         <WardenBadge className="transition-transform duration-300 group-hover:scale-[1.06]" />
       </Link>
       <div className="ml-auto flex items-center gap-2">
-        <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle dark mode">
-          {dark ? <Sun className="size-5" /> : <Moon className="size-5" />}
-        </Button>
+        <div className="flex items-center gap-1.5 pr-0.5">
+          <Sun
+            aria-hidden
+            className={`size-4 transition-colors ${dark ? "text-muted-foreground/50" : "text-primary"}`}
+          />
+          <ElasticToggle
+            checked={dark}
+            onCheckedChange={toggle}
+            aria-label={`Switch to ${dark ? "light" : "dark"} mode`}
+          />
+          <Moon
+            aria-hidden
+            className={`size-4 transition-colors ${dark ? "text-primary" : "text-muted-foreground/50"}`}
+          />
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="default" size="icon" className="rounded-full" aria-label="Profile menu">

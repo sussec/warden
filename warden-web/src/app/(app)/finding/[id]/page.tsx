@@ -38,6 +38,7 @@ import {
   updateFinding,
 } from "@/client/sdk.gen";
 import type { FindingDetail, FindingStatus } from "@/client/types.gen";
+import { runViewTransition } from "@/lib/view-transition";
 
 // Close an unterminated ``` code fence so the markdown renders cleanly while
 // the answer is still streaming (prevents the flash of raw fence markup).
@@ -148,7 +149,7 @@ export default function FindingDetailPage() {
   }
 
   function openAi() {
-    setAiOpen(true);
+    runViewTransition(() => setAiOpen(true));
     if (!streamText && !streaming) void streamSuggestion();
   }
 
@@ -384,7 +385,7 @@ export default function FindingDetailPage() {
                 size="icon"
                 className="size-8"
                 title="Collapse"
-                onClick={() => setAiOpen(false)}
+                onClick={() => runViewTransition(() => setAiOpen(false))}
               >
                 <PanelRightClose className="size-4" />
               </Button>
