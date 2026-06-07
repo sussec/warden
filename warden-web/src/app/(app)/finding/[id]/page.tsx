@@ -12,20 +12,14 @@ import {
   FileText,
   GitBranch,
   Loader2,
+  PanelRightClose,
+  RefreshCw,
   Send,
   Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -68,8 +62,10 @@ const THINKING_WORDS = [
 function MetaRow({ label, children }: { label: string; children: React.ReactNode }) {
   if (children === null || children === undefined || children === "") return null;
   return (
-    <div className="flex min-w-0 flex-col gap-0.5">
-      <dt className="text-xs font-medium uppercase text-muted-foreground">{label}</dt>
+    <div className="flex min-w-0 flex-col gap-1">
+      <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </dt>
       <dd className="break-all text-sm">{children}</dd>
     </div>
   );
@@ -96,7 +92,7 @@ export default function FindingDetailPage() {
   const [comment, setComment] = useState("");
   const [streamText, setStreamText] = useState("");
   const [streaming, setStreaming] = useState(false);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
   const [thinkIdx, setThinkIdx] = useState(0);
   const streamRef = useRef<HTMLDivElement>(null);
 
@@ -119,7 +115,7 @@ export default function FindingDetailPage() {
 
   // Stream the AI remediation token-by-token over SSE (same-origin cookie auth).
   async function streamSuggestion() {
-    setSheetOpen(true);
+    setAiOpen(true);
     setStreamText("");
     setStreaming(true);
     try {
@@ -149,6 +145,11 @@ export default function FindingDetailPage() {
     } finally {
       setStreaming(false);
     }
+  }
+
+  function openAi() {
+    setAiOpen(true);
+    if (!streamText && !streaming) void streamSuggestion();
   }
 
   const { data: finding, isLoading } = useQuery({
@@ -204,7 +205,7 @@ export default function FindingDetailPage() {
 
   if (isLoading || !finding) {
     return (
-      <div className="flex h-[calc(100dvh-5.5rem)] flex-col">
+      <div className="h-[calc(100dvh-5.5rem)]">
         <Card className="space-y-4 p-6">
           <Skeleton className="h-8 w-2/3" />
           <Skeleton className="h-5 w-1/3" />
@@ -220,144 +221,183 @@ export default function FindingDetailPage() {
   const activities = activityPage?.items ?? [];
 
   return (
-    <div className="flex h-[calc(100dvh-5.5rem)] flex-col gap-4">
-      {/* fixed header: title + badges + actions */}
-      <div className="flex shrink-0 flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0 space-y-2">
-          <h1 className="text-xl font-bold">{finding.name ?? finding.identity ?? findingId}</h1>
+    <div className="flex h-[calc(100dvh-5.5rem)] gap-4">
+      {/* ── main column ───────────────────────────────────────────── */}
+      <div className="flex min-w-0 flex-1 flex-col gap-4">
+        {/* header */}
+        <div className="flex shrink-0 flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 space-y-2">
+            <h1 className="text-xl font-bold leading-tight">
+              {finding.name ?? finding.identity ?? findingId}
+            </h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <SeverityBadge severity={finding.severity} />
+              <FindingStatusBadge status={finding.status} />
+              <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
+                {finding.scanner} · {finding.type}
+              </span>
+            </div>
+          </div>
           <div className="flex flex-wrap items-center gap-2">
-            <SeverityBadge severity={finding.severity} />
-            <FindingStatusBadge status={finding.status} />
+            <TicketMenu findingId={findingId} ticket={finding.ticket} />
+            <FindingStatusMenu
+              label={findingStatusMeta(finding.status).label}
+              loading={changeStatus.isPending}
+              onSelect={(s) => changeStatus.mutate(s)}
+            />
+            {!aiOpen && (
+              <Button size="sm" onClick={openAi}>
+                <Sparkles className="size-4" />
+                AI suggestion
+              </Button>
+            )}
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <TicketMenu findingId={findingId} ticket={finding.ticket} />
-          <FindingStatusMenu
-            label={findingStatusMeta(finding.status).label}
-            loading={changeStatus.isPending}
-            onSelect={(s) => changeStatus.mutate(s)}
-          />
+
+        {/* scrolling body */}
+        <div className="min-h-0 flex-1 space-y-4 overflow-auto pr-1">
+          <Card className="p-6">
+            <dl className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3">
+              <MetaRow label="Project">
+                <Link
+                  href={`/project/${finding.project.id}/overview`}
+                  className="text-primary hover:underline"
+                >
+                  {finding.project.name}
+                </Link>
+              </MetaRow>
+              <MetaRow label="Rule">{finding.ruleId}</MetaRow>
+              {location && (
+                <MetaRow label="Location">
+                  <span className="flex items-center gap-1.5 font-mono text-xs">
+                    <FileText className="size-3.5 shrink-0 text-muted-foreground" />
+                    {location}
+                  </span>
+                </MetaRow>
+              )}
+              {branch && (
+                <MetaRow label="Branch">
+                  <span className="flex items-center gap-1.5">
+                    <GitBranch className="size-3.5 shrink-0 text-muted-foreground" />
+                    {branch}
+                  </span>
+                </MetaRow>
+              )}
+              {finding.metadata?.cwes && finding.metadata.cwes.length > 0 && (
+                <MetaRow label="CWE">{finding.metadata.cwes.join(", ")}</MetaRow>
+              )}
+            </dl>
+          </Card>
+
+          {finding.description && (
+            <Card className="space-y-2 p-6">
+              <h2 className="text-base font-bold">Description</h2>
+              <MarkdownView content={finding.description} />
+            </Card>
+          )}
+
+          {snippet && (
+            <Card className="overflow-hidden p-0">
+              <div className="flex items-center gap-2 border-b border-border bg-muted/40 px-4 py-2.5">
+                <FileText className="size-4 text-muted-foreground" />
+                <span className="font-mono text-xs text-muted-foreground">{location ?? "snippet"}</span>
+              </div>
+              <pre className="overflow-x-auto p-4 font-mono text-sm">
+                <code>{snippet}</code>
+              </pre>
+            </Card>
+          )}
+
+          {finding.recommendation && (
+            <Card className="space-y-2 p-6">
+              <h2 className="text-base font-bold">Recommendation</h2>
+              <MarkdownView content={finding.recommendation} />
+            </Card>
+          )}
+
+          {/* Live OSV.dev advisory drill-down (CVE/GHSA identities only). */}
+          <OsvAdvisoryCard findingId={findingId} identity={finding.identity} />
+
+          <Card className="space-y-4 p-6">
+            <h2 className="text-base font-bold">Activity</h2>
+            <form
+              className="space-y-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const text = comment.trim();
+                if (text) postComment.mutate(text);
+              }}
+            >
+              <Textarea
+                placeholder="Add a comment… (Markdown supported)"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                rows={3}
+              />
+              <div className="flex justify-end">
+                <Button type="submit" size="sm" disabled={postComment.isPending || !comment.trim()}>
+                  {postComment.isPending ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Send className="size-4" />
+                  )}
+                  Comment
+                </Button>
+              </div>
+            </form>
+            <Separator />
+            <FindingActivityTimeline activities={activities} />
+          </Card>
         </div>
       </div>
 
-      {/* detail body — scrolls inside; page stays fixed */}
-      <div className="flex-1 min-h-0 space-y-6 overflow-auto">
-      <Card className="space-y-4 p-6">
-        <dl className="grid grid-cols-2 gap-4 md:grid-cols-3">
-          <MetaRow label="Project">
-            <Link
-              href={`/project/${finding.project.id}/overview`}
-              className="text-primary hover:underline"
-            >
-              {finding.project.name}
-            </Link>
-          </MetaRow>
-          <MetaRow label="Scanner">
-            <span>
-              {finding.scanner}{" "}
-              <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
-                {finding.type}
-              </span>
-            </span>
-          </MetaRow>
-          <MetaRow label="Rule">{finding.ruleId}</MetaRow>
-          {location && (
-            <MetaRow label="Location">
-              <span className="flex items-center gap-1.5 font-mono text-xs">
-                <FileText className="size-3.5 text-muted-foreground" />
-                {location}
-              </span>
-            </MetaRow>
-          )}
-          {branch && (
-            <MetaRow label="Branch">
-              <span className="flex items-center gap-1.5">
-                <GitBranch className="size-3.5 text-muted-foreground" />
-                {branch}
-              </span>
-            </MetaRow>
-          )}
-          {finding.metadata?.cwes && finding.metadata.cwes.length > 0 && (
-            <MetaRow label="CWE">{finding.metadata.cwes.join(", ")}</MetaRow>
-          )}
-        </dl>
-      </Card>
+      {/* ── collapsible AI dock ───────────────────────────────────── */}
+      {aiOpen && (
+        <aside className="flex w-[min(420px,40vw)] shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+          <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
+            <div className="flex min-w-0 items-center gap-2">
+              <Sparkles className="size-4 shrink-0 text-primary" />
+              <div className="min-w-0">
+                <div className="text-sm font-semibold leading-tight">AI suggestion</div>
+                <div className="truncate text-[11px] text-muted-foreground">
+                  {streaming ? "Generating…" : "Remediation assistant"}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8"
+                title="Regenerate"
+                onClick={() => void streamSuggestion()}
+                disabled={streaming}
+              >
+                {streaming ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="size-4" />
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8"
+                title="Collapse"
+                onClick={() => setAiOpen(false)}
+              >
+                <PanelRightClose className="size-4" />
+              </Button>
+            </div>
+          </div>
 
-      {finding.description && (
-        <Card className="space-y-2 p-6">
-          <h2 className="text-base font-bold">Description</h2>
-          <MarkdownView content={finding.description} />
-        </Card>
-      )}
-
-      {snippet && (
-        <Card className="space-y-2 p-6">
-          <h2 className="text-base font-bold">Code snippet</h2>
-          <pre className="overflow-x-auto rounded-lg bg-muted p-4 font-mono text-sm">
-            <code>{snippet}</code>
-          </pre>
-        </Card>
-      )}
-
-      {finding.recommendation && (
-        <Card className="space-y-2 p-6">
-          <h2 className="text-base font-bold">Recommendation</h2>
-          <MarkdownView content={finding.recommendation} />
-        </Card>
-      )}
-
-      {/* Live OSV.dev advisory drill-down (CVE/GHSA identities only). */}
-      <OsvAdvisoryCard findingId={findingId} identity={finding.identity} />
-
-
-      <Card className="flex items-center justify-between gap-4 p-6">
-        <div className="min-w-0">
-          <h2 className="text-base font-bold">AI suggestion</h2>
-          <p className="truncate text-sm text-muted-foreground">
-            {streamText && !streaming
-              ? "Remediation generated — open to review."
-              : "Generate an AI-assisted remediation for this finding."}
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="shrink-0"
-          onClick={() => {
-            if (streamText && !streaming) setSheetOpen(true);
-            else void streamSuggestion();
-          }}
-          disabled={streaming}
-        >
-          {streaming ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <Sparkles className="size-4 text-primary" />
-          )}
-          {streamText && !streaming ? "View suggestion" : "Get AI suggestion"}
-        </Button>
-      </Card>
-
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-xl">
-          <SheetHeader className="border-b border-border px-6 py-4">
-            <SheetTitle className="flex items-center gap-2">
-              <Sparkles className="size-4 text-primary" />
-              AI suggestion
-            </SheetTitle>
-            <SheetDescription className="truncate">
-              {finding.name ?? finding.ruleId ?? "Remediation"}
-            </SheetDescription>
-          </SheetHeader>
-
-          <div ref={streamRef} className="flex-1 overflow-y-auto px-6 py-5">
+          <div ref={streamRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
             {streaming && !streamText && (
               <p className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span className="size-1.5 animate-pulse rounded-full bg-primary" />
                 <span className="animate-pulse">{THINKING_WORDS[thinkIdx]}…</span>
               </p>
             )}
-            {/* Live formatted markdown; unterminated code fences auto-closed. */}
             {streaming && streamText && (
               <>
                 <MarkdownView content={sanitizeStreamingMarkdown(streamText)} />
@@ -366,62 +406,26 @@ export default function FindingDetailPage() {
             )}
             {!streaming && streamText && <MarkdownView content={streamText} />}
             {!streaming && !streamText && (
-              <p className="text-sm text-muted-foreground">No suggestion yet.</p>
+              <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
+                <Sparkles className="size-7 text-primary/60" />
+                <p className="text-sm text-muted-foreground">
+                  Generate an AI-assisted remediation for this finding.
+                </p>
+                <Button size="sm" onClick={() => void streamSuggestion()}>
+                  <Sparkles className="size-4" />
+                  Generate
+                </Button>
+              </div>
             )}
           </div>
 
-          <SheetFooter className="flex-row items-center justify-between border-t border-border px-6 py-4">
-            <span className="text-xs text-muted-foreground">
-              {streaming ? "Generating…" : streamText ? "Powered by your configured AI model" : ""}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => void streamSuggestion()}
-              disabled={streaming}
-            >
-              {streaming ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Sparkles className="size-4 text-primary" />
-              )}
-              Regenerate
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
-
-      <Card className="space-y-4 p-6">
-        <h2 className="text-base font-bold">Activity</h2>
-        <form
-          className="space-y-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const text = comment.trim();
-            if (text) postComment.mutate(text);
-          }}
-        >
-          <Textarea
-            placeholder="Add a comment… (Markdown supported)"
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            rows={3}
-          />
-          <div className="flex justify-end">
-            <Button type="submit" size="sm" disabled={postComment.isPending || !comment.trim()}>
-              {postComment.isPending ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Send className="size-4" />
-              )}
-              Comment
-            </Button>
-          </div>
-        </form>
-        <Separator />
-        <FindingActivityTimeline activities={activities} />
-      </Card>
-      </div>
+          {(streaming || streamText) && (
+            <div className="border-t border-border px-4 py-2.5 text-[11px] text-muted-foreground">
+              {streaming ? "Generating…" : "Powered by your configured AI model"}
+            </div>
+          )}
+        </aside>
+      )}
     </div>
   );
 }

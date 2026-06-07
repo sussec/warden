@@ -11,16 +11,24 @@ installAuthInterceptors();
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(true);
 
-  // default: open on desktop, closed on mobile (991px parity with Angular)
+  // Restore the user's last sidebar choice; fall back to open on desktop only.
+  // window is unavailable during SSR; reading at render time causes hydration mismatch.
   useEffect(() => {
-    // window is unavailable during SSR; reading at render time causes hydration mismatch.
+    const saved = window.localStorage.getItem("sidebar-open");
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMenuOpen(window.innerWidth > 991);
+    setMenuOpen(saved !== null ? saved === "1" : window.innerWidth > 991);
   }, []);
+
+  const toggleMenu = () =>
+    setMenuOpen((v) => {
+      const next = !v;
+      window.localStorage.setItem("sidebar-open", next ? "1" : "0");
+      return next;
+    });
 
   return (
     <AuthGuard>
-      <Topbar onMenuToggle={() => setMenuOpen((v) => !v)} />
+      <Topbar onMenuToggle={toggleMenu} />
       <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
       <main
         className={
