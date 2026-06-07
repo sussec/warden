@@ -51,10 +51,12 @@ import type {
   FindingStatus,
   FindingSummary,
   Scanners,
+  ScannerType,
   SemanticSearchResult,
 } from "@/client/types.gen";
 
 const SEVERITIES: FindingSeverity[] = ["Critical", "High", "Medium", "Low", "Info"];
+const SCANNER_TYPES: ScannerType[] = ["Sast", "Dast", "Iast", "Dependency", "Container", "Secret", "Ai", "Cloud"];
 const STATUSES: FindingStatus[] = ["Open", "Confirmed", "AcceptedRisk", "Fixed", "Incorrect"];
 const STATUS_LABELS: Record<FindingStatus, string> = {
   Open: "Need Triage",
@@ -79,11 +81,18 @@ function FindingListPage() {
     return raw.filter(isSeverity);
   }, [searchParams]);
 
+  // Seed scanner-category from ?type= (linked from the dashboard coverage panel).
+  const initialTypes = useMemo<ScannerType[]>(() => {
+    return searchParams.getAll("type").filter((t): t is ScannerType =>
+      SCANNER_TYPES.includes(t as ScannerType));
+  }, [searchParams]);
+
   const [page, setPage] = useState<PageState>({ page: 1, size: 20 });
   const [name, setName] = useState("");
   const [severity, setSeverity] = useState<FindingSeverity[]>(initialSeverity);
   const [status, setStatus] = useState<FindingStatus[]>(["Open", "Confirmed"]);
   const [scanner, setScanner] = useState<string[]>([]);
+  const [scannerType, setScannerType] = useState<ScannerType[]>(initialTypes);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   // AI semantic search
@@ -100,9 +109,10 @@ function FindingListPage() {
       severity: severity.length ? severity : null,
       status: status.length ? status : null,
       scanner: scanner.length ? scanner : null,
+      scannerType: scannerType.length ? scannerType : null,
       sortBy: "CreatedAt",
     }),
-    [page, name, severity, status, scanner],
+    [page, name, severity, status, scanner, scannerType],
   );
 
   const { data, isLoading } = useQuery({

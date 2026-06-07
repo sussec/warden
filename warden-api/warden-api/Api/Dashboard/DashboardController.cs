@@ -16,7 +16,8 @@ public class DashboardController(AppDbContext context)
         {
             Severity = await context.StatsSastFindingBySeverityAsync(filter),
             Status = await context.StatsSastFindingByStatusAsync(filter),
-            TopFindings = await context.StatsTopSastFindingAsync(filter, top: 10)
+            TopFindings = await context.StatsTopSastFindingAsync(filter, top: 10),
+            Categories = await context.StatsFindingByCategoryAsync(filter)
         };
     }
 

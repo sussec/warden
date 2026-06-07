@@ -241,6 +241,7 @@ export type FindingFilter = {
     severity?: Array<FindingSeverity> | null;
     status?: Array<FindingStatus> | null;
     scanner?: Array<string> | null;
+    scannerType?: Array<ScannerType> | null;
     projectManagerId?: string | null;
     startCreatedAt?: string | null;
     endCreatedAt?: string | null;
@@ -896,6 +897,12 @@ export type SastStatistic = {
     severity: SeveritySeries;
     status: SastStatus;
     topFindings: Array<TopFinding>;
+    categories: Array<CategoryCount>;
+};
+
+export type CategoryCount = {
+    category: string;
+    count: number;
 };
 
 export type SastStatus = {

@@ -30,6 +30,34 @@ public static class StatsSastFindingExtension
             Fixed = await context.CountSastFindingByStatusAsync(FindingStatus.Fixed, filter),
         };
     }
+    /// <summary>
+    /// Counts findings grouped by their scanner's category (ScannerType) within
+    /// the filter window. Surfaces every pillar — Sast, Secret, Dast, Ai, Cloud,
+    /// … — so finding-style scanners that are not "Code" (LLM red-team, cloud
+    /// CSPM) are visible distinctly on the dashboard rather than lumped together.
+    /// </summary>
+    public static async Task<List<CategoryCount>> StatsFindingByCategoryAsync(this AppDbContext context, StatisticFilter filter)
+    {
+        filter.StartDate ??= DateTime.MinValue;
+        filter.EndDate ??= DateTime.UtcNow;
+        var rows = await context.Findings
+            .Where(finding =>
+                (filter.ProjectId == null || finding.ProjectId == filter.ProjectId) &&
+                finding.Status != FindingStatus.Incorrect &&
+                (finding.CreatedAt >= filter.StartDate && finding.CreatedAt < filter.EndDate) &&
+                (filter.SourceId == null || context.Projects.Any(record =>
+                    record.Id == finding.ProjectId && record.SourceControlId == filter.SourceId)))
+            .Join(context.Scanners, finding => finding.ScannerId, scanner => scanner.Id,
+                (finding, scanner) => scanner.Type)
+            .GroupBy(type => type)
+            .Select(group => new { Type = group.Key, Count = group.Count() })
+            .ToListAsync();
+        return rows
+            .Select(row => new CategoryCount { Category = row.Type.ToString(), Count = row.Count })
+            .OrderByDescending(entry => entry.Count)
+            .ToList();
+    }
+
     public static async Task<List<TopFinding>> StatsTopSastFindingAsync(this AppDbContext context, StatisticFilter filter, int top = 10)
     {
         filter.StartDate ??= DateTime.MinValue;

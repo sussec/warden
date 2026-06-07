@@ -10,4 +10,7 @@ public record SastStatistic
     [Required] public required SastStatus Status { get; set; }
 
     [Required] public required List<TopFinding> TopFindings { get; set; }
+
+    /// Finding counts per scanner category (Sast, Secret, Dast, Ai, Cloud, …).
+    [Required] public required List<CategoryCount> Categories { get; set; }
 }

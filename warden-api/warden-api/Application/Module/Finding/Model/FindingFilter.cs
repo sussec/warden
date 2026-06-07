@@ -14,6 +14,7 @@ public record FindingFilter : QueryFilter
     public List<FindingSeverity>? Severity { get; set; }
     public List<FindingStatus>? Status { get; set; }
     public List<Guid>? Scanner { get; set; }
+    public List<ScannerType>? ScannerType { get; set; }
     public Guid? ProjectManagerId { get; set; }
     public DateTime? StartCreatedAt { get; set; }
     public DateTime? EndCreatedAt { get; set; }

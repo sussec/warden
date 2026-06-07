@@ -33,6 +33,10 @@ public static class FindingFilterQueryable
             ))
             .Where(finding => filter.Scanner == null || filter.Scanner.Count == 0 ||
                               filter.Scanner.Contains(finding.ScannerId))
+            .Where(finding => filter.ScannerType == null || filter.ScannerType.Count == 0 ||
+                              context.Scanners.Any(scanner =>
+                                  scanner.Id == finding.ScannerId &&
+                                  filter.ScannerType.Contains(scanner.Type)))
             .Where(finding => filter.Severity == null || filter.Severity.Count == 0 ||
                               filter.Severity.Contains(finding.Severity))
             .Where(finding => string.IsNullOrEmpty(filter.Category) || finding.Category == filter.Category)

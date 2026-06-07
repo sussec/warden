@@ -24,6 +24,18 @@ const SEV = [
 const CODE_COLOR = "#3b82f6";
 const DEP_COLOR = "#21b3b3";
 
+// Friendly label + colour per scanner category (ScannerType) for the coverage
+// breakdown, so the finding stream is split by pillar instead of all "Code".
+const CATEGORY_META: Record<string, { label: string; color: string }> = {
+  Sast: { label: "Code (SAST)", color: CODE_COLOR },
+  Secret: { label: "Secrets", color: "#a855f7" },
+  Dast: { label: "DAST / Web", color: "#f0a92a" },
+  Iast: { label: "IAST", color: "#6b8cff" },
+  Container: { label: "Container", color: "#14b8a6" },
+  Ai: { label: "AI / LLM", color: "#ec4899" },
+  Cloud: { label: "Cloud (CSPM)", color: "#0ea5e9" },
+};
+
 const RANGES = [
   { value: "7", label: "Past 7 days" },
   { value: "30", label: "Past 30 days" },
@@ -87,6 +99,17 @@ export default function CommandCenterDashboard() {
 
   const sparkSast = (trend?.sast ?? []).map((p) => n(p.critical) + n(p.high) + n(p.medium) + n(p.low));
   const sparkSca = (trend?.sca ?? []).map((p) => n(p.critical) + n(p.high) + n(p.medium) + n(p.low));
+
+  // Finding coverage split by scanner category (Code/Secrets/DAST/AI/Cloud/…).
+  const categoryBars = (sast?.categories ?? [])
+    .map((c) => ({
+      category: c.category,
+      label: CATEGORY_META[c.category]?.label ?? c.category,
+      color: CATEGORY_META[c.category]?.color ?? "#9ca3af",
+      count: n(c.count),
+    }))
+    .sort((a, b) => b.count - a.count);
+  const catMax = Math.max(scaTotal, ...categoryBars.map((c) => c.count), 1);
 
   const kpis = [
     { label: "Total Findings", value: grand, sub: "across all scans", cls: "text-foreground" },
@@ -171,12 +194,25 @@ export default function CommandCenterDashboard() {
 
       {/* bottom panels */}
       <div className="grid shrink-0 grid-cols-1 gap-3 lg:grid-cols-3">
-        {/* coverage */}
+        {/* coverage by category */}
         <div className="rounded-xl border border-border/60 bg-card/70 p-3 shadow-sm backdrop-blur-md">
-          <h3 className="text-sm font-bold">Coverage</h3>
+          <h3 className="text-sm font-bold">Coverage by category</h3>
           <div className="mt-2 space-y-2">
-            <Bar label="Code findings (SAST)" value={sastTotal} total={grand} color={CODE_COLOR} />
-            <Bar label="Dependency vulns (SCA)" value={scaTotal} total={grand} color={DEP_COLOR} />
+            {categoryBars.length === 0 ? (
+              <Bar label="Code findings (SAST)" value={sastTotal} total={grand || 1} color={CODE_COLOR} />
+            ) : (
+              categoryBars.map((c) => (
+                <Bar
+                  key={c.category}
+                  label={c.label}
+                  value={c.count}
+                  total={catMax}
+                  color={c.color}
+                  onClick={() => router.push(`/finding?type=${c.category}`)}
+                />
+              ))
+            )}
+            <Bar label="Dependency inventory (SCA)" value={scaTotal} total={catMax} color={DEP_COLOR} />
           </div>
         </div>
         {/* activity */}
@@ -220,10 +256,13 @@ export default function CommandCenterDashboard() {
   );
 }
 
-function Bar({ label, value, total, color }: { label: string; value: number; total: number; color: string }) {
+function Bar({ label, value, total, color, onClick }: { label: string; value: number; total: number; color: string; onClick?: () => void }) {
   const pct = total > 0 ? Math.round((value / total) * 100) : 0;
   return (
-    <div>
+    <div
+      className={onClick ? "cursor-pointer rounded transition-opacity hover:opacity-80" : undefined}
+      onClick={onClick}
+    >
       <div className="flex items-center justify-between text-xs">
         <span>{label}</span>
         <span className="tabular-nums text-muted-foreground">{value.toLocaleString()}</span>
