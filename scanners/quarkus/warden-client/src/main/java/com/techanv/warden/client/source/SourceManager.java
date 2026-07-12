@@ -73,8 +73,10 @@ public abstract class SourceManager {
         String path = loc != null ? loc.path : null;
         String snippet = loc != null ? loc.snippet : null;
         int start = loc != null && loc.startLine != null ? loc.startLine : 0;
+        // API returns a project list URL (with query). Per-finding deep links use
+        // the web origin + /finding/{id} (Next.js path routes, not hash routes).
         String detail = (f.id != null && !f.id.isBlank())
-                ? trimSlash(findingUrl) + "/#/finding/" + f.id
+                ? originOf(findingUrl) + "/finding/" + f.id
                 : findingUrl;
         String name = f.name == null ? "Finding" : f.name;
         StringBuilder msg = new StringBuilder("**[").append(name).append("](").append(detail).append(")**\n\n");
@@ -94,6 +96,16 @@ public abstract class SourceManager {
             msg.append("**Recommendation**\n\n").append(f.recommendation).append("\n");
         }
         return msg.toString().strip();
+    }
+
+    /** scheme://host[:port] for absolute URLs; otherwise trim trailing slash. */
+    static String originOf(String url) {
+        if (url == null || url.isBlank()) return "";
+        int scheme = url.indexOf("://");
+        if (scheme < 0) return trimSlash(url);
+        int pathStart = url.indexOf('/', scheme + 3);
+        if (pathStart < 0) return trimSlash(url);
+        return url.substring(0, pathStart);
     }
 
     private static String trimSlash(String s) {
