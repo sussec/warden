@@ -3,7 +3,9 @@ import type { NextConfig } from "next";
 // Internal URL of the Warden API (container-to-container in compose,
 // localhost in dev). The browser only ever talks same-origin — these
 // rewrites proxy API traffic so no CORS is involved.
-const API_INTERNAL_URL = process.env.API_INTERNAL_URL ?? "http://localhost:8080";
+// Host-side default matches warden-api launchSettings / compose publish port.
+// In Docker compose, build-arg API_INTERNAL_URL=http://warden:8080 overrides this.
+const API_INTERNAL_URL = process.env.API_INTERNAL_URL ?? "http://localhost:5272";
 
 const nextConfig: NextConfig = {
   output: "standalone",
