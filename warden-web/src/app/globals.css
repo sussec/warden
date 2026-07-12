@@ -3,44 +3,47 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Warden — premium AppSec palette: cool neutral grays + an azure security
-     accent (trillion-dollar tech feel; distinct from severity hues). */
-  --background: oklch(0.9770 0.0020 256);
-  --foreground: oklch(0.2200 0.0090 262);
-  --card: oklch(1.0000 0 0);
-  --card-foreground: oklch(0.2200 0.0090 262);
-  --popover: oklch(1.0000 0 0);
-  --popover-foreground: oklch(0.2200 0.0090 262);
-  --primary: oklch(0.5500 0.1700 250);
-  --primary-foreground: oklch(1.0000 0 0);
-  --secondary: oklch(0.9680 0.0040 256);
-  --secondary-foreground: oklch(0.3000 0.0090 262);
-  --muted: oklch(0.9680 0.0040 256);
-  --muted-foreground: oklch(0.5500 0.0120 262);
-  --accent: oklch(0.9680 0.0040 256);
-  --accent-foreground: oklch(0.2400 0.0090 262);
+  /* Warden × Techanv — ops-console palette inspired by warden.techanv.com:
+     near-black charcoal, off-white type, brand cyan #18a3d2 (logomark top).
+     Severity hues stay independent of the brand accent. */
+  --background: oklch(0.975 0.004 230);
+  --foreground: oklch(0.18 0.012 250);
+  --card: oklch(0.995 0.002 230);
+  --card-foreground: oklch(0.18 0.012 250);
+  --popover: oklch(0.995 0.002 230);
+  --popover-foreground: oklch(0.18 0.012 250);
+  /* Brand cyan ≈ #18a3d2 */
+  --primary: oklch(0.66 0.12 230);
+  --primary-foreground: oklch(0.99 0.005 230);
+  --secondary: oklch(0.955 0.008 230);
+  --secondary-foreground: oklch(0.28 0.015 250);
+  --muted: oklch(0.955 0.008 230);
+  --muted-foreground: oklch(0.48 0.02 250);
+  --accent: oklch(0.945 0.02 230);
+  --accent-foreground: oklch(0.22 0.02 250);
   --destructive: oklch(0.5770 0.2150 27.3000);
   --destructive-foreground: oklch(1.0000 0 0);
-  --border: oklch(0.9220 0.0040 256);
-  --input: oklch(0.8720 0.0050 256);
-  --ring: oklch(0.5500 0.1700 250);
-  --chart-1: oklch(0.5500 0.1600 250);
+  --border: oklch(0.90 0.01 230);
+  --input: oklch(0.86 0.012 230);
+  --ring: oklch(0.66 0.12 230);
+  --chart-1: oklch(0.66 0.12 230);
   --chart-2: oklch(0.6898 0.1581 290.4107);
   --chart-3: oklch(0.7480 0.1400 66.0000);
   --chart-4: oklch(0.6270 0.1400 150.0000);
   --chart-5: oklch(0.6090 0.1320 274.0000);
-  --sidebar: oklch(0.9830 0.0020 256);
-  --sidebar-foreground: oklch(0.3200 0.0090 262);
-  --sidebar-primary: oklch(0.5500 0.1700 250);
-  --sidebar-primary-foreground: oklch(1.0000 0 0);
-  --sidebar-accent: oklch(0.9680 0.0040 256);
-  --sidebar-accent-foreground: oklch(0.2400 0.0090 262);
-  --sidebar-border: oklch(0.9220 0.0040 256);
-  --sidebar-ring: oklch(0.5500 0.1700 250);
-  --font-sans: var(--font-outfit), Outfit, sans-serif;
+  --sidebar: oklch(0.98 0.004 230);
+  --sidebar-foreground: oklch(0.32 0.015 250);
+  --sidebar-primary: oklch(0.66 0.12 230);
+  --sidebar-primary-foreground: oklch(0.99 0.005 230);
+  --sidebar-accent: oklch(0.945 0.02 230);
+  --sidebar-accent-foreground: oklch(0.22 0.02 250);
+  --sidebar-border: oklch(0.90 0.01 230);
+  --sidebar-ring: oklch(0.66 0.12 230);
+  --font-sans: var(--font-outfit), Outfit, ui-sans-serif, system-ui, sans-serif;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: var(--font-geist-mono), "Geist Mono", ui-monospace, monospace;
-  --radius: 1rem;
+  /* Tighter radius — technical console, not soft SaaS blobs */
+  --radius: 0.5rem;
   --shadow-x: 0;
   --shadow-y: 1px;
   --shadow-blur: 3px;
@@ -68,42 +71,43 @@
 }
 
 .dark {
-  --background: oklch(0.2120 0.0080 262);
-  --foreground: oklch(0.9650 0.0030 256);
-  --card: oklch(0.2550 0.0090 262);
-  --card-foreground: oklch(0.9650 0.0030 256);
-  --popover: oklch(0.2550 0.0090 262);
-  --popover-foreground: oklch(0.9400 0.0030 256);
-  --primary: oklch(0.6400 0.1600 250);
-  --primary-foreground: oklch(0.1700 0.0100 262);
-  --secondary: oklch(0.2750 0.0090 262);
-  --secondary-foreground: oklch(0.9400 0.0030 256);
-  --muted: oklch(0.2550 0.0090 262);
-  --muted-foreground: oklch(0.7150 0.0110 256);
-  --accent: oklch(0.2750 0.0090 262);
-  --accent-foreground: oklch(0.9650 0.0030 256);
+  /* Marketing-site black ≈ #080808; surfaces step up one stop for cards. */
+  --background: oklch(0.12 0.008 250);
+  --foreground: oklch(0.97 0.005 230);
+  --card: oklch(0.155 0.01 250);
+  --card-foreground: oklch(0.97 0.005 230);
+  --popover: oklch(0.155 0.01 250);
+  --popover-foreground: oklch(0.95 0.005 230);
+  --primary: oklch(0.72 0.12 230);
+  --primary-foreground: oklch(0.12 0.02 250);
+  --secondary: oklch(0.20 0.012 250);
+  --secondary-foreground: oklch(0.94 0.005 230);
+  --muted: oklch(0.18 0.01 250);
+  --muted-foreground: oklch(0.68 0.02 240);
+  --accent: oklch(0.20 0.02 230);
+  --accent-foreground: oklch(0.97 0.005 230);
   --destructive: oklch(0.6370 0.2370 25.3310);
   --destructive-foreground: oklch(1.0000 0 0);
-  --border: oklch(0.3050 0.0100 262);
-  --input: oklch(0.3600 0.0110 262);
-  --ring: oklch(0.6400 0.1600 250);
-  --chart-1: oklch(0.6400 0.1600 250);
+  --border: oklch(0.26 0.015 250);
+  --input: oklch(0.30 0.015 250);
+  --ring: oklch(0.72 0.12 230);
+  --chart-1: oklch(0.72 0.12 230);
   --chart-2: oklch(0.6898 0.1581 290.4107);
   --chart-3: oklch(0.8000 0.1350 70.0000);
   --chart-4: oklch(0.7100 0.1500 150.0000);
   --chart-5: oklch(0.6800 0.1300 274.0000);
-  --sidebar: oklch(0.1900 0.0080 262);
-  --sidebar-foreground: oklch(0.8000 0.0090 256);
-  --sidebar-primary: oklch(0.6400 0.1600 250);
-  --sidebar-primary-foreground: oklch(0.1700 0.0100 262);
-  --sidebar-accent: oklch(0.2600 0.0090 262);
-  --sidebar-accent-foreground: oklch(0.9000 0.0060 256);
-  --sidebar-border: oklch(0.3050 0.0100 262);
-  --sidebar-ring: oklch(0.6400 0.1600 250);
-  --font-sans: var(--font-outfit), Outfit, sans-serif;
+  --sidebar: oklch(0.11 0.008 250);
+  --sidebar-foreground: oklch(0.78 0.015 240);
+  --sidebar-primary: oklch(0.72 0.12 230);
+  --sidebar-primary-foreground: oklch(0.12 0.02 250);
+  --sidebar-accent: oklch(0.18 0.015 250);
+  --sidebar-accent-foreground: oklch(0.94 0.005 230);
+  --sidebar-border: oklch(0.26 0.015 250);
+  --sidebar-ring: oklch(0.72 0.12 230);
+  --font-sans: var(--font-outfit), Outfit, ui-sans-serif, system-ui, sans-serif;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: var(--font-geist-mono), "Geist Mono", ui-monospace, monospace;
-  --radius: 1rem;
+  --radius: 0.5rem;
   --shadow-x: 0;
   --shadow-y: 1px;
   --shadow-blur: 3px;
@@ -599,5 +603,161 @@
   .warden-anim-border::before {
     animation: none;
     transform: none;
+  }
+}
+
+/* ===========================================================================
+   Techanv ops console — visual language from warden.techanv.com
+   Dot matrix, mono labels, hairline panels, status chips. Token-driven so
+   light + dark both stay readable; never rely on pure neon for meaning.
+   =========================================================================== */
+
+/* Subtle dot-matrix field (marketing site "dot" motif). */
+.warden-dot-grid {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    color-mix(in oklab, var(--foreground) 12%, transparent) 1px,
+    transparent 0
+  );
+  background-size: 18px 18px;
+  background-position: 0 0;
+}
+
+.dark .warden-dot-grid {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    color-mix(in oklab, var(--primary) 18%, transparent) 1px,
+    transparent 0
+  );
+}
+
+/* Soft radial wash behind dashboard hero — cyan brand bloom. */
+.warden-ops-wash {
+  background:
+    radial-gradient(
+      60% 50% at 12% 0%,
+      color-mix(in oklab, var(--primary) 14%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      40% 40% at 90% 10%,
+      color-mix(in oklab, var(--primary) 8%, transparent),
+      transparent 65%
+    );
+}
+
+/* Mono technical label (PP Fraktion vibe via Geist Mono). */
+.warden-mono-label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+/* Live status chip — terminal style. */
+.warden-live-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid color-mix(in oklab, var(--primary) 35%, var(--border));
+  background: color-mix(in oklab, var(--primary) 10%, var(--card));
+  color: var(--primary);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 0.25rem 0.65rem;
+  line-height: 1;
+}
+
+.warden-live-chip::before {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: var(--primary);
+  box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 55%, transparent);
+  animation: warden-pulse-glow 2.2s ease-in-out infinite;
+}
+
+/* Command-bar / status strip under page titles. */
+.warden-status-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--card) 88%, transparent);
+  border-radius: var(--radius);
+  padding: 0.55rem 0.85rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  color: var(--muted-foreground);
+}
+
+.warden-status-bar strong {
+  color: var(--foreground);
+  font-weight: 500;
+}
+
+.warden-status-bar .sep {
+  width: 1px;
+  height: 0.85rem;
+  background: var(--border);
+}
+
+/* Hairline ops panel — marketing-site technical card. */
+.warden-ops-panel {
+  border: 1px solid color-mix(in oklab, var(--border) 90%, var(--primary));
+  background: color-mix(in oklab, var(--card) 92%, transparent);
+  border-radius: var(--radius);
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--primary) 4%, transparent),
+    0 8px 24px -16px color-mix(in oklab, var(--foreground) 18%, transparent);
+}
+
+.dark .warden-ops-panel {
+  background: color-mix(in oklab, var(--card) 85%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--primary) 8%, transparent),
+    0 12px 40px -20px color-mix(in oklab, black 70%, transparent);
+}
+
+/* Shell chrome: topbar hairline + subtle glass. */
+.warden-topbar {
+  border-bottom: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  background: color-mix(in oklab, var(--background) 82%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* Sidebar rail accent on active nav. */
+.warden-nav-active {
+  position: relative;
+  background: color-mix(in oklab, var(--primary) 12%, transparent);
+  color: var(--primary);
+  font-weight: 600;
+}
+.warden-nav-active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 20%;
+  bottom: 20%;
+  width: 2px;
+  border-radius: 999px;
+  background: var(--primary);
+  box-shadow: 0 0 10px color-mix(in oklab, var(--primary) 55%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .warden-live-chip::before {
+    animation: none;
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary) 40%, transparent);
   }
 }

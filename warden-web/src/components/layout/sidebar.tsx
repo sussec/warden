@@ -94,19 +94,15 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose?: () => void
       )}
       <aside
         className={cn(
-          // Glass treatment: translucent --sidebar over a backdrop blur, hairline
-          // border for definition against the blurred content beneath. Falls back
-          // to the opaque token where backdrop-filter is unsupported.
-          "fixed left-4 top-16 bottom-4 z-40 w-64 overflow-y-auto rounded-lg border border-sidebar-border/60 bg-sidebar p-4 shadow-sm backdrop-blur-xl transition-transform duration-200 supports-[backdrop-filter]:bg-sidebar/70 motion-reduce:transition-none",
+          // Ops rail: near-black glass, hairline border, cyan active rail.
+          "fixed left-3 top-16 bottom-3 z-40 w-64 overflow-y-auto rounded-lg border border-sidebar-border/70 bg-sidebar p-3 shadow-sm backdrop-blur-xl transition-transform duration-200 supports-[backdrop-filter]:bg-sidebar/80 motion-reduce:transition-none",
           open ? "translate-x-0" : "-translate-x-[120%]",
         )}
       >
         {groups.map((group) => (
           <div key={group.label} className="mb-4">
-            <div className="px-3 py-2 text-xs font-bold tracking-wider text-sidebar-foreground">
-              {group.label}
-            </div>
-            <nav className="flex flex-col gap-1">
+            <div className="warden-mono-label px-3 py-2">{group.label}</div>
+            <nav className="flex flex-col gap-0.5">
               {group.items.map((item) => {
                 const active = isActive(item.href);
 
@@ -117,13 +113,13 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose?: () => void
                       href={item.href}
                       onClick={closeOnMobile}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
+                        "flex cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
                         active
-                          ? "bg-primary/10 font-semibold text-primary"
+                          ? "warden-nav-active"
                           : "text-sidebar-foreground hover:bg-sidebar-accent/60",
                       )}
                     >
-                      <item.icon className="size-4.5" />
+                      <item.icon className="size-4.5 shrink-0" />
                       {item.label}
                     </Link>
                   );
@@ -139,13 +135,13 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose?: () => void
                         setExpanded((prev) => ({ ...prev, [item.href]: !isOpen }))
                       }
                       className={cn(
-                        "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
+                        "flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
                         active
                           ? "font-semibold text-primary"
                           : "text-sidebar-foreground hover:bg-sidebar-accent/60",
                       )}
                     >
-                      <item.icon className="size-4.5" />
+                      <item.icon className="size-4.5 shrink-0" />
                       {item.label}
                       <ChevronRight
                         className={cn(
@@ -155,7 +151,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose?: () => void
                       />
                     </button>
                     {isOpen && (
-                      <div className="ml-5 mt-1 flex flex-col gap-1 border-l border-sidebar-border pl-3">
+                      <div className="ml-5 mt-1 flex flex-col gap-0.5 border-l border-sidebar-border pl-3">
                         {item.children.map((child) => {
                           // exact match — child routes are leaves (avoids /scanner
                           // matching /scanner/runs via startsWith)
@@ -166,13 +162,13 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose?: () => void
                               href={child.href}
                               onClick={closeOnMobile}
                               className={cn(
-                                "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
+                                "flex cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
                                 childActive
-                                  ? "bg-primary/10 font-semibold text-primary"
+                                  ? "warden-nav-active"
                                   : "text-sidebar-foreground hover:bg-sidebar-accent/60",
                               )}
                             >
-                              <child.icon className="size-4" />
+                              <child.icon className="size-4 shrink-0" />
                               {child.label}
                             </Link>
                           );

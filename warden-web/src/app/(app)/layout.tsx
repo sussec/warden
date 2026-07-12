@@ -33,11 +33,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
       <main
         className={
-          "min-h-dvh bg-muted pt-18 pb-4 pr-4 transition-[padding] duration-200 " +
-          (menuOpen ? "pl-4 lg:pl-72" : "pl-4")
+          "min-h-dvh bg-background pt-18 pb-4 pr-3 transition-[padding] duration-200 " +
+          (menuOpen ? "pl-3 lg:pl-[17.5rem]" : "pl-3")
         }
       >
-        <PageTransition>{children}</PageTransition>
+        {/* Field behind every authenticated surface — technical ops canvas */}
+        <div className="relative min-h-[calc(100dvh-5rem)] rounded-lg border border-border/50 bg-muted/40 p-3 shadow-sm sm:p-4 md:p-5 dark:bg-muted/20">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 rounded-lg opacity-40 warden-dot-grid"
+          />
+          <div className="relative">
+            <PageTransition>{children}</PageTransition>
+          </div>
+        </div>
       </main>
     </AuthGuard>
   );

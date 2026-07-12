@@ -22,16 +22,25 @@ export function Topbar({ onMenuToggle }: { onMenuToggle: () => void }) {
   const { data: profile } = useProfile();
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 flex h-14 items-center gap-3 bg-background px-4">
-      <Button variant="ghost" size="icon" onClick={onMenuToggle} aria-label="Toggle menu">
+    <header className="warden-topbar fixed inset-x-0 top-0 z-50 flex h-14 items-center gap-3 px-4">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onMenuToggle}
+        aria-label="Toggle menu"
+        className="cursor-pointer"
+      >
         <Menu className="size-5" />
       </Button>
       <Link
         href="/dashboard"
         aria-label="Techanv Warden — dashboard"
-        className="group flex items-center text-primary"
+        className="group flex items-center gap-2 text-primary"
       >
         <WardenBadge className="transition-transform duration-300 group-hover:scale-[1.06]" />
+        <span className="hidden font-mono text-[10px] font-medium tracking-[0.14em] text-muted-foreground uppercase sm:inline">
+          Techanv · Warden
+        </span>
       </Link>
       <div className="ml-auto flex items-center gap-2">
         <div className="flex items-center gap-1.5 pr-0.5">
@@ -51,27 +60,32 @@ export function Topbar({ onMenuToggle }: { onMenuToggle: () => void }) {
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="default" size="icon" className="rounded-full" aria-label="Profile menu">
+            <Button
+              variant="default"
+              size="icon"
+              className="cursor-pointer rounded-full"
+              aria-label="Profile menu"
+            >
               <User className="size-5" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel className="truncate">
+            <DropdownMenuLabel className="truncate font-mono text-xs tracking-wide">
               {profile?.fullName ?? profile?.userName ?? "Account"}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/profile">
+              <Link href="/profile" className="cursor-pointer">
                 <User className="size-4" /> Profile
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/setting">
+              <Link href="/setting" className="cursor-pointer">
                 <Settings className="size-4" /> Settings
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout} variant="destructive">
+            <DropdownMenuItem onClick={logout} variant="destructive" className="cursor-pointer">
               <LogOut className="size-4" /> Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>
