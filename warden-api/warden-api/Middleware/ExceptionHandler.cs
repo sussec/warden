@@ -31,7 +31,7 @@ public class ExceptionHandlerMiddleware(RequestDelegate next, ILogger<ExceptionH
         {
             logger.LogWarning("{Method} {Path} -> 501 Not Implemented",
                 context.Request.Method, context.Request.Path);
-            await Write(context, 500, ["Not Implemented"]);
+            await Write(context, StatusCodes.Status501NotImplemented, ["Not Implemented"]);
         }
         catch (Exception ex)
         {
