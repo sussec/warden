@@ -7,6 +7,7 @@ import { HBarChart } from "@/components/charts/hbar-chart";
 import { PulseDot, StatusGlow } from "@/components/ui/pulse-dot";
 import { getFindings, sastStatistic, scaStatistic } from "@/client/sdk.gen";
 import { Bar, CATEGORY_META, Panel, SeverityChip, n } from "./dashboard-ui";
+import { EmptyState } from "./empty-state";
 
 /** Theme-safe severity → CSS-var token for live dots (resolves in both themes). */
 function severityGlowToken(severity: string): string {
@@ -106,11 +107,16 @@ export function FindingsTab({ body }: { body: { startDate: string; endDate: stri
           }
         >
           {risksLoading ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">Loading…</p>
-          ) : riskItems.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              No open critical or high findings. 🎉
+            <p className="py-8 text-center font-mono text-xs tracking-wide text-muted-foreground">
+              Loading risk feed…
             </p>
+          ) : riskItems.length === 0 ? (
+            <EmptyState
+              compact
+              title="No open critical or high findings"
+              description="Posture is clean in this band — keep gates on."
+              image="empty-secure"
+            />
           ) : (
             <div className="divide-y divide-border/50">
               {riskItems.map((f) => (
@@ -118,7 +124,7 @@ export function FindingsTab({ body }: { body: { startDate: string; endDate: stri
                   key={f.id}
                   type="button"
                   onClick={() => router.push(`/finding?severity=${f.severity}`)}
-                  className="flex w-full items-center gap-3 py-2 text-left transition-colors hover:bg-muted/40"
+                  className="flex w-full cursor-pointer items-center gap-3 py-2 text-left transition-colors hover:bg-primary/5"
                 >
                   <PulseDot
                     color={severityGlowToken(f.severity)}
@@ -143,7 +149,12 @@ export function FindingsTab({ body }: { body: { startDate: string; endDate: stri
         <Panel title="By category" subtitle="Findings per scanner pillar" className="self-start">
           <div className="space-y-2.5">
             {catBars.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No categorised findings.</p>
+              <EmptyState
+                compact
+                title="No categorised findings"
+                description="Scanner pillars will appear here."
+                image="mark"
+              />
             ) : (
               catBars.map((c) => (
                 <Bar
@@ -173,9 +184,11 @@ export function FindingsTab({ body }: { body: { startDate: string; endDate: stri
                 onBarClick={() => router.push("/finding?type=Dependency")}
               />
             ) : (
-              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                No vulnerable dependencies.
-              </div>
+              <EmptyState
+                title="No vulnerable dependencies"
+                description="SCA inventory is clear for this window."
+                image="pipeline-hud"
+              />
             )}
           </div>
         </Panel>
@@ -191,9 +204,11 @@ export function FindingsTab({ body }: { body: { startDate: string; endDate: stri
                 onBarClick={() => router.push("/finding")}
               />
             ) : (
-              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                No finding categories.
-              </div>
+              <EmptyState
+                title="No finding categories"
+                description="Rule groups populate as scans land."
+                image="empty-secure"
+              />
             )}
           </div>
         </Panel>

@@ -58,7 +58,7 @@ export function fmtDay(d: string): string {
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
 }
 
-/** Card wrapper with a header row. */
+/** Card wrapper with a header row — Techanv ops panel chrome. */
 export function Panel({
   title,
   subtitle,
@@ -76,21 +76,28 @@ export function Panel({
   glow?: boolean;
 }) {
   const header = (title || action) && (
-    <div className="mb-3 flex items-start justify-between gap-2">
-      <div>
-        {title && <h3 className="text-sm font-semibold leading-tight">{title}</h3>}
-        {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+    <div className="mb-3 flex items-start justify-between gap-2 border-b border-border/50 pb-2.5">
+      <div className="min-w-0">
+        {title && (
+          <h3 className="text-sm font-semibold leading-tight tracking-tight">{title}</h3>
+        )}
+        {subtitle && (
+          <p className="mt-0.5 font-mono text-[11px] tracking-wide text-muted-foreground">
+            {subtitle}
+          </p>
+        )}
       </div>
       {action}
     </div>
   );
 
+  const surface =
+    "flex flex-col rounded-lg border border-border/70 bg-card/80 p-4 backdrop-blur-md warden-ops-panel";
+
   // Plain (non-glow): the surface itself is the grid item and carries `className`.
   if (!glow) {
     return (
-      <div
-        className={`flex flex-col rounded-xl border border-border/60 bg-card/70 p-4 shadow-sm backdrop-blur-md ${className ?? ""}`}
-      >
+      <div className={`${surface} ${className ?? ""}`}>
         {header}
         {children}
       </div>
@@ -101,8 +108,8 @@ export function Panel({
   // on it). The inner surface fills the slot (`h-full`) and owns the corner
   // accent + visual treatment.
   return (
-    <GlowCard className={`rounded-xl ${className ?? ""}`}>
-      <div className="flex h-full flex-col rounded-xl border border-border/60 bg-card/70 p-4 shadow-sm backdrop-blur-md warden-card-accent">
+    <GlowCard className={`rounded-lg ${className ?? ""}`}>
+      <div className={`${surface} h-full warden-card-accent`}>
         {header}
         {children}
       </div>
@@ -135,18 +142,16 @@ export function KpiCard({
   onClick?: () => void;
 }) {
   return (
-    <GlowCard className="rounded-xl">
+    <GlowCard className="rounded-lg">
       <button
         type="button"
         onClick={onClick}
         disabled={!onClick}
-        className="group warden-card-accent flex h-full w-full flex-col items-start rounded-xl border border-border/60 bg-card/70 p-4 text-left shadow-sm backdrop-blur-md transition-colors enabled:hover:border-border enabled:hover:bg-card disabled:cursor-default"
+        className="group warden-card-accent warden-ops-panel flex h-full w-full cursor-pointer flex-col items-start rounded-lg border border-border/70 bg-card/80 p-4 text-left backdrop-blur-md transition-colors enabled:hover:border-primary/40 enabled:hover:bg-card disabled:cursor-default"
       >
-        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-          {label}
-        </span>
+        <span className="warden-mono-label">{label}</span>
         <span
-          className="mt-1 text-3xl font-bold leading-none tabular-nums"
+          className="mt-2 font-mono text-3xl font-semibold leading-none tracking-tight tabular-nums"
           style={accent ? { color: accent } : undefined}
         >
           {count === undefined ? (
@@ -164,7 +169,11 @@ export function KpiCard({
             </>
           )}
         </span>
-        {sub && <span className="mt-1 text-xs text-muted-foreground">{sub}</span>}
+        {sub && (
+          <span className="mt-1.5 font-mono text-[11px] tracking-wide text-muted-foreground">
+            {sub}
+          </span>
+        )}
       </button>
     </GlowCard>
   );
@@ -193,14 +202,17 @@ export function Bar({
       onClick={onClick}
     >
       <div className="flex items-center justify-between text-xs">
-        <span className="truncate pr-2">{label}</span>
-        <span className="tabular-nums text-muted-foreground">
+        <span className="truncate pr-2 font-medium">{label}</span>
+        <span className="font-mono tabular-nums text-muted-foreground">
           {fmt(value)}
           {suffix ?? ""}
         </span>
       </div>
-      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
+      <div className="mt-1.5 h-1 w-full overflow-hidden rounded-sm bg-muted">
+        <div
+          className="h-full rounded-sm transition-[width] duration-300 ease-out"
+          style={{ width: `${pct}%`, background: color }}
+        />
       </div>
     </div>
   );
@@ -243,8 +255,19 @@ export function TrendArea({ data }: { data: TrendDatum[] }) {
 
   if (data.length === 0) {
     return (
-      <div className="flex h-full min-h-[200px] items-center justify-center text-sm text-muted-foreground">
-        No trend data in this window.
+      <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-2 text-center">
+        {/* eslint-disable-next-line @next/next/no-img-element -- tiny decorative empty-state mark */}
+        <img
+          src="/dashboard/mark.jpg"
+          alt=""
+          width={56}
+          height={56}
+          className="size-14 rounded-md border border-border/60 object-cover opacity-80"
+        />
+        <p className="text-sm font-medium">No trend data in this window</p>
+        <p className="font-mono text-[11px] tracking-wide text-muted-foreground">
+          Feed updates as scans complete
+        </p>
       </div>
     );
   }
