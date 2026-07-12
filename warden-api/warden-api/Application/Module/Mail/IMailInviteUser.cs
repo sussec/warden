@@ -1,3 +1,4 @@
+using Warden.Application.Helpers;
 using Warden.Application.Services;
 using Warden.Core.Extension;
 using FluentResults;
@@ -11,9 +12,7 @@ public record MailInviteUserModel
     public bool IsRegister { get; init; }
 
     public string ConfirmInviteLink()
-    {
-        return $"{Configuration.FrontendUrl}/#/auth/confirm-email?token={Token.UrlEncode()}&username={Username}";
-    }
+        => FrontendUrlHelper.ConfirmEmailUrl(Token.UrlEncode(), Username);
 }
 public interface IMailInviteUser
 {

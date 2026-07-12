@@ -1,3 +1,4 @@
+using Warden.Application.Helpers;
 using Warden.Application.Module.Integration.Teams.Client;
 using Warden.Application.Module.Integration.Teams.Client.Action;
 using Warden.Core.Enum;
@@ -31,10 +32,10 @@ public class AlertFixedFindingTeams(string webhook) : IAlertFixedFinding
             }
 
             text += "**Fixed Findings**<br>";
-            text += "<table><thead><tr><td>**ID**</td><td>**NAME**</td><td>**SEVERITY**</td></tr></thread><tbody>";
+            text += "<table><thead><tr><td>**ID**</td><td>**NAME**</td><td>**SEVERITY**</td></tr></thead><tbody>";
             for (int i = 0; i < model.Findings.Count; i++)
             {
-                var findingUrl = $"{Configuration.FrontendUrl}/#/finding/{model.Findings[i].Id}";
+                var findingUrl = FrontendUrlHelper.FindingUrl(model.Findings[i].Id);
                 text +=
                     $"<tr><td style='width: 30px;'>{i + 1}</td><td>[{model.Findings[i].Name}]({findingUrl})</td><td style='width: 100px'>{model.Findings[i].Severity.ToString().ToUpper()}</td></tr>";
             }

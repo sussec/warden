@@ -1,4 +1,5 @@
 using Warden.Application.Exceptions;
+using Warden.Application.Helpers;
 using Warden.Application.Module.Ci.Model;
 using Warden.Application.Module.Package;
 using Warden.Application.Module.Package.Command;
@@ -8,10 +9,11 @@ using Warden.Core.Enum;
 using Warden.Core.Extension;
 using Warden.Core.Utils;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Warden.Application.Module.Ci.Command;
 
-public class PushCiDependencyCommand(AppDbContext context)
+public class PushCiDependencyCommand(AppDbContext context, ILogger<PushCiDependencyCommand> logger)
 {
     public async Task<ScanDependencyResult> ExecuteAsync(UploadCiDependencyRequest request)
     {
@@ -22,7 +24,8 @@ public class PushCiDependencyCommand(AppDbContext context)
         if (scan == null) throw new BadRequestException("scan not found");
         if (scan.Status != ScanStatus.Running) throw new BadRequestException("scan is not running");
         var projectSetting = context.GetProjectSettingsAsync(scan.ProjectId).Result.GetResult();
-        var scanUrl = $"{Configuration.FrontendUrl}/#/project/{scan.ProjectId}/scan/{scan.Id}";
+        // Dependency packages land on the project dependency page (no per-scan route in web).
+        var scanUrl = FrontendUrlHelper.ProjectDependencyUrl(scan.ProjectId);
         if (request.Packages == null)
         {
             return new ScanDependencyResult
@@ -129,9 +132,11 @@ public class PushCiDependencyCommand(AppDbContext context)
                     await context.SaveChangesAsync();
                     projectPackagesOfCurrentScan.Add(requestProjectPackage);
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
-                    //todo: log exception
+                    logger.LogWarning(ex,
+                        "Failed to add project package {PackageId} at {Location} for scan {ScanId}",
+                        requestProjectPackage.PackageId, requestProjectPackage.Location, scan.Id);
                 }
             }
             else
@@ -162,9 +167,11 @@ public class PushCiDependencyCommand(AppDbContext context)
                 });
                 await context.SaveChangesAsync();
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                //todo: log exception
+                logger.LogWarning(ex,
+                    "Failed to link project package {ProjectPackageId} to scan {ScanId}",
+                    projectPackage.Id, scan.Id);
             }
         }
         var fixedPackageOfScan = projectPackagesOfLastScan.Where(package => 

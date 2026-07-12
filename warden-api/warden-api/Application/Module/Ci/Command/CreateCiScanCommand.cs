@@ -1,4 +1,5 @@
 using Warden.Application.Exceptions;
+using Warden.Application.Helpers;
 using Warden.Application.Module.Ci.Model;
 using Warden.Application.Module.Project;
 using Warden.Application.Module.Scanner;
@@ -124,7 +125,7 @@ public class CreateCiScanCommand(AppDbContext context)
         return new CiScanInfo
         {
             ScanId = scan.Id,
-            ScanUrl = $"{Configuration.FrontendUrl}/#/project/{scan.ProjectId}/overview",
+            ScanUrl = FrontendUrlHelper.ProjectUrl(scan.ProjectId),
             LastCommitSha = lastCommitSha
         };
     }

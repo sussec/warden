@@ -1,3 +1,4 @@
+using Warden.Application.Helpers;
 using Warden.Application.Services;
 using Warden.Core.Extension;
 using FluentResults;
@@ -11,9 +12,7 @@ public record MailResetPasswordModel
     public required string Token { get; set; }
 
     public string ResetPasswordLink()
-    {
-        return $"{Configuration.FrontendUrl}/#/auth/reset-password?token={Token.UrlEncode()}&username={Username}";
-    }
+        => FrontendUrlHelper.ResetPasswordUrl(Token.UrlEncode(), Username);
 }
 
 public interface IMailResetPassword

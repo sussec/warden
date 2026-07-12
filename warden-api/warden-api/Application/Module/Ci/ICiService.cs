@@ -1,6 +1,7 @@
 using Warden.Application.Module.Ci.Command;
 using Warden.Application.Module.Ci.Model;
 using Warden.Core.Extension;
+using Microsoft.Extensions.Logging;
 
 namespace Warden.Application.Module.Ci;
 
@@ -15,7 +16,8 @@ public interface ICiService
 
 public class CiService(
     IServiceProvider serviceProvider,
-    AppDbContext context
+    AppDbContext context,
+    ILogger<PushCiDependencyCommand> dependencyLogger
 ) : ICiService
 {
     public async Task<CiScanInfo> CreateCiScanAsync(CiScanRequest request)
@@ -38,6 +40,6 @@ public class CiService(
 
     public Task<ScanDependencyResult> PushCiDependencyAsync(UploadCiDependencyRequest request)
     {
-        return new PushCiDependencyCommand(context).ExecuteAsync(request);
+        return new PushCiDependencyCommand(context, dependencyLogger).ExecuteAsync(request);
     }
 }

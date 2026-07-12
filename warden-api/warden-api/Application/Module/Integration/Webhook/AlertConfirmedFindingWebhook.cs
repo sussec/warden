@@ -1,3 +1,4 @@
+using Warden.Application.Helpers;
 using Warden.Application.Module.Integration.Webhook.Client;
 using FluentResults;
 
@@ -23,7 +24,7 @@ public class AlertConfirmedFindingWebhook(string url, WebhookFormat format) : IA
                 {
                     Name = f.Name,
                     Severity = f.Severity.ToString().ToUpper(),
-                    Url = $"{Configuration.FrontendUrl}/#/finding/{f.Id}"
+                    Url = FrontendUrlHelper.FindingUrl(f.Id)
                 }).ToList(),
                 Url = model.FindingUrl()
             };

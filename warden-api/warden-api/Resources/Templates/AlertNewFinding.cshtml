@@ -1,4 +1,5 @@
 @using Warden.Application
+@using Warden.Application.Helpers
 @using Warden.Core.Enum
 @model Warden.Application.Module.Integration.AlertStatusFindingModel
 @{
@@ -59,7 +60,7 @@
                                                     <tr valign="top">
                                                         @{
                                                             var index = i + 1;
-                                                            var findingUrl = $"{Configuration.FrontendUrl}/#/finding/{findings[i].Id}";
+                                                            var findingUrl = FrontendUrlHelper.FindingUrl(findings[i].Id);
                                                             var color = "#22C55E";
                                                             var label = "N";
                                                             @switch (findings[i].Severity)

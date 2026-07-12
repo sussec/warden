@@ -1,3 +1,4 @@
+using Warden.Application.Helpers;
 using Warden.Application.Module.Integration.Webhook.Client;
 using Warden.Core.Enum;
 using FluentResults;
@@ -28,7 +29,7 @@ public class AlertNewFindingWebhook(string url, WebhookFormat format) : IAlertNe
                 {
                     Name = f.Name,
                     Severity = f.Severity.ToString().ToUpper(),
-                    Url = $"{Configuration.FrontendUrl}/#/finding/{f.Id}"
+                    Url = FrontendUrlHelper.FindingUrl(f.Id)
                 }).ToList(),
                 Url = model.FindingUrl(FindingStatus.Open)
             };

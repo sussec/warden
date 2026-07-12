@@ -1,10 +1,11 @@
+using Warden.Application.Helpers;
 using Warden.Application.Module.Integration.Webhook.Client;
 using Warden.Core.Enum;
 using FluentResults;
 
 namespace Warden.Application.Module.Integration.Webhook;
 
-public class AlertFixedFindingWebhook(string url, WebhookFormat format) : IAlertNewFinding
+public class AlertFixedFindingWebhook(string url, WebhookFormat format) : IAlertFixedFinding
 {
     public async Task<Result<bool>> AlertAsync(List<string> receivers, AlertStatusFindingModel model)
     {
@@ -28,7 +29,7 @@ public class AlertFixedFindingWebhook(string url, WebhookFormat format) : IAlert
                 {
                     Name = f.Name,
                     Severity = f.Severity.ToString().ToUpper(),
-                    Url = $"{Configuration.FrontendUrl}/#/finding/{f.Id}"
+                    Url = FrontendUrlHelper.FindingUrl(f.Id)
                 }).ToList(),
                 Url = model.FindingUrl(FindingStatus.Fixed)
             };
