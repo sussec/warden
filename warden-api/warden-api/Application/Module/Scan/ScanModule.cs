@@ -6,6 +6,8 @@ public class ScanModule : IModule
 {
     public IServiceCollection RegisterModule(IServiceCollection builder)
     {
+        builder.AddSingleton<IScanJobStreamHub, ScanJobStreamHub>();
+        builder.AddSingleton<IScanExecutionBackend, DockerScanExecutionBackend>();
         builder.AddScoped<IScanJobService, ScanJobService>();
         builder.AddHostedService<ScanRunnerWorker>();
         return builder;
