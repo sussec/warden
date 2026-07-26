@@ -146,7 +146,7 @@ function ActivityNode({
       {/* rail: node dot + connector line */}
       <div className="relative flex flex-col items-center">
         <span
-          className="z-10 flex size-9 shrink-0 items-center justify-center rounded-full border"
+          className="z-10 flex size-9 shrink-0 items-center justify-center rounded-none border"
           style={{
             color: meta.color,
             background: `color-mix(in oklab, ${meta.color} 14%, transparent)`,
@@ -164,7 +164,7 @@ function ActivityNode({
       <div className="min-w-0 flex-1 pt-1">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           {isSystem ? (
-            <span className="flex size-5 items-center justify-center rounded-full bg-muted text-muted-foreground">
+            <span className="flex size-5 items-center justify-center rounded-none bg-muted text-muted-foreground">
               <Server className="size-3" />
             </span>
           ) : (
@@ -202,7 +202,7 @@ function ActivityNode({
         {ai && (
           <div className="mt-2 rounded-lg border border-primary/30 bg-primary/5 p-3">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary">
+              <span className="inline-flex items-center gap-1 rounded-none bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary">
                 <Sparkles className="size-3" />
                 {ai.verdict}
               </span>
