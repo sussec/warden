@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#000000" />
+  <title>Warden · fifty shades of red &amp; black</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #000; --fg: #f2eeea; --dim: #8a8680; --border: #141414; --red: #ff0033;
+      --mono: "JetBrains Mono", ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; background: var(--bg); color: var(--fg);
+      font-family: var(--mono); font-size: 13px; line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    header {
+      position: sticky; top: 0; z-index: 10; background: #000;
+      border-bottom: 1px solid #0a0a0a; padding: 1rem 1.5rem;
+      display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.75rem 1.5rem;
+    }
+    header .brand { letter-spacing: 0.06em; }
+    header .brand .p { color: var(--red); }
+    header h1 { margin: 0; font-size: 0.8125rem; font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); }
+    main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 2rem; }
+    section { margin-bottom: 2.5rem; }
+    h2 {
+      margin: 0 0 0.75rem; font-size: 0.75rem; font-weight: 500;
+      letter-spacing: 0.12em; text-transform: uppercase; color: var(--red);
+    }
+    p.lead { margin: 0 0 1.25rem; color: var(--dim); max-width: 52ch; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+      gap: 2px;
+    }
+    .swatch {
+      border: 1px solid var(--border); min-height: 88px;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 0.55rem 0.65rem;
+    }
+    .swatch .name { font-size: 11px; letter-spacing: 0.04em; }
+    .swatch .hex { font-size: 10px; opacity: 0.75; margin-top: 2px; }
+    .swatch.light .name, .swatch.light .hex { color: #000; }
+    .swatch.dark .name, .swatch.dark .hex { color: #f2eeea; }
+    .role {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 2px; margin-top: 0.5rem;
+    }
+    .role .cell { border: 1px solid var(--border); padding: 0.85rem; background: #050505; }
+    .role .chip {
+      display: inline-block; width: 100%; height: 36px; margin-bottom: 0.5rem;
+      border: 1px solid #1a1a1a;
+    }
+    .role .k { color: var(--dim); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
+    .role .v { margin-top: 0.2rem; font-size: 12px; }
+    .art {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 2px;
+    }
+    .art a { border: 1px solid var(--border); display: block; }
+    .art img { width: 100%; display: block; object-fit: cover; }
+    footer { border-top: 1px solid #0a0a0a; padding: 1.25rem 1.5rem; color: var(--dim); font-size: 11px; }
+    footer a { color: var(--red); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="p">$_</span>warden</div>
+    <h1>fifty shades · red &amp; matte black · brand art</h1>
+  </header>
+  <main>
+    <section>
+      <h2>system</h2>
+      <p class="lead">
+        End-to-end Athesis palette for Warden. Only red and matte black.
+        Chatak laal <strong style="color:#ff0033;font-weight:500">#ff0033</strong> is primary.
+      </p>
+    </section>
+    <section>
+      <h2>25 matte blacks → warm white</h2>
+      <div class="grid" id="blacks"></div>
+    </section>
+    <section>
+      <h2>25 reds · deep blood → chatak → rose</h2>
+      <div class="grid" id="reds"></div>
+    </section>
+    <section>
+      <h2>semantic roles</h2>
+      <div class="role" id="roles"></div>
+    </section>
+    <section>
+      <h2>severity · red intensity only</h2>
+      <div class="role" id="sev"></div>
+    </section>
+
+    <section>
+      <h2>black &amp; red color scale images</h2>
+      <p class="lead">Exact token chart + generated scale boards. Files under <code>/palette/</code>.</p>
+      <div class="art">
+        <a href="/palette/scale-exact.jpg" title="exact tokens"><img src="/palette/scale-exact.jpg" alt="exact scale" style="aspect-ratio:16/9" /></a>
+        <a href="/palette/scale-swatches.jpg" title="swatches"><img src="/palette/scale-swatches.jpg" alt="swatches" style="aspect-ratio:16/9" /></a>
+        <a href="/palette/scale-grid.jpg" title="grid"><img src="/palette/scale-grid.jpg" alt="grid" style="aspect-ratio:16/9" /></a>
+        <a href="/palette/scale-gradients.jpg" title="gradients"><img src="/palette/scale-gradients.jpg" alt="gradients" style="aspect-ratio:1" /></a>
+        <a href="/palette/scale-wallpaper.jpg" title="wallpaper"><img src="/palette/scale-wallpaper.jpg" alt="wallpaper" style="aspect-ratio:16/9" /></a>
+      </div>
+    </section>
+    <section>
+      <h2>generated brand art</h2>
+      <p class="lead">Wired into dashboard empty states, hero, pipeline strip, and logo.</p>
+      <div class="art">
+        <a href="/dashboard/mark.jpg"><img src="/dashboard/mark.jpg" alt="shield mark" style="aspect-ratio:1" /></a>
+        <a href="/dashboard/brand-w.jpg"><img src="/dashboard/brand-w.jpg" alt="W mark" style="aspect-ratio:1" /></a>
+        <a href="/dashboard/empty-secure.jpg"><img src="/dashboard/empty-secure.jpg" alt="empty state" style="aspect-ratio:1" /></a>
+        <a href="/dashboard/hero-ops.jpg"><img src="/dashboard/hero-ops.jpg" alt="hero" style="aspect-ratio:16/9" /></a>
+        <a href="/dashboard/pipeline-hud.jpg"><img src="/dashboard/pipeline-hud.jpg" alt="pipeline" style="aspect-ratio:16/9" /></a>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <a href="/palette.html">/palette.html</a>
+    · tokens: <code>src/app/globals.css</code> · <code>src/lib/palette.ts</code>
+  </footer>
+  <script>
+    const BLACK = {
+      0:"#000000",1:"#030303",2:"#050505",3:"#080808",4:"#0a0a0a",
+      5:"#0c0c0c",6:"#111111",7:"#141414",8:"#1a1a1a",9:"#222222",
+      10:"#2a2a2a",11:"#333333",12:"#3a3a3a",13:"#4a4a4a",14:"#5a5a5a",
+      15:"#6a6a6a",16:"#7a7a7a",17:"#8a8680",18:"#a8a49e",19:"#cfcbc6",
+      20:"#e0dcd6",21:"#ebe7e1",22:"#f2eeea",23:"#faf8f6",24:"#ffffff",
+    };
+    const RED = {
+      0:"#0a0002",1:"#140004",2:"#1a0005",3:"#2b0008",4:"#3d000c",
+      5:"#4f0010",6:"#660014",7:"#7a0019",8:"#8f001d",9:"#a30022",
+      10:"#b80028",11:"#cc002c",12:"#e00030",13:"#ff0033",14:"#ff1a47",
+      15:"#ff3355",16:"#ff4d66",17:"#ff6680",18:"#ff8099",19:"#ff99b0",
+      20:"#ffb3c6",21:"#ffccdd",22:"#ffe0ea",23:"#fff0f4",24:"#fff8fa",
+    };
+    const BLACK_NOTES = {
+      0:"void canvas",1:"elevated",2:"panel / card",4:"hover · muted",
+      5:"input",7:"border",12:"text-mute",17:"text-dim",19:"body",
+      22:"primary type",24:"white",
+    };
+    const RED_NOTES = {
+      0:"black-red",8:"deep blood",10:"low sev",11:"cardinal",
+      13:"CHATAK · brand",15:"hover",17:"medium sev",24:"rose wash",
+    };
+    function luminance(hex) {
+      const h = hex.replace("#","");
+      const r = parseInt(h.slice(0,2),16)/255;
+      const g = parseInt(h.slice(2,4),16)/255;
+      const b = parseInt(h.slice(4,6),16)/255;
+      return 0.2126*r + 0.7152*g + 0.0722*b;
+    }
+    function paint(id, map, notes, prefix) {
+      const root = document.getElementById(id);
+      Object.entries(map).forEach(([k, hex]) => {
+        const el = document.createElement("div");
+        el.className = "swatch " + (luminance(hex) > 0.55 ? "light" : "dark");
+        el.style.background = hex;
+        const note = notes[k] ? ` · ${notes[k]}` : "";
+        el.innerHTML = `<span class="name">${prefix}-${k}${note}</span><span class="hex">${hex}</span>`;
+        root.appendChild(el);
+      });
+    }
+    paint("blacks", BLACK, BLACK_NOTES, "black");
+    paint("reds", RED, RED_NOTES, "red");
+    const roles = [
+      ["background", BLACK[0]], ["card / panel", BLACK[2]], ["muted / hover", BLACK[4]],
+      ["border", BLACK[7]], ["text mute", BLACK[12]], ["text dim", BLACK[17]],
+      ["body text", BLACK[19]], ["foreground", BLACK[22]],
+      ["primary (chatak)", RED[13]], ["primary hover", RED[15]], ["destructive", RED[13]],
+      ["chart-1", RED[13]], ["chart-2", RED[15]], ["chart-3", RED[17]],
+      ["chart-4", RED[11]], ["chart-5", RED[8]],
+    ];
+    const rolesEl = document.getElementById("roles");
+    roles.forEach(([name, hex]) => {
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.innerHTML = `<div class="chip" style="background:${hex}"></div>
+        <div class="k">${name}</div><div class="v">${hex}</div>`;
+      rolesEl.appendChild(cell);
+    });
+    const sev = [
+      ["critical", RED[13]], ["high", RED[15]], ["medium", RED[17]],
+      ["low", RED[10]], ["info", BLACK[14]],
+    ];
+    const sevEl = document.getElementById("sev");
+    sev.forEach(([name, hex]) => {
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.innerHTML = `<div class="chip" style="background:${hex}"></div>
+        <div class="k">${name}</div><div class="v">${hex}</div>`;
+      sevEl.appendChild(cell);
+    });
+  </script>
+</body>
+</html>
