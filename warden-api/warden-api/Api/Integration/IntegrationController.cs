@@ -1,4 +1,5 @@
 using Warden.Application;
+using Warden.Application.Caching;
 using Warden.Application.Module.Integration;
 using Warden.Application.Module.Integration.GitHub;
 using Warden.Application.Module.Integration.GitLab;
@@ -14,7 +15,8 @@ namespace Warden.Api.Integration;
 
 [ApiExplorerSettings(GroupName = "Integration")]
 public class IntegrationController(
-    AppDbContext context
+    AppDbContext context,
+    IAppCache cache
 ) : BaseController
 {
     [HttpGet]
@@ -33,17 +35,21 @@ public class IntegrationController(
 
     [HttpGet]
     [Route("ticket-tracker-status")]
-    public async Task<TicketTrackerStatus> GetTicketTrackerStatus()
-    {
-        var gh = await context.GetGitHubSettingAsync();
-        var gl = await context.GetGitLabSettingAsync();
-        return new TicketTrackerStatus
-        {
-            Jira = (await context.GetJiraSettingAsync()).Active,
-            Redmine = (await context.GetRedmineSettingAsync()).Active,
-            // PAT-based issues — no GitHub App / GitLab OAuth App required.
-            GitHub = gh.Active && !string.IsNullOrWhiteSpace(gh.Token),
-            GitLab = gl.Active && !string.IsNullOrWhiteSpace(gl.Token)
-        };
-    }
+    public Task<TicketTrackerStatus> GetTicketTrackerStatus(CancellationToken cancellationToken) =>
+        cache.GetOrCreateAsync(
+            CacheKeys.TicketTrackers(),
+            async ct =>
+            {
+                var gh = await context.GetGitHubSettingAsync();
+                var gl = await context.GetGitLabSettingAsync();
+                return new TicketTrackerStatus
+                {
+                    Jira = (await context.GetJiraSettingAsync()).Active,
+                    Redmine = (await context.GetRedmineSettingAsync()).Active,
+                    GitHub = gh.Active && !string.IsNullOrWhiteSpace(gh.Token),
+                    GitLab = gl.Active && !string.IsNullOrWhiteSpace(gl.Token)
+                };
+            },
+            TimeSpan.FromSeconds(20),
+            cancellationToken)!;
 }

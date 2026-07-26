@@ -12,9 +12,28 @@ public static class Configuration
     public static bool OpenApiEnabled =>
         !string.Equals(Config.OpenApiEnabled, "false", StringComparison.OrdinalIgnoreCase);
 
-    public static string DbConnectionString =>
-        $"Host={Config.DbServer};Database={Config.DbName};Username={Config.DbUsername};Password={Config.DbPassword}";
-    
+    /// <summary>
+    /// Tuned for high concurrency: large pool, prepared statements, short connect timeout.
+    /// </summary>
+    public static string DbConnectionString
+    {
+        get
+        {
+            var maxPool = int.TryParse(Config.DbMaxPoolSize, out var mx) ? Math.Clamp(mx, 10, 500) : 100;
+            var minPool = int.TryParse(Config.DbMinPoolSize, out var mn) ? Math.Clamp(mn, 0, maxPool) : 5;
+            return
+                $"Host={Config.DbServer};Database={Config.DbName};Username={Config.DbUsername};Password={Config.DbPassword};" +
+                $"Maximum Pool Size={maxPool};Minimum Pool Size={minPool};" +
+                "Timeout=15;Command Timeout=60;" +
+                "Max Auto Prepare=100;Auto Prepare Min Usages=2;" +
+                "No Reset On Close=true;Enlist=false;Multiplexing=false;" +
+                "Keepalive=30;Tcp Keepalive=true";
+        }
+    }
+
+    public static string RedisConnection => Config.RedisConnection?.Trim() ?? string.Empty;
+    public static bool RedisEnabled => !string.IsNullOrWhiteSpace(RedisConnection);
+
     public static string SystemPassword => Config.SystemPassword;
     public static string ScanBackend => Config.ScanBackend;
     public static string ScanDockerSocket => Config.ScanDockerSocket;

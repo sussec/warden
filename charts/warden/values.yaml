@@ -378,3 +378,23 @@ serviceAccount:
   create: true
   name: ""
   annotations: {}
+
+# ---------------------------------------------------------------------------
+# Redis — L2 cache for dashboard / hot API reads (optional but recommended at scale)
+# ---------------------------------------------------------------------------
+redis:
+  enabled: false
+  image:
+    repository: redis
+    tag: "7-alpine"
+    pullPolicy: IfNotPresent
+  service:
+    port: 6379
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+  # When enabled, API gets REDIS_CONNECTION=warden-redis:6379

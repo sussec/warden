@@ -86,6 +86,22 @@ public class AppConfig
     [Option(Env = "OSV_SERVICE_URL", Default = "")]
     public string OsvServiceUrl { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Optional Redis for L2 distributed cache (dashboard, tracker status, hot reads).
+    /// Examples: localhost:6379  |  warden-redis:6379  |  redis://:pass@host:6379
+    /// Empty = in-process memory cache only.
+    /// </summary>
+    [Option(Env = "REDIS_CONNECTION", Default = "")]
+    public string RedisConnection { get; set; } = string.Empty;
+
+    /// <summary>Npgsql max pool size (scale with API replicas × concurrent requests).</summary>
+    [Option(Env = "DB_MAX_POOL_SIZE", Default = "100")]
+    public string DbMaxPoolSize { get; set; } = "100";
+
+    /// <summary>Npgsql min pool size (warm connections).</summary>
+    [Option(Env = "DB_MIN_POOL_SIZE", Default = "5")]
+    public string DbMinPoolSize { get; set; } = "5";
+
     [JsonIgnore] internal SecurityKey AccessTokenSecurityKey = null!;
     [JsonIgnore] internal SecurityKey RefreshTokenSecurityKey = null!;
 

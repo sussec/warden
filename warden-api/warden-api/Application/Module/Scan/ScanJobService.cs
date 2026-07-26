@@ -119,7 +119,10 @@ public class ScanJobService(
 
     public async Task<List<ScanJobInfo>> ListAsync(ScanJobFilter filter, int limit = 50)
     {
+        if (limit < 1) limit = 20;
+        if (limit > 200) limit = 200;
         return await context.ScanJobs
+            .AsNoTracking()
             .Where(job =>
                 (filter.Scanner == null || job.Scanner == filter.Scanner) &&
                 (filter.Status == null || job.Status == filter.Status))

@@ -10,10 +10,11 @@ public class GetFindingByFilterCommand(AppDbContext context, JwtUserClaims curre
 {
     public async Task<Result<Page<FindingSummary>>> ExecuteAsync(FindingFilter filter)
     {
+        // No Include + Distinct: Select projects join; Distinct was O(n) over huge sets.
+        // AsNoTracking is default on the context; explicit for clarity.
         return await context.Findings
-            .Include(finding => finding.Scanner)
+            .AsNoTracking()
             .FindingFilter(context, currentUser, filter)
-            .Distinct()
             .OrderBy(filter.SortBy.ToString(), filter.Desc)
             .Select(finding => new FindingSummary
             {

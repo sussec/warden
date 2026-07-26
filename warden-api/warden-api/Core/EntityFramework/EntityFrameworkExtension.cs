@@ -41,13 +41,22 @@ public static class EntityFrameworkExtension
 
     public static async Task<Page<T>> PageAsync<T>(this IQueryable<T> query, int page, int size)
     {
+        // Guard against pathological page sizes under huge datasets
+        if (page < 1) page = 1;
+        if (size < 1) size = 20;
+        if (size > 200) size = 200;
+
         var skip = (page - 1) * size;
-        var count = query.Count();
+        // CountAsync (not sync Count) so the thread isn't blocked under load
+        var count = await query.CountAsync();
+        var items = count == 0
+            ? []
+            : await query.Skip(skip).Take(size).ToListAsync();
         return new Page<T>
         {
             Count = count,
-            PageCount = (int)Math.Ceiling((double)count / size),
-            Items = await query.Skip(skip).Take(size).ToListAsync(),
+            PageCount = size == 0 ? 0 : (int)Math.Ceiling((double)count / size),
+            Items = items,
             CurrentPage = page,
             Size = size
         };

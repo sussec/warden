@@ -76,3 +76,14 @@ postgresql:
 # Public access via Cloudflare Tunnel (not cluster Ingress)
 ingress:
   enabled: false
+
+# L2 cache for dashboard + ticket status (scale-out safe)
+redis:
+  enabled: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi

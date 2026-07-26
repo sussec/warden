@@ -191,6 +191,17 @@ spec:
                   key: scan-git-token
             - name: OSV_SERVICE_URL
               value: {{ include "warden.osvUrl" . | quote }}
+            - name: DB_MAX_POOL_SIZE
+              value: {{ .Values.api.env.dbMaxPoolSize | default "100" | quote }}
+            - name: DB_MIN_POOL_SIZE
+              value: {{ .Values.api.env.dbMinPoolSize | default "5" | quote }}
+            {{- if .Values.redis.enabled }}
+            - name: REDIS_CONNECTION
+              value: {{ printf "%s-redis:%v" (include "warden.fullname" .) (.Values.redis.service.port | default 6379) | quote }}
+            {{- else if .Values.api.env.redisConnection }}
+            - name: REDIS_CONNECTION
+              value: {{ .Values.api.env.redisConnection | quote }}
+            {{- end }}
             {{- if .Values.api.dockerSocket.enabled }}
             - name: SCAN_DOCKER_SOCKET
               value: "unix:///var/run/docker.sock"

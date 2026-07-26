@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using System.Net;
 using System.Net.Sockets;
 using System.Text.Json.Serialization;
@@ -12,6 +13,7 @@ using Warden.Middleware;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Microsoft.AspNetCore.ResponseCompression;
 using Scalar.AspNetCore;
 using Serilog;
 using IPNetwork = Microsoft.AspNetCore.HttpOverrides.IPNetwork;
@@ -31,16 +33,30 @@ public static class ApiServer
         });
         builder.Host.UseSerilog((context, configuration) =>
             configuration.ReadFrom.Configuration(context.Configuration));
-        // App DB Context
+        // App DB Context (Npgsql pool + boot indexes)
         builder.Services.AddDbContext();
-        // Memory Cache
-        builder.Services.AddMemoryCache();
-        // App Module
+        // App modules (includes hybrid memory/Redis cache)
         builder.Services.AddAppModules();
         // MCP server (Model Context Protocol)
         builder.Services.AddWardenMcp();
         // Authentication
         builder.Services.AddAppAuthentication();
+        // Compress JSON (Brotli preferred)
+        builder.Services.AddResponseCompression(o =>
+        {
+            o.EnableForHttps = true;
+            o.Providers.Add<BrotliCompressionProvider>();
+            o.Providers.Add<GzipCompressionProvider>();
+            o.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+            [
+                "application/json",
+                "application/problem+json"
+            ]);
+        });
+        builder.Services.Configure<BrotliCompressionProviderOptions>(o =>
+            o.Level = CompressionLevel.Fastest);
+        builder.Services.Configure<GzipCompressionProviderOptions>(o =>
+            o.Level = CompressionLevel.Fastest);
         // Controller
         builder.Services.AddControllers(options =>
         {
@@ -65,7 +81,15 @@ public static class ApiServer
             options.MultipartBodyLengthLimit = 26843545; // 25MB
         });
         builder.Services.AddHealthChecks().AddDbContextCheck<AppDbContext>();
+        builder.WebHost.ConfigureKestrel(k =>
+        {
+            k.Limits.MaxConcurrentConnections = 10_000;
+            k.Limits.MaxConcurrentUpgradedConnections = 10_000;
+            k.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(2);
+            k.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(30);
+        });
         var app = builder.Build();
+        app.UseResponseCompression();
         app.MapHealthChecks("/healthz");
         app.InitApp();
         // Configure the HTTP request pipeline.
