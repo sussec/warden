@@ -1,5 +1,6 @@
 using Warden.Application.Module.Integration;
 using Warden.Application.Module.Integration.GitHub;
+using Warden.Application.Module.Integration.GitLab;
 using Warden.Application.Module.Integration.Jira;
 using Warden.Application.Module.Integration.Redmine;
 using Warden.Application.Module.Project.Model;
@@ -52,6 +53,12 @@ public class CreateProjectPackageTicketCommand(AppDbContext context)
         {
             var gitHubTicketTracker = new GitHubTicketTracker(context);
             return await gitHubTicketTracker.CreateTicketAsync(ticket);
+        }
+
+        if (request.TicketType == TicketType.GitLab)
+        {
+            var gitLabTicketTracker = new GitLabTicketTracker(context);
+            return await gitLabTicketTracker.CreateTicketAsync(ticket);
         }
 
         return Result.Fail("Ticket type not supported");

@@ -68,7 +68,7 @@ function hasTicket(ticket?: Tickets | null): ticket is Tickets {
   return Boolean(ticket && (ticket.id || ticket.url || ticket.name));
 }
 
-const VULN_TICKET_TYPES: TicketType[] = ["Jira", "Redmine", "GitHub"];
+const VULN_TICKET_TYPES: TicketType[] = ["Jira", "Redmine", "GitHub", "GitLab"];
 
 // Flattened OSV advisory served by GET /api/package/{id}/advisories
 // (warden-api → warden-osv sidecar; empty when enrichment is disabled).
@@ -219,9 +219,11 @@ export function PackageDetailDrawer({ target, onOpenChange }: PackageDetailDrawe
   const detailLoading = scoped ? projectDetail.isLoading : globalDetail.isLoading;
 
   const available: TicketType[] = VULN_TICKET_TYPES.filter((t) => {
-    if (t === "Jira") return trackerStatus?.jira;
-    if (t === "Redmine") return trackerStatus?.redmine;
-    return true; // GitHub has no tracker-status flag; offer it when scoped.
+    if (t === "Jira") return Boolean(trackerStatus?.jira);
+    if (t === "Redmine") return Boolean(trackerStatus?.redmine);
+    if (t === "GitHub") return Boolean(trackerStatus?.gitHub);
+    if (t === "GitLab") return Boolean(trackerStatus?.gitLab);
+    return false;
   });
 
   const displayName = `${target?.group ? `${target.group}:` : info?.group ? `${info.group}:` : ""}${

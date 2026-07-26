@@ -7,5 +7,7 @@ public enum TicketType
 {
     Jira,
     Redmine,
-    GitHub
+    GitHub,
+    /// <summary>GitLab issues via PAT (CodeRabbit-style — no OAuth App required).</summary>
+    GitLab
 }

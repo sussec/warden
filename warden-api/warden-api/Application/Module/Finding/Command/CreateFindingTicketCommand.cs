@@ -1,5 +1,7 @@
+using Warden.Application.Module.Ai;
 using Warden.Application.Module.Integration;
 using Warden.Application.Module.Integration.GitHub;
+using Warden.Application.Module.Integration.GitLab;
 using Warden.Application.Module.Integration.Jira;
 using Warden.Application.Module.Integration.Redmine;
 using Warden.Core.Entity;
@@ -9,7 +11,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Warden.Application.Module.Finding.Command;
 
-public class CreateFindingTicketCommand(AppDbContext context)
+public class CreateFindingTicketCommand(
+    AppDbContext context,
+    IFindingAiService? findingAiService = null
+)
 {
     public async Task<Result<Tickets>> ExecuteAsync(Guid findingId, TicketType ticketType)
     {
@@ -26,6 +31,25 @@ public class CreateFindingTicketCommand(AppDbContext context)
             .OrderByDescending(record => record.Scan!.CompletedAt)
             .Where(record => record.FindingId == finding.Id)
             .FirstAsync();
+
+        // Optional AI enrichment for ticket body (PAT trackers / Jira / Redmine).
+        // Never fails ticket creation if AI is off or errors — falls back to stored recommendation.
+        if (findingAiService != null && string.IsNullOrWhiteSpace(finding.Recommendation))
+        {
+            try
+            {
+                var ai = await findingAiService.GenerateRemediationAsync(findingId);
+                if (ai.IsSuccess && !string.IsNullOrWhiteSpace(ai.Value.Content))
+                {
+                    finding.Recommendation = ai.Value.Content;
+                }
+            }
+            catch
+            {
+                /* ticket still created without AI body */
+            }
+        }
+
         var ticket = new SastTicket
         {
             Commit = scanFinding.CommitHash,
@@ -51,6 +75,12 @@ public class CreateFindingTicketCommand(AppDbContext context)
             return await gitHubTicketTracker.CreateTicketAsync(ticket);
         }
 
-        return Result.Fail("Not implement ticket type");
+        if (ticketType == TicketType.GitLab)
+        {
+            var gitLabTicketTracker = new GitLabTicketTracker(context);
+            return await gitLabTicketTracker.CreateTicketAsync(ticket);
+        }
+
+        return Result.Fail("Ticket type not supported");
     }
 }

@@ -1136,9 +1136,13 @@ export type ThresholdSetting = {
 export type TicketTrackerStatus = {
     jira: boolean;
     redmine: boolean;
+    /** PAT-based GitHub issues (no GitHub App). */
+    gitHub?: boolean;
+    /** PAT-based GitLab issues (no OAuth App). */
+    gitLab?: boolean;
 };
 
-export type TicketType = 'Jira' | 'Redmine' | 'GitHub';
+export type TicketType = 'Jira' | 'Redmine' | 'GitHub' | 'GitLab';
 
 export type Tickets = {
     id?: string;

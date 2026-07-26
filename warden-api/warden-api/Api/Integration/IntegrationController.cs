@@ -1,5 +1,7 @@
 using Warden.Application;
 using Warden.Application.Module.Integration;
+using Warden.Application.Module.Integration.GitHub;
+using Warden.Application.Module.Integration.GitLab;
 using Warden.Application.Module.Integration.Jira;
 using Warden.Application.Module.Integration.JiraWebhook;
 using Warden.Application.Module.Integration.Mail;
@@ -33,10 +35,15 @@ public class IntegrationController(
     [Route("ticket-tracker-status")]
     public async Task<TicketTrackerStatus> GetTicketTrackerStatus()
     {
+        var gh = await context.GetGitHubSettingAsync();
+        var gl = await context.GetGitLabSettingAsync();
         return new TicketTrackerStatus
         {
             Jira = (await context.GetJiraSettingAsync()).Active,
-            Redmine = (await context.GetRedmineSettingAsync()).Active
+            Redmine = (await context.GetRedmineSettingAsync()).Active,
+            // PAT-based issues — no GitHub App / GitLab OAuth App required.
+            GitHub = gh.Active && !string.IsNullOrWhiteSpace(gh.Token),
+            GitLab = gl.Active && !string.IsNullOrWhiteSpace(gl.Token)
         };
     }
 }

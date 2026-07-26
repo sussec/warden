@@ -1,3 +1,4 @@
+using Warden.Application.Module.Ai;
 using Warden.Application.Module.Finding.Command;
 using Warden.Application.Module.Finding.Model;
 using Warden.Core.Entity;
@@ -22,7 +23,12 @@ public interface IFindingService
     Task<FindingStatus> UpdateStatusScanFindingAsync(Guid findingId, UpdateStatusScanFindingRequest request);
 }
 
-public class FindingService(IHttpContextAccessor accessor, AppDbContext context, IFindingAuthorize authorize)
+public class FindingService(
+    IHttpContextAccessor accessor,
+    AppDbContext context,
+    IFindingAuthorize authorize,
+    IFindingAiService findingAiService
+)
     : BaseService(accessor), IFindingService
 {
     public async Task<FindingActivity> CreateCommentAsync(Guid findingId, string comment)
@@ -33,7 +39,7 @@ public class FindingService(IHttpContextAccessor accessor, AppDbContext context,
 
     public async Task<Tickets> CreateTicketAsync(Guid findingId, TicketType ticketType)
     {
-        return (await new CreateFindingTicketCommand(context)
+        return (await new CreateFindingTicketCommand(context, findingAiService)
             .ExecuteAsync(findingId, ticketType)).GetResult();
     }
 

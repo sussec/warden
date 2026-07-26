@@ -88,10 +88,12 @@ export function TicketMenu({ findingId, ticket }: TicketMenuProps) {
     onError: () => toast.error("Failed to delete ticket"),
   });
 
-  // Only Jira and Redmine carry a configured/enabled flag from the API.
+  // Trackers reported as configured/enabled (PAT for GitHub/GitLab — no App required).
   const available: TicketType[] = [];
   if (trackerStatus?.jira) available.push("Jira");
   if (trackerStatus?.redmine) available.push("Redmine");
+  if (trackerStatus?.gitHub) available.push("GitHub");
+  if (trackerStatus?.gitLab) available.push("GitLab");
 
   if (hasTicket(ticket)) {
     return (
