@@ -62,25 +62,27 @@
   --red-23: #fff0f4;
   --red-24: #fff8fa;
 
-  /* ─── LIGHT (default / :root) — warm paper white × chatak red ─── */
-  --background: #f7f3ee;
-  --foreground: #1a1210;
-  --card: #fffdfb;
-  --card-foreground: #1a1210;
-  --popover: #fffdfb;
-  --popover-foreground: #1a1210;
+  /* ─── LIGHT (default / :root) — enterprise paper white × chatak red ───
+     Near-white canvas, pure white cards, hard borders, solid ink.
+     No heavy cream wash — dual-theme parity with dark ops console. */
+  --background: #f8f7f5;
+  --foreground: #14110f;
+  --card: #ffffff;
+  --card-foreground: #14110f;
+  --popover: #ffffff;
+  --popover-foreground: #14110f;
   --primary: var(--red-13);
   --primary-foreground: #ffffff;
-  --secondary: #efe8e0;
-  --secondary-foreground: #2a221e;
-  --muted: #efe8e0;
-  --muted-foreground: #6b635c;
-  --accent: #f3ebe3;
-  --accent-foreground: #1a1210;
+  --secondary: #f0eeeb;
+  --secondary-foreground: #1f1b18;
+  --muted: #f0eeeb;
+  --muted-foreground: #5c564f;
+  --accent: #fff0f3;
+  --accent-foreground: #14110f;
   --destructive: var(--red-13);
   --destructive-foreground: #ffffff;
-  --border: #e0d6cc;
-  --input: #e8dfd6;
+  --border: #ddd6ce;
+  --input: #e5e0d9;
   --ring: var(--red-13);
 
   /* Charts — red spectrum only (bright → deep) */
@@ -90,13 +92,13 @@
   --chart-4: var(--red-11);
   --chart-5: var(--red-8);
 
-  --sidebar: #f2eeea;
-  --sidebar-foreground: #3a322c;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #3a342e;
   --sidebar-primary: var(--red-13);
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #efe8e0;
-  --sidebar-accent-foreground: #1a1210;
-  --sidebar-border: #e0d6cc;
+  --sidebar-accent: #fff0f3;
+  --sidebar-accent-foreground: #14110f;
+  --sidebar-border: #e5e0d9;
   --sidebar-ring: var(--red-13);
 
   /* Same stack as Athesis Odyssey — JetBrains Mono only */
@@ -133,27 +135,27 @@
   --tracking-normal: 0.01em;
   --spacing: 0.25rem;
 
-  /* Odyssey helpers — light */
-  --ody-bg-elevated: #fffdfb;
-  --ody-bg-panel: #fffdfb;
-  --ody-bg-hover: #efe8e0;
-  --ody-border-soft: #e8dfd6;
-  --ody-text-body: #4a4038;
-  --ody-text-mute: #8a8078;
-  --ody-accent-soft: color-mix(in srgb, var(--red-13) 12%, transparent);
+  /* Odyssey helpers — light (enterprise paper) */
+  --ody-bg-elevated: #ffffff;
+  --ody-bg-panel: #ffffff;
+  --ody-bg-hover: #f0eeeb;
+  --ody-border-soft: #e5e0d9;
+  --ody-text-body: #3f3a35;
+  --ody-text-mute: #6b6560;
+  --ody-accent-soft: color-mix(in srgb, var(--red-13) 8%, transparent);
   --ody-accent-hover: var(--red-15);
-  --ody-accent-glow: color-mix(in srgb, var(--red-13) 28%, transparent);
+  --ody-accent-glow: color-mix(in srgb, var(--red-13) 18%, transparent);
   --ody-nav-h: 56px;
   --ody-ease: 0.15s ease;
-  --ody-topbar-bg: #f7f3ee;
-  --ody-topbar-border: #e0d6cc;
+  --ody-topbar-bg: #ffffff;
+  --ody-topbar-border: #e5e0d9;
 
-  /* Severity — red intensity (shared light/dark) */
+  /* Severity — red intensity; info is ink-muted for AA on paper */
   --severity-critical: var(--red-13);
   --severity-high: var(--red-15);
   --severity-medium: var(--red-11);
   --severity-low: var(--red-8);
-  --severity-info: #8a8078;
+  --severity-info: #5c564f;
 }
 
 /* DARK — pure matte black × chatak red (Odyssey) */
@@ -845,6 +847,43 @@
     );
 }
 
+/* Light: paper-safe wash — no dark fog, whisper of red only */
+:root:not(.dark) .warden-ops-wash {
+  background:
+    radial-gradient(
+      50% 40% at 6% 0%,
+      rgba(255, 0, 51, 0.05),
+      transparent 65%
+    ),
+    radial-gradient(
+      30% 30% at 94% 4%,
+      rgba(255, 0, 51, 0.03),
+      transparent 60%
+    );
+}
+
+/* Light: hide dark cyber hero photos that muddy paper UI */
+:root:not(.dark) .warden-hero-photo {
+  display: none;
+}
+
+/* Light: pipeline media — contained dark art, not full-bleed fog */
+:root:not(.dark) .warden-pipeline-media {
+  opacity: 0.85;
+  isolation: isolate;
+}
+:root:not(.dark) .warden-pipeline-media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 40%,
+    var(--card) 96%
+  );
+  pointer-events: none;
+}
+
 /* Mono technical label — Odyssey meta. */
 .warden-mono-label {
   font-family: var(--font-mono);
@@ -918,9 +957,21 @@
   box-shadow: none;
 }
 
+/* Light: crisp white cards on paper (enterprise dual-theme) */
+:root:not(.dark) .warden-ops-panel {
+  background: #ffffff;
+  border-color: var(--border);
+}
+
 .dark .warden-ops-panel {
   background: var(--card);
   box-shadow: none;
+}
+
+/* Light status bar — solid paper strip */
+:root:not(.dark) .warden-status-bar {
+  background: #ffffff;
+  border-color: var(--border);
 }
 
 /* Shell chrome: pure black sticky nav (no glass blur). */

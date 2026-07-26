@@ -14,6 +14,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OverviewTab } from "./_components/overview-tab";
 import { FindingsTab } from "./_components/findings-tab";
+import { useTheme } from "@/lib/use-theme";
 
 const RANGES = [
   { value: "7", label: "Past 7 days" },
@@ -23,6 +24,7 @@ const RANGES = [
 
 export default function DashboardPage() {
   const [days, setDays] = useState("30");
+  const { dark } = useTheme();
 
   const body = useMemo(() => {
     const end = new Date();
@@ -33,28 +35,38 @@ export default function DashboardPage() {
 
   return (
     <div className="relative mx-auto w-full max-w-[1600px] space-y-5 pb-8">
-      {/* Odyssey hero field — generated matte black × red HUD art */}
+      {/* Hero: dark HUD art only in dark mode; light gets a faint red wash */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 -top-2 h-52 overflow-hidden sm:h-64"
       >
-        <Image
-          src="/dashboard/hero-ops.jpg"
-          alt=""
-          fill
-          priority
-          sizes="(max-width: 1600px) 100vw, 1600px"
-          className="object-cover object-center opacity-50"
+        {dark ? (
+          <>
+            <Image
+              src="/dashboard/hero-ops.jpg"
+              alt=""
+              fill
+              priority
+              sizes="(max-width: 1600px) 100vw, 1600px"
+              className="warden-hero-photo object-cover object-center opacity-[0.35]"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/75 to-background" />
+          </>
+        ) : null}
+        <div
+          className={
+            dark
+              ? "absolute inset-0 warden-ops-wash opacity-50"
+              : "absolute inset-0 warden-ops-wash opacity-100"
+          }
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/70 to-background" />
-        <div className="absolute inset-0 warden-ops-wash opacity-60" />
       </div>
 
-      {/* Command header */}
+      {/* Command header — solid type, no blend with hero */}
       <header className="relative space-y-3">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex min-w-0 items-start gap-3 sm:gap-4">
-            <div className="relative mt-0.5 hidden size-12 shrink-0 overflow-hidden rounded-none border border-primary/40 sm:block">
+            <div className="relative mt-0.5 hidden size-12 shrink-0 overflow-hidden rounded-none border border-border bg-card sm:block">
               <Image
                 src="/dashboard/mark.jpg"
                 alt=""
@@ -70,8 +82,9 @@ export default function DashboardPage() {
                 ops · security posture
               </p>
               <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-2xl font-normal tracking-tight sm:text-3xl">
-                  <span className="text-primary">$_</span>security posture
+                <h1 className="text-2xl font-normal tracking-tight text-foreground sm:text-3xl">
+                  <span className="text-primary">$_</span>
+                  <span className="text-foreground">security posture</span>
                 </h1>
                 <span className="warden-live-chip">live</span>
               </div>

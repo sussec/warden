@@ -160,22 +160,22 @@ export function OverviewTab({ body }: { body: { startDate: string; endDate: stri
         ))}
       </Stagger>
 
-      {/* Visual pipeline strip — generated HUD art */}
-      <div className="relative overflow-hidden rounded-none border border-border warden-ops-panel">
+      {/* Visual pipeline strip — dark HUD framed; light gets card fade so paper stays clean */}
+      <div className="relative overflow-hidden rounded-none border border-border bg-card warden-ops-panel">
         <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
-          <div className="relative min-h-[140px] md:min-h-[168px]">
+          <div className="warden-pipeline-media relative min-h-[140px] border-b border-border md:min-h-[168px] md:border-b-0 md:border-r">
             <Image
               src="/dashboard/pipeline-hud.jpg"
               alt=""
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover object-center opacity-90"
+              className="object-cover object-center opacity-90 dark:opacity-90"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-background/10 via-transparent to-background/80 md:to-background" />
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-card max-md:to-card/90" />
           </div>
-          <div className="relative flex flex-col justify-center gap-2 p-4 sm:p-5">
+          <div className="relative flex flex-col justify-center gap-2 bg-card p-4 sm:p-5">
             <p className="warden-mono-label">7-tool CI · blocking gates</p>
-            <h2 className="text-lg font-normal tracking-tight sm:text-xl">
+            <h2 className="text-lg font-normal tracking-tight text-foreground sm:text-xl">
               security baked into every phase
             </h2>
             <p className="max-w-md text-sm text-muted-foreground">
@@ -183,13 +183,13 @@ export function OverviewTab({ body }: { body: { startDate: string; endDate: stri
               stay elevated until a human gate clears them.
             </p>
             <div className="mt-1 flex flex-wrap gap-2 font-mono text-[10px] tracking-wider text-muted-foreground uppercase">
-              <span className="rounded-sm border border-border/70 bg-background/50 px-2 py-1">
+              <span className="rounded-none border border-border bg-muted px-2 py-1 text-foreground">
                 SAST
               </span>
-              <span className="rounded-sm border border-border/70 bg-background/50 px-2 py-1">
+              <span className="rounded-none border border-border bg-muted px-2 py-1 text-foreground">
                 SCA
               </span>
-              <span className="rounded-sm border border-primary/30 bg-primary/10 px-2 py-1 text-primary">
+              <span className="rounded-none border border-primary/40 bg-primary/10 px-2 py-1 text-primary">
                 Gate active
               </span>
             </div>
