@@ -21,7 +21,7 @@ export default function TwoStepPage() {
 
   return (
     <div className="flex flex-col items-center gap-4 text-center">
-      <h1 className="text-2xl font-bold">Two-step verification</h1>
+      <h1 className="text-2xl font-medium">Two-step verification</h1>
       <p className="text-muted-foreground">Enter the 6-digit code from your authenticator.</p>
       <div className="flex gap-2">
         {values.map((v, i) => (

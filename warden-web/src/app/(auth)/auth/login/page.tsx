@@ -63,11 +63,13 @@ function LoginForm() {
           and fields unchanged. Sits over the backdrop. */}
       <GlassCard className="relative z-10 w-full max-w-xl p-8 sm:p-10 warden-ops-panel">
         <div className="flex flex-col items-center gap-2">
-          <WardenLogo className="mb-2 size-14 text-primary" />
-          <p className="warden-mono-label">Security as a blocking constraint</p>
-          <h1 className="text-2xl font-semibold tracking-tight">Techanv Warden</h1>
+          <WardenLogo className="mb-2 size-12 text-primary" />
+          <p className="warden-mono-label">security as a blocking constraint</p>
+          <h1 className="text-2xl font-normal tracking-tight">
+            <span className="text-primary">$_</span>warden
+          </h1>
           <p className="font-mono text-xs tracking-wide text-muted-foreground">
-            Sign in to the ops console
+            sign in to the console
           </p>
           <form
             className="mt-6 w-full max-w-md space-y-5"

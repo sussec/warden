@@ -54,10 +54,10 @@ export function ErrorScreen({
 }: ErrorScreenProps) {
   return (
     <div className="flex min-h-screen items-center justify-center px-6 py-16">
-      <GlowCard className="w-full max-w-md rounded-2xl">
-        <div className="warden-card-accent flex flex-col items-center gap-4 rounded-2xl border border-border/60 bg-card/70 px-8 py-12 text-center shadow-sm backdrop-blur-md">
+      <GlowCard className="w-full max-w-md rounded-none">
+        <div className="warden-card-accent flex flex-col items-center gap-4 rounded-none border border-border bg-card px-8 py-12 text-center">
           <p
-            className="warden-flicker select-none font-mono text-8xl font-bold leading-none tabular-nums sm:text-9xl"
+            className="warden-flicker select-none font-mono text-8xl font-normal leading-none tabular-nums sm:text-9xl"
             style={
               flickerColor
                 ? ({ "--primary": flickerColor } as CSSProperties)
@@ -67,7 +67,7 @@ export function ErrorScreen({
           >
             {code}
           </p>
-          <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+          <h1 className="text-2xl font-normal tracking-tight">{title}</h1>
           <p className="max-w-sm text-sm text-muted-foreground">{description}</p>
           <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
             <Button asChild>

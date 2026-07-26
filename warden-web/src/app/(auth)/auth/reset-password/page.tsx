@@ -36,7 +36,7 @@ function ResetPasswordForm() {
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <h1 className="text-2xl font-bold">Reset password</h1>
+      <h1 className="text-2xl font-medium">Reset password</h1>
       <form
         className="mt-6 w-full max-w-md space-y-5"
         onSubmit={(e) => {

@@ -22,7 +22,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <h1 className="text-2xl font-bold">Forgot password</h1>
+      <h1 className="text-2xl font-medium">Forgot password</h1>
       {sent ? (
         <p className="mt-4 text-center text-muted-foreground">
           If the account exists, a reset link has been sent to its email.

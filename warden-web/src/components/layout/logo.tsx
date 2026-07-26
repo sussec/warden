@@ -1,9 +1,8 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Techanv Warden mark — a geometric shield holding a watch-beacon (sentinel
- * dot + radiating sweep arcs). Inline SVG so `fill="currentColor"` inherits
- * the surrounding text color (azure via text-primary) in light and dark.
+ * Warden mark — geometric shield + watch-beacon (sentinel dot + radar arcs).
+ * Inline SVG; `fill="currentColor"` inherits chatak red via text-primary.
  */
 export function WardenLogo({ className }: { className?: string }) {
   return (
@@ -90,8 +89,23 @@ export function AnimatedWardenLogo({ className }: { className?: string }) {
  */
 export function WardenBadge({ className }: { className?: string }) {
   return (
-    <span className={cn("warden-badge relative grid size-10 place-items-center rounded-xl text-primary", className)}>
+    <span
+      className={cn(
+        "warden-badge relative grid size-10 place-items-center rounded-none text-primary",
+        className,
+      )}
+    >
       <AnimatedWardenLogo className="relative z-10 size-6" />
+    </span>
+  );
+}
+
+/** Odyssey prompt lockup — `$_warden` used in shell chrome. */
+export function OdysseyBrand({ className }: { className?: string }) {
+  return (
+    <span className={cn("ody-brand", className)}>
+      <span className="prompt">$_</span>
+      <span>warden</span>
     </span>
   );
 }
@@ -108,7 +122,7 @@ export function AnimatedWardenLockup({ className }: { className?: string }) {
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 360 80"
       role="img"
-      aria-label="Techanv Warden"
+      aria-label="Warden"
       className={cn("warden-mark h-8 w-auto", className)}
     >
       {/* mark — 512-space geometry scaled into a 64px box on the left */}

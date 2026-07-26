@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { Menu, Moon, Sun, User, LogOut, Settings } from "lucide-react";
-import { WardenBadge } from "./logo";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,12 +16,12 @@ import { useTheme } from "@/lib/use-theme";
 import { useLogout, useProfile } from "@/lib/auth/use-session";
 
 export function Topbar({ onMenuToggle }: { onMenuToggle: () => void }) {
-  const { dark, toggle } = useTheme();
+  const { dark, setDarkMode } = useTheme();
   const logout = useLogout();
   const { data: profile } = useProfile();
 
   return (
-    <header className="warden-topbar fixed inset-x-0 top-0 z-50 flex h-14 items-center gap-3 px-4">
+    <header className="warden-topbar fixed inset-x-0 top-0 z-50 flex h-14 items-center gap-3 px-4 sm:px-6">
       <Button
         variant="ghost"
         size="icon"
@@ -32,15 +31,9 @@ export function Topbar({ onMenuToggle }: { onMenuToggle: () => void }) {
       >
         <Menu className="size-5" />
       </Button>
-      <Link
-        href="/dashboard"
-        aria-label="Techanv Warden — dashboard"
-        className="group flex items-center gap-2 text-primary"
-      >
-        <WardenBadge className="transition-transform duration-300 group-hover:scale-[1.06]" />
-        <span className="hidden font-mono text-[10px] font-medium tracking-[0.14em] text-muted-foreground uppercase sm:inline">
-          Techanv · Warden
-        </span>
+      <Link href="/dashboard" aria-label="Warden — dashboard" className="ody-brand group">
+        <span className="prompt">$_</span>
+        <span>warden</span>
       </Link>
       <div className="ml-auto flex items-center gap-2">
         <div className="flex items-center gap-1.5 pr-0.5">
@@ -50,7 +43,7 @@ export function Topbar({ onMenuToggle }: { onMenuToggle: () => void }) {
           />
           <ElasticToggle
             checked={dark}
-            onCheckedChange={toggle}
+            onCheckedChange={(isDark) => setDarkMode(isDark)}
             aria-label={`Switch to ${dark ? "light" : "dark"} mode`}
           />
           <Moon
@@ -61,15 +54,15 @@ export function Topbar({ onMenuToggle }: { onMenuToggle: () => void }) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
-              variant="default"
+              variant="outline"
               size="icon"
-              className="cursor-pointer rounded-full"
+              className="cursor-pointer border-border bg-transparent"
               aria-label="Profile menu"
             >
-              <User className="size-5" />
+              <User className="size-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent align="end" className="w-56 rounded-none border-border bg-card">
             <DropdownMenuLabel className="truncate font-mono text-xs tracking-wide">
               {profile?.fullName ?? profile?.userName ?? "Account"}
             </DropdownMenuLabel>

@@ -94,8 +94,8 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose?: () => void
       )}
       <aside
         className={cn(
-          // Ops rail: near-black glass, hairline border, cyan active rail.
-          "fixed left-3 top-16 bottom-3 z-40 w-64 overflow-y-auto rounded-lg border border-sidebar-border/70 bg-sidebar p-3 shadow-sm backdrop-blur-xl transition-transform duration-200 supports-[backdrop-filter]:bg-sidebar/80 motion-reduce:transition-none",
+          // Odyssey rail: pure black, hairline right border, sharp edges, no glass.
+          "fixed left-0 top-14 bottom-0 z-40 w-64 overflow-y-auto border-r border-sidebar-border bg-sidebar p-3 transition-transform duration-200 motion-reduce:transition-none",
           open ? "translate-x-0" : "-translate-x-[120%]",
         )}
       >
@@ -113,14 +113,14 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose?: () => void
                       href={item.href}
                       onClick={closeOnMobile}
                       className={cn(
-                        "flex cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
+                        "flex cursor-pointer items-center gap-3 px-3 py-2.5 text-sm lowercase tracking-wide transition-colors",
                         active
                           ? "warden-nav-active"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent/60",
+                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-primary",
                       )}
                     >
-                      <item.icon className="size-4.5 shrink-0" />
-                      {item.label}
+                      <item.icon className="size-4 shrink-0 opacity-80" />
+                      {item.label.toLowerCase()}
                     </Link>
                   );
                 }
@@ -135,14 +135,14 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose?: () => void
                         setExpanded((prev) => ({ ...prev, [item.href]: !isOpen }))
                       }
                       className={cn(
-                        "flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
+                        "flex w-full cursor-pointer items-center gap-3 px-3 py-2.5 text-sm lowercase tracking-wide transition-colors",
                         active
-                          ? "font-semibold text-primary"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent/60",
+                          ? "font-medium text-primary"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-primary",
                       )}
                     >
-                      <item.icon className="size-4.5 shrink-0" />
-                      {item.label}
+                      <item.icon className="size-4 shrink-0 opacity-80" />
+                      {item.label.toLowerCase()}
                       <ChevronRight
                         className={cn(
                           "ml-auto size-4 transition-transform duration-200",
@@ -162,14 +162,14 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose?: () => void
                               href={child.href}
                               onClick={closeOnMobile}
                               className={cn(
-                                "flex cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
+                                "flex cursor-pointer items-center gap-2.5 px-3 py-2 text-sm lowercase tracking-wide transition-colors",
                                 childActive
                                   ? "warden-nav-active"
-                                  : "text-sidebar-foreground hover:bg-sidebar-accent/60",
+                                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-primary",
                               )}
                             >
-                              <child.icon className="size-4 shrink-0" />
-                              {child.label}
+                              <child.icon className="size-4 shrink-0 opacity-80" />
+                              {child.label.toLowerCase()}
                             </Link>
                           );
                         })}

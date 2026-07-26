@@ -35,7 +35,7 @@ function ConfirmEmailHandler() {
 
   return (
     <div className="flex flex-col items-center gap-4 text-center">
-      <h1 className="text-2xl font-bold">Email confirmation</h1>
+      <h1 className="text-2xl font-medium">Email confirmation</h1>
       {state === "pending" && <p className="text-muted-foreground">Confirming…</p>}
       {state === "ok" && (
         <p className="text-muted-foreground">Email confirmed. You can sign in now.</p>
