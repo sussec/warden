@@ -15,6 +15,8 @@ const nextConfig: NextConfig = {
       { source: "/openapi/:path*", destination: `${API_INTERNAL_URL}/openapi/:path*` },
       { source: "/mcp", destination: `${API_INTERNAL_URL}/mcp` },
       { source: "/healthz", destination: `${API_INTERNAL_URL}/healthz` },
+      // Live scan-job stream (WebSocket upgrade when proxy supports it)
+      { source: "/ws/:path*", destination: `${API_INTERNAL_URL}/ws/:path*` },
     ];
   },
   async headers() {
