@@ -2,133 +2,224 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+  Odyssey / Athesis — MATTE BLACK × CHATAK RED only.
+  Entire UI is red + black (no blue / green / amber brand colors).
+  Full scale: 25 blacks + 25 reds (fifty shades).
+*/
 :root {
-  /* Warden × Techanv — ops-console palette inspired by warden.techanv.com:
-     near-black charcoal, off-white type, brand cyan #18a3d2 (logomark top).
-     Severity hues stay independent of the brand accent. */
-  --background: oklch(0.975 0.004 230);
-  --foreground: oklch(0.18 0.012 250);
-  --card: oklch(0.995 0.002 230);
-  --card-foreground: oklch(0.18 0.012 250);
-  --popover: oklch(0.995 0.002 230);
-  --popover-foreground: oklch(0.18 0.012 250);
-  /* Brand cyan ≈ #18a3d2 */
-  --primary: oklch(0.66 0.12 230);
-  --primary-foreground: oklch(0.99 0.005 230);
-  --secondary: oklch(0.955 0.008 230);
-  --secondary-foreground: oklch(0.28 0.015 250);
-  --muted: oklch(0.955 0.008 230);
-  --muted-foreground: oklch(0.48 0.02 250);
-  --accent: oklch(0.945 0.02 230);
-  --accent-foreground: oklch(0.22 0.02 250);
-  --destructive: oklch(0.5770 0.2150 27.3000);
-  --destructive-foreground: oklch(1.0000 0 0);
-  --border: oklch(0.90 0.01 230);
-  --input: oklch(0.86 0.012 230);
-  --ring: oklch(0.66 0.12 230);
-  --chart-1: oklch(0.66 0.12 230);
-  --chart-2: oklch(0.6898 0.1581 290.4107);
-  --chart-3: oklch(0.7480 0.1400 66.0000);
-  --chart-4: oklch(0.6270 0.1400 150.0000);
-  --chart-5: oklch(0.6090 0.1320 274.0000);
-  --sidebar: oklch(0.98 0.004 230);
-  --sidebar-foreground: oklch(0.32 0.015 250);
-  --sidebar-primary: oklch(0.66 0.12 230);
-  --sidebar-primary-foreground: oklch(0.99 0.005 230);
-  --sidebar-accent: oklch(0.945 0.02 230);
-  --sidebar-accent-foreground: oklch(0.22 0.02 250);
-  --sidebar-border: oklch(0.90 0.01 230);
-  --sidebar-ring: oklch(0.66 0.12 230);
-  --font-sans: var(--font-outfit), Outfit, ui-sans-serif, system-ui, sans-serif;
-  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-  --font-mono: var(--font-geist-mono), "Geist Mono", ui-monospace, monospace;
-  /* Tighter radius — technical console, not soft SaaS blobs */
-  --radius: 0.5rem;
+  /* ─── 25 shades of matte black → warm white ─── */
+  --black-0: #000000; /* void canvas */
+  --black-1: #030303; /* elevated */
+  --black-2: #050505; /* panel / card */
+  --black-3: #080808; /* surface-2 */
+  --black-4: #0a0a0a; /* hover / muted / nav border */
+  --black-5: #0c0c0c; /* input / soft border */
+  --black-6: #111111; /* raised */
+  --black-7: #141414; /* border */
+  --black-8: #1a1a1a; /* strong border */
+  --black-9: #222222; /* dim line */
+  --black-10: #2a2a2a; /* deep mute */
+  --black-11: #333333; /* mute mid */
+  --black-12: #3a3a3a; /* text-mute */
+  --black-13: #4a4a4a;
+  --black-14: #5a5a5a;
+  --black-15: #6a6a6a;
+  --black-16: #7a7a7a;
+  --black-17: #8a8680; /* text-dim (warm grey) */
+  --black-18: #a8a49e;
+  --black-19: #cfcbc6; /* body text */
+  --black-20: #e0dcd6;
+  --black-21: #ebe7e1;
+  --black-22: #f2eeea; /* primary type */
+  --black-23: #faf8f6;
+  --black-24: #ffffff;
+
+  /* ─── 25 shades of red (deep blood → chatak → rose) ─── */
+  --red-0: #0a0002; /* black-red void */
+  --red-1: #140004;
+  --red-2: #1a0005;
+  --red-3: #2b0008;
+  --red-4: #3d000c;
+  --red-5: #4f0010;
+  --red-6: #660014;
+  --red-7: #7a0019;
+  --red-8: #8f001d;
+  --red-9: #a30022;
+  --red-10: #b80028;
+  --red-11: #cc002c;
+  --red-12: #e00030;
+  --red-13: #ff0033; /* CHATAK LAAL — brand primary */
+  --red-14: #ff1a47;
+  --red-15: #ff3355; /* hover */
+  --red-16: #ff4d66;
+  --red-17: #ff6680;
+  --red-18: #ff8099;
+  --red-19: #ff99b0;
+  --red-20: #ffb3c6;
+  --red-21: #ffccdd;
+  --red-22: #ffe0ea;
+  --red-23: #fff0f4;
+  --red-24: #fff8fa;
+
+  /* ─── LIGHT (default / :root) — warm paper white × chatak red ─── */
+  --background: #f7f3ee;
+  --foreground: #1a1210;
+  --card: #fffdfb;
+  --card-foreground: #1a1210;
+  --popover: #fffdfb;
+  --popover-foreground: #1a1210;
+  --primary: var(--red-13);
+  --primary-foreground: #ffffff;
+  --secondary: #efe8e0;
+  --secondary-foreground: #2a221e;
+  --muted: #efe8e0;
+  --muted-foreground: #6b635c;
+  --accent: #f3ebe3;
+  --accent-foreground: #1a1210;
+  --destructive: var(--red-13);
+  --destructive-foreground: #ffffff;
+  --border: #e0d6cc;
+  --input: #e8dfd6;
+  --ring: var(--red-13);
+
+  /* Charts — red spectrum only (bright → deep) */
+  --chart-1: var(--red-13);
+  --chart-2: var(--red-15);
+  --chart-3: var(--red-17);
+  --chart-4: var(--red-11);
+  --chart-5: var(--red-8);
+
+  --sidebar: #f2eeea;
+  --sidebar-foreground: #3a322c;
+  --sidebar-primary: var(--red-13);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #efe8e0;
+  --sidebar-accent-foreground: #1a1210;
+  --sidebar-border: #e0d6cc;
+  --sidebar-ring: var(--red-13);
+
+  /* Same stack as Athesis Odyssey — JetBrains Mono only */
+  --font-ody: var(--font-jetbrains-mono), "JetBrains Mono", "SF Mono", "Fira Code",
+    "Consolas", ui-monospace, monospace;
+  --font-sans: var(--font-ody);
+  --font-serif: var(--font-ody);
+  --font-mono: var(--font-ody);
+
+  /* Athesis type scale */
+  --text-xs: 0.8125rem; /* 13px — meta, captions */
+  --text-sm: 0.875rem; /* 14px — labels, nav */
+  --text-base: 1rem; /* 16px — body */
+  --text-md: 1.0625rem; /* 17px — list titles */
+  --text-lg: 1.1875rem; /* 19px — section titles */
+  --text-xl: clamp(1.75rem, 4vw, 2.35rem); /* hero */
+
+  /* Proper rectangle UI — radius 0 everywhere (Athesis) */
+  --radius: 0px;
   --shadow-x: 0;
-  --shadow-y: 1px;
-  --shadow-blur: 3px;
+  --shadow-y: 0;
+  --shadow-blur: 0;
   --shadow-spread: 0px;
-  --shadow-opacity: 0.1;
-  --shadow-color: oklch(0 0 0);
-  --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
-  --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
-  --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 2px 4px -1px hsl(0 0% 0% / 0.10);
-  --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 4px 6px -1px hsl(0 0% 0% / 0.10);
-  --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 8px 10px -1px hsl(0 0% 0% / 0.10);
-  --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
-  --tracking-normal: 0em;
+  --shadow-opacity: 0;
+  --shadow-color: #000000;
+  --shadow-2xs: none;
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+  --shadow-2xl: none;
+  --tracking-normal: 0.01em;
   --spacing: 0.25rem;
 
-  /* Warden severity scale — security convention (decoupled from the brand):
-     red → orange → amber → indigo → green */
-  --severity-critical: oklch(0.5770 0.2150 27.3000);
-  --severity-high: oklch(0.6850 0.1700 47.0000);
-  --severity-medium: oklch(0.7480 0.1400 66.0000);
-  --severity-low: oklch(0.6090 0.1320 274.0000);
-  --severity-info: oklch(0.6270 0.1400 150.0000);
+  /* Odyssey helpers — light */
+  --ody-bg-elevated: #fffdfb;
+  --ody-bg-panel: #fffdfb;
+  --ody-bg-hover: #efe8e0;
+  --ody-border-soft: #e8dfd6;
+  --ody-text-body: #4a4038;
+  --ody-text-mute: #8a8078;
+  --ody-accent-soft: color-mix(in srgb, var(--red-13) 12%, transparent);
+  --ody-accent-hover: var(--red-15);
+  --ody-accent-glow: color-mix(in srgb, var(--red-13) 28%, transparent);
+  --ody-nav-h: 56px;
+  --ody-ease: 0.15s ease;
+  --ody-topbar-bg: #f7f3ee;
+  --ody-topbar-border: #e0d6cc;
+
+  /* Severity — red intensity (shared light/dark) */
+  --severity-critical: var(--red-13);
+  --severity-high: var(--red-15);
+  --severity-medium: var(--red-11);
+  --severity-low: var(--red-8);
+  --severity-info: #8a8078;
 }
 
+/* DARK — pure matte black × chatak red (Odyssey) */
 .dark {
-  /* Marketing-site black ≈ #080808; surfaces step up one stop for cards. */
-  --background: oklch(0.12 0.008 250);
-  --foreground: oklch(0.97 0.005 230);
-  --card: oklch(0.155 0.01 250);
-  --card-foreground: oklch(0.97 0.005 230);
-  --popover: oklch(0.155 0.01 250);
-  --popover-foreground: oklch(0.95 0.005 230);
-  --primary: oklch(0.72 0.12 230);
-  --primary-foreground: oklch(0.12 0.02 250);
-  --secondary: oklch(0.20 0.012 250);
-  --secondary-foreground: oklch(0.94 0.005 230);
-  --muted: oklch(0.18 0.01 250);
-  --muted-foreground: oklch(0.68 0.02 240);
-  --accent: oklch(0.20 0.02 230);
-  --accent-foreground: oklch(0.97 0.005 230);
-  --destructive: oklch(0.6370 0.2370 25.3310);
-  --destructive-foreground: oklch(1.0000 0 0);
-  --border: oklch(0.26 0.015 250);
-  --input: oklch(0.30 0.015 250);
-  --ring: oklch(0.72 0.12 230);
-  --chart-1: oklch(0.72 0.12 230);
-  --chart-2: oklch(0.6898 0.1581 290.4107);
-  --chart-3: oklch(0.8000 0.1350 70.0000);
-  --chart-4: oklch(0.7100 0.1500 150.0000);
-  --chart-5: oklch(0.6800 0.1300 274.0000);
-  --sidebar: oklch(0.11 0.008 250);
-  --sidebar-foreground: oklch(0.78 0.015 240);
-  --sidebar-primary: oklch(0.72 0.12 230);
-  --sidebar-primary-foreground: oklch(0.12 0.02 250);
-  --sidebar-accent: oklch(0.18 0.015 250);
-  --sidebar-accent-foreground: oklch(0.94 0.005 230);
-  --sidebar-border: oklch(0.26 0.015 250);
-  --sidebar-ring: oklch(0.72 0.12 230);
-  --font-sans: var(--font-outfit), Outfit, ui-sans-serif, system-ui, sans-serif;
-  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-  --font-mono: var(--font-geist-mono), "Geist Mono", ui-monospace, monospace;
-  --radius: 0.5rem;
-  --shadow-x: 0;
-  --shadow-y: 1px;
-  --shadow-blur: 3px;
-  --shadow-spread: 0px;
-  --shadow-opacity: 0.1;
-  --shadow-color: oklch(0 0 0);
-  --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
-  --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
-  --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 2px 4px -1px hsl(0 0% 0% / 0.10);
-  --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 4px 6px -1px hsl(0 0% 0% / 0.10);
-  --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 8px 10px -1px hsl(0 0% 0% / 0.10);
-  --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+  --background: var(--black-0);
+  --foreground: var(--black-22);
+  --card: var(--black-2);
+  --card-foreground: var(--black-22);
+  --popover: var(--black-2);
+  --popover-foreground: var(--black-22);
+  --primary: var(--red-13);
+  --primary-foreground: var(--black-24);
+  --secondary: var(--black-4);
+  --secondary-foreground: var(--black-19);
+  --muted: var(--black-4);
+  --muted-foreground: var(--black-17);
+  --accent: var(--black-4);
+  --accent-foreground: var(--black-22);
+  --destructive: var(--red-13);
+  --destructive-foreground: var(--black-24);
+  --border: var(--black-7);
+  --input: var(--black-5);
+  --ring: var(--red-13);
+  --chart-1: var(--red-13);
+  --chart-2: var(--red-15);
+  --chart-3: var(--red-17);
+  --chart-4: var(--red-11);
+  --chart-5: var(--red-8);
+  --sidebar: var(--black-0);
+  --sidebar-foreground: var(--black-19);
+  --sidebar-primary: var(--red-13);
+  --sidebar-primary-foreground: var(--black-24);
+  --sidebar-accent: var(--black-4);
+  --sidebar-accent-foreground: var(--black-22);
+  --sidebar-border: var(--black-4);
+  --sidebar-ring: var(--red-13);
+  --font-ody: var(--font-jetbrains-mono), "JetBrains Mono", "SF Mono", "Fira Code",
+    "Consolas", ui-monospace, monospace;
+  --font-sans: var(--font-ody);
+  --font-serif: var(--font-ody);
+  --font-mono: var(--font-ody);
+  --radius: 0px;
+  --shadow-2xs: none;
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+  --shadow-2xl: none;
+  --severity-critical: var(--red-13);
+  --severity-high: var(--red-15);
+  --severity-medium: var(--red-17);
+  --severity-low: var(--red-10);
+  --severity-info: var(--black-14);
 
-  /* severity ramp, lifted for the cool-charcoal dark surface */
-  --severity-critical: oklch(0.6370 0.2370 25.3310);
-  --severity-high: oklch(0.7200 0.1600 50.0000);
-  --severity-medium: oklch(0.8000 0.1350 70.0000);
-  --severity-low: oklch(0.6800 0.1300 274.0000);
-  --severity-info: oklch(0.7100 0.1500 150.0000);
+  --ody-bg-elevated: var(--black-1);
+  --ody-bg-panel: var(--black-2);
+  --ody-bg-hover: var(--black-4);
+  --ody-border-soft: var(--black-5);
+  --ody-text-body: var(--black-19);
+  --ody-text-mute: var(--black-12);
+  --ody-accent-soft: color-mix(in srgb, var(--red-13) 14%, transparent);
+  --ody-accent-glow: color-mix(in srgb, var(--red-13) 35%, transparent);
+  --ody-topbar-bg: var(--black-0);
+  --ody-topbar-border: var(--black-4);
 }
 
 @theme inline {
@@ -170,14 +261,72 @@
   --color-low: var(--severity-low);
   --color-info: var(--severity-info);
 
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-mono);
-  --font-serif: var(--font-serif);
+  /* Fifty shades — usable as bg-black-0 … text-red-13 etc. */
+  --color-black-0: var(--black-0);
+  --color-black-1: var(--black-1);
+  --color-black-2: var(--black-2);
+  --color-black-3: var(--black-3);
+  --color-black-4: var(--black-4);
+  --color-black-5: var(--black-5);
+  --color-black-6: var(--black-6);
+  --color-black-7: var(--black-7);
+  --color-black-8: var(--black-8);
+  --color-black-9: var(--black-9);
+  --color-black-10: var(--black-10);
+  --color-black-11: var(--black-11);
+  --color-black-12: var(--black-12);
+  --color-black-13: var(--black-13);
+  --color-black-14: var(--black-14);
+  --color-black-15: var(--black-15);
+  --color-black-16: var(--black-16);
+  --color-black-17: var(--black-17);
+  --color-black-18: var(--black-18);
+  --color-black-19: var(--black-19);
+  --color-black-20: var(--black-20);
+  --color-black-21: var(--black-21);
+  --color-black-22: var(--black-22);
+  --color-black-23: var(--black-23);
+  --color-black-24: var(--black-24);
+  --color-red-0: var(--red-0);
+  --color-red-1: var(--red-1);
+  --color-red-2: var(--red-2);
+  --color-red-3: var(--red-3);
+  --color-red-4: var(--red-4);
+  --color-red-5: var(--red-5);
+  --color-red-6: var(--red-6);
+  --color-red-7: var(--red-7);
+  --color-red-8: var(--red-8);
+  --color-red-9: var(--red-9);
+  --color-red-10: var(--red-10);
+  --color-red-11: var(--red-11);
+  --color-red-12: var(--red-12);
+  --color-red-13: var(--red-13);
+  --color-red-14: var(--red-14);
+  --color-red-15: var(--red-15);
+  --color-red-16: var(--red-16);
+  --color-red-17: var(--red-17);
+  --color-red-18: var(--red-18);
+  --color-red-19: var(--red-19);
+  --color-red-20: var(--red-20);
+  --color-red-21: var(--red-21);
+  --color-red-22: var(--red-22);
+  --color-red-23: var(--red-23);
+  --color-red-24: var(--red-24);
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  /* Tailwind font utilities → JetBrains Mono (Athesis) */
+  --font-sans: var(--font-ody);
+  --font-mono: var(--font-ody);
+  --font-serif: var(--font-ody);
+
+  /* Force sharp rectangles — every radius step is 0 */
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
+  --radius: 0px;
 
   --shadow-2xs: var(--shadow-2xs);
   --shadow-xs: var(--shadow-xs);
@@ -199,11 +348,78 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    /* Proper rectangle UI — no pills, no squircles (Athesis radius: 0) */
+    border-radius: 0 !important;
+  }
+  html {
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   body {
     @apply bg-background text-foreground;
-    letter-spacing: var(--tracking-normal);
+    font-family: var(--font-ody);
+    font-size: var(--text-base);
+    letter-spacing: 0.01em;
+    line-height: 1.7;
+    font-weight: 400;
   }
+  button,
+  input,
+  textarea,
+  select,
+  option,
+  label,
+  table,
+  th,
+  td,
+  code,
+  pre,
+  kbd,
+  samp {
+    font-family: inherit;
+  }
+  /* Selection: chatak red wash only */
+  ::selection {
+    background: color-mix(in srgb, var(--red-13) 35%, transparent);
+    color: var(--black-24);
+  }
+  /* Odyssey headings — mono, light weight like Athesis */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-ody);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.35;
+    color: var(--foreground);
+  }
+  h1 { font-size: var(--text-xl); }
+  h2 { font-size: var(--text-lg); letter-spacing: 0.01em; }
+  h3, h4 { font-size: var(--text-md); letter-spacing: 0.01em; }
+  h5, h6 { font-size: var(--text-base); letter-spacing: 0.01em; }
+  /* Body paragraphs follow theme (warm ink on light, warm off-white on dark) */
+  p {
+    color: var(--ody-text-body, var(--muted-foreground));
+    font-weight: 400;
+    line-height: 1.75;
+    letter-spacing: 0.01em;
+  }
+  a {
+    transition: color var(--ody-ease, 0.15s ease);
+  }
+}
+
+/* Utility aliases still force rectangles even outside @layer base */
+.rounded-full,
+.rounded-sm,
+.rounded,
+.rounded-md,
+.rounded-lg,
+.rounded-xl,
+.rounded-2xl,
+.rounded-3xl,
+.rounded-4xl,
+.rounded-none {
+  border-radius: 0 !important;
 }
 
 /* ---------------------------------------------------------------------------
@@ -258,30 +474,14 @@
   animation: warden-wordmark-in 0.5s ease-out 0.5s both;
 }
 
-/* Brand badge — rounded-rect frame with a rotating conic-gradient ring sweep. */
+/* Brand badge — sharp red mark frame (Odyssey, no soft glass ring). */
 .warden-badge {
-  background: color-mix(in oklab, var(--primary) 14%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--primary) 22%, transparent);
+  background: var(--ody-accent-soft, rgba(255, 0, 51, 0.14));
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--primary) 40%, transparent);
+  border-radius: 0;
 }
 .warden-badge::before {
-  content: "";
-  position: absolute;
-  inset: -1.5px;
-  border-radius: inherit;
-  padding: 1.5px;
-  background: conic-gradient(
-    from 0deg,
-    transparent 0deg,
-    var(--primary) 70deg,
-    color-mix(in oklab, var(--primary) 30%, transparent) 150deg,
-    transparent 200deg
-  );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  animation: warden-ring 3.4s linear infinite;
+  content: none;
 }
 @keyframes warden-ring {
   to {
@@ -607,9 +807,8 @@
 }
 
 /* ===========================================================================
-   Techanv ops console — visual language from warden.techanv.com
-   Dot matrix, mono labels, hairline panels, status chips. Token-driven so
-   light + dark both stay readable; never rely on pure neon for meaning.
+   Odyssey ops chrome — matte black × chatak red only.
+   Dot matrix, mono labels, hairline panels, status chips.
    =========================================================================== */
 
 /* Subtle dot-matrix field (marketing site "dot" motif). */
@@ -631,45 +830,45 @@
   );
 }
 
-/* Soft radial wash behind dashboard hero — cyan brand bloom. */
+/* Soft red wash behind dashboard hero (chatak laal, sparse). */
 .warden-ops-wash {
   background:
     radial-gradient(
-      60% 50% at 12% 0%,
-      color-mix(in oklab, var(--primary) 14%, transparent),
+      55% 45% at 8% 0%,
+      var(--ody-accent-soft, rgba(255, 0, 51, 0.14)),
       transparent 70%
     ),
     radial-gradient(
-      40% 40% at 90% 10%,
-      color-mix(in oklab, var(--primary) 8%, transparent),
+      35% 35% at 92% 8%,
+      rgba(255, 0, 51, 0.06),
       transparent 65%
     );
 }
 
-/* Mono technical label (PP Fraktion vibe via Geist Mono). */
+/* Mono technical label — Odyssey meta. */
 .warden-mono-label {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
+  font-weight: 400;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--muted-foreground);
 }
 
-/* Live status chip — terminal style. */
+/* Live status chip — sharp terminal pill. */
 .warden-live-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  border: 1px solid color-mix(in oklab, var(--primary) 35%, var(--border));
-  background: color-mix(in oklab, var(--primary) 10%, var(--card));
+  border: 1px solid color-mix(in oklab, var(--primary) 45%, var(--border));
+  background: var(--ody-accent-soft, rgba(255, 0, 51, 0.14));
   color: var(--primary);
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  border-radius: 999px;
+  border-radius: 0;
   padding: 0.25rem 0.65rem;
   line-height: 1;
 }
@@ -678,7 +877,7 @@
   content: "";
   width: 0.4rem;
   height: 0.4rem;
-  border-radius: 999px;
+  border-radius: 0;
   background: var(--primary);
   box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 55%, transparent);
   animation: warden-pulse-glow 2.2s ease-in-out infinite;
@@ -691,8 +890,8 @@
   align-items: center;
   gap: 0.75rem 1.25rem;
   border: 1px solid var(--border);
-  background: color-mix(in oklab, var(--card) 88%, transparent);
-  border-radius: var(--radius);
+  background: var(--card);
+  border-radius: 0;
   padding: 0.55rem 0.85rem;
   font-family: var(--font-mono);
   font-size: 0.6875rem;
@@ -711,48 +910,65 @@
   background: var(--border);
 }
 
-/* Hairline ops panel — marketing-site technical card. */
+/* Flat Odyssey panel — hairline border, no glass lift. */
 .warden-ops-panel {
-  border: 1px solid color-mix(in oklab, var(--border) 90%, var(--primary));
-  background: color-mix(in oklab, var(--card) 92%, transparent);
-  border-radius: var(--radius);
-  box-shadow:
-    0 0 0 1px color-mix(in oklab, var(--primary) 4%, transparent),
-    0 8px 24px -16px color-mix(in oklab, var(--foreground) 18%, transparent);
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .dark .warden-ops-panel {
-  background: color-mix(in oklab, var(--card) 85%, transparent);
-  box-shadow:
-    0 0 0 1px color-mix(in oklab, var(--primary) 8%, transparent),
-    0 12px 40px -20px color-mix(in oklab, black 70%, transparent);
+  background: var(--card);
+  box-shadow: none;
 }
 
-/* Shell chrome: topbar hairline + subtle glass. */
+/* Shell chrome: pure black sticky nav (no glass blur). */
 .warden-topbar {
-  border-bottom: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
-  background: color-mix(in oklab, var(--background) 82%, transparent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  height: var(--ody-nav-h, 56px);
+  border-bottom: 1px solid var(--ody-topbar-border, var(--border));
+  background: var(--ody-topbar-bg, var(--background));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
-/* Sidebar rail accent on active nav. */
+/* Sidebar active — red text + left rail, no soft glow blob. */
 .warden-nav-active {
   position: relative;
-  background: color-mix(in oklab, var(--primary) 12%, transparent);
+  background: var(--ody-accent-soft, rgba(255, 0, 51, 0.14));
   color: var(--primary);
-  font-weight: 600;
+  font-weight: 500;
 }
 .warden-nav-active::before {
   content: "";
   position: absolute;
   left: 0;
-  top: 20%;
-  bottom: 20%;
+  top: 0;
+  bottom: 0;
   width: 2px;
-  border-radius: 999px;
+  border-radius: 0;
   background: var(--primary);
-  box-shadow: 0 0 10px color-mix(in oklab, var(--primary) 55%, transparent);
+  box-shadow: none;
+}
+
+/* Odyssey brand prompt: $_warden */
+.ody-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 0.875rem;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  color: var(--foreground);
+  white-space: nowrap;
+}
+.ody-brand:hover {
+  color: var(--primary);
+}
+.ody-brand .prompt {
+  color: var(--primary);
 }
 
 @media (prefers-reduced-motion: reduce) {
