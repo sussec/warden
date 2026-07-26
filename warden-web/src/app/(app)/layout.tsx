@@ -38,8 +38,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         }
       >
         {/* Odyssey canvas — pure black field, hairline only, no glass panel */}
-        <div className="relative min-h-[calc(100dvh-3.5rem)] border-l border-border/80 bg-background p-4 sm:p-5 md:p-6">
-          <div className="relative">
+        <div className="relative min-h-[calc(100dvh-3.5rem)] min-w-0 border-l border-border/80 bg-background p-3 sm:p-5 md:p-6">
+          <div className="relative min-w-0 max-w-full">
             <PageTransition>{children}</PageTransition>
           </div>
         </div>

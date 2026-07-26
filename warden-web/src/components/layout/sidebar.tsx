@@ -95,7 +95,8 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose?: () => void
       <aside
         className={cn(
           // Odyssey rail: pure black, hairline right border, sharp edges, no glass.
-          "fixed left-0 top-14 bottom-0 z-40 w-64 overflow-y-auto border-r border-sidebar-border bg-sidebar p-3 transition-transform duration-200 motion-reduce:transition-none",
+          // Full-width drawer on very small phones; fixed 16rem from sm up.
+          "fixed left-0 top-14 bottom-0 z-40 w-[min(16rem,100vw-3rem)] max-w-[16rem] overflow-y-auto overscroll-contain border-r border-sidebar-border bg-sidebar p-3 transition-transform duration-200 motion-reduce:transition-none sm:w-64 sm:max-w-none",
           open ? "translate-x-0" : "-translate-x-[120%]",
         )}
       >

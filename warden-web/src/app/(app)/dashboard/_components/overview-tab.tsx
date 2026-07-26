@@ -154,7 +154,7 @@ export function OverviewTab({ body }: { body: { startDate: string; endDate: stri
   return (
     <div className="flex flex-col gap-4">
       {/* KPI strip — cascades in once on mount via staggered reveal. */}
-      <Stagger className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
+      <Stagger className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 xl:grid-cols-5">
         {kpis.map((k) => (
           <KpiCard key={k.label} {...k} />
         ))}
@@ -197,27 +197,35 @@ export function OverviewTab({ body }: { body: { startDate: string; endDate: stri
         </div>
       </div>
 
-      {/* trend (wide) + severity donut */}
+      {/* trend (wide) + severity donut — stack on tablet, side-by-side on lg+ */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Panel
           title="Findings over time"
           subtitle="New findings by severity"
-          className="lg:col-span-2"
+          className="min-w-0 lg:col-span-2"
           glow
         >
-          <div className="h-[260px]">
+          <div className="h-[220px] w-full min-w-0 sm:h-[260px]">
             <TrendArea data={trendData} />
           </div>
         </Panel>
-        <Panel title="Severity distribution" subtitle={`${fmt(grand)} total`} glow>
-          <div className="h-[260px]">
+        <Panel
+          title="Severity distribution"
+          subtitle={`${fmt(grand)} total`}
+          className="min-w-0"
+          glow
+        >
+          {/* Fixed height must match DonutChart flex layout (ring + legend), not overflow h-72 */}
+          <div className="flex h-[240px] w-full min-w-0 flex-col sm:h-[260px]">
             {grand > 0 ? (
               <DonutChart
                 title=""
                 labels={sevTotals.map((s) => s.label)}
                 values={sevTotals.map((s) => s.total)}
                 colors={sevTotals.map((s) => s.color)}
-                onSegmentClick={(i) => router.push(`/finding?severity=${sevTotals[i].label}`)}
+                onSegmentClick={(i) =>
+                  router.push(`/finding?severity=${sevTotals[i].label}`)
+                }
               />
             ) : (
               <EmptyState

@@ -153,7 +153,7 @@ export function KpiCard({
       >
         <span className="warden-mono-label">{label}</span>
         <span
-          className="mt-2 font-mono text-3xl font-medium leading-none tracking-tight tabular-nums"
+          className="mt-2 max-w-full truncate font-mono text-2xl font-medium leading-none tracking-tight tabular-nums sm:text-3xl"
           style={accent ? { color: accent } : undefined}
         >
           {count === undefined ? (

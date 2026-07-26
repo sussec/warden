@@ -45,9 +45,9 @@ export function ProjectStats({ projectId }: { projectId: string }) {
   if (isLoading) {
     return (
       <Card className="grid grid-cols-1 gap-4 p-4 md:grid-cols-3">
-        <Skeleton className="h-72 w-full" />
-        <Skeleton className="h-72 w-full" />
-        <Skeleton className="h-72 w-full" />
+        <Skeleton className="h-56 w-full sm:h-64" />
+        <Skeleton className="h-56 w-full sm:h-64" />
+        <Skeleton className="h-56 w-full sm:h-64" />
       </Card>
     );
   }
@@ -56,29 +56,38 @@ export function ProjectStats({ projectId }: { projectId: string }) {
   const scaTotal = severityValues(data?.severitySca).reduce((a, b) => a + b, 0);
 
   return (
-    <Card className="grid grid-cols-1 gap-4 p-4 md:grid-cols-3" key={dark ? "dark" : "light"}>
-      <div className="flex flex-col items-center justify-center gap-2 rounded-md border border-border/60 p-4">
+    <Card
+      className="grid grid-cols-1 gap-4 p-3 sm:p-4 md:grid-cols-3"
+      key={dark ? "dark" : "light"}
+    >
+      <div className="flex min-h-[12rem] flex-col items-center justify-center gap-2 rounded-none border border-border/60 p-4 sm:min-h-[16rem]">
         <span className="flex items-center gap-2 font-mono text-xs uppercase tracking-wide text-muted-foreground">
           <AlertTriangle className="size-4 text-high" />
           Open Findings
         </span>
-        <span className="font-mono text-5xl font-bold tabular-nums">{data?.openFinding ?? 0}</span>
+        <span className="font-mono text-4xl font-bold tabular-nums sm:text-5xl">
+          {data?.openFinding ?? 0}
+        </span>
         <span className="font-mono text-xs text-muted-foreground">
           {sastTotal} SAST &middot; {scaTotal} SCA
         </span>
       </div>
-      <DonutChart
-        title="SAST Severity"
-        labels={SEVERITY_LABELS}
-        values={severityValues(data?.severitySast)}
-        colors={severityColors}
-      />
-      <DonutChart
-        title="SCA Severity"
-        labels={SEVERITY_LABELS}
-        values={severityValues(data?.severitySca)}
-        colors={severityColors}
-      />
+      <div className="flex h-56 min-w-0 flex-col sm:h-64">
+        <DonutChart
+          title="SAST Severity"
+          labels={SEVERITY_LABELS}
+          values={severityValues(data?.severitySast)}
+          colors={severityColors}
+        />
+      </div>
+      <div className="flex h-56 min-w-0 flex-col sm:h-64">
+        <DonutChart
+          title="SCA Severity"
+          labels={SEVERITY_LABELS}
+          values={severityValues(data?.severitySca)}
+          colors={severityColors}
+        />
+      </div>
     </Card>
   );
 }
