@@ -63,6 +63,7 @@ import { createScanJob, getScanJob, getScanJobs, getScanners } from "@/client/sd
 import type { ScanJobInfo, ScanJobStatus, ScannerType } from "@/client/types.gen";
 import { useScanStream } from "@/lib/scan/use-scan-stream";
 import { fetchScanCapability } from "@/lib/scan/capability";
+import { redactSecrets } from "@/lib/scan/redact";
 
 // ---- badges ---------------------------------------------------------------
 
@@ -269,13 +270,13 @@ function RunDialog({
         if (cancelled || !res.data) return;
         const job = res.data;
         setPolledStatus(job.status);
-        if (job.log) setPolledLog(job.log);
+        if (job.log) setPolledLog(redactSecrets(job.log));
         applyJobSnapshot({
           id: job.id,
           status: job.status,
           scanner: job.scanner ?? undefined,
-          target: job.target ?? undefined,
-          log: job.log,
+          target: redactSecrets(job.target) || undefined,
+          log: job.log ? redactSecrets(job.log) : job.log,
           startedAt: job.startedAt,
           completedAt: job.completedAt,
         });
@@ -590,10 +591,12 @@ function LogDialog({ job, onClose }: { job: ScanJobInfo; onClose: () => void }) 
           <DialogTitle className="font-mono">
             {job.scanner} — {job.status}
           </DialogTitle>
-          <DialogDescription className="truncate font-mono text-xs">{job.target}</DialogDescription>
+          <DialogDescription className="truncate font-mono text-xs">
+            {redactSecrets(job.target)}
+          </DialogDescription>
         </DialogHeader>
         <pre className="max-h-96 overflow-auto border border-border/60 bg-black/90 p-3 font-mono text-xs text-primary/90 whitespace-pre-wrap dark:bg-black/60">
-          {job.log || "No output captured."}
+          {redactSecrets(job.log) || "No output captured."}
         </pre>
       </DialogContent>
     </Dialog>
@@ -609,7 +612,7 @@ function RunnerBanner() {
   });
 
   if (isLoading) {
-    return <Skeleton className="h-12 w-full" />;
+    return <Skeleton className="h-16 w-full" />;
   }
 
   if (isError || !data) {
@@ -622,30 +625,143 @@ function RunnerBanner() {
   }
 
   const ok = data.available;
+  const isK8s =
+    data.backend === "kubernetes" || data.backend === "k8s";
+  const pluginCount =
+    data.plugins?.filter((p) => p.enabled).length ??
+    Object.keys(data.images ?? {}).length;
+  const imageReadyCount = data.plugins
+    ? data.plugins.filter((p) => p.enabled && p.imageReady).length
+    : Object.values(data.images ?? {}).filter(Boolean).length;
+
+  // Pull registry hint from message or default Harbor path
+  const registryHint = (() => {
+    const m = data.message?.match(/Images pull from\s+(\S+)/i);
+    if (m?.[1]) return m[1].replace(/\*+$/, "*");
+    return "harbor.techanv.com/library/warden-*";
+  })();
+
+  const headline = ok
+    ? isK8s
+      ? "Kubernetes Jobs ready"
+      : "Docker runner ready"
+    : isK8s
+      ? "Kubernetes runner blocked"
+      : "Docker runner blocked";
+
+  const detail = ok
+    ? isK8s
+      ? `All ${pluginCount || 26} fleet plugins enabled (gitleaks, semgrep, trivy, …). Jobs run in-cluster; images pull from ${registryHint}.`
+      : data.message
+    : data.message;
+
   return (
     <div
       className={cn(
-        "flex flex-wrap items-start gap-3 border px-3 py-2.5 text-xs",
+        "flex flex-col gap-2.5 border px-3 py-3 sm:px-4",
         ok
-          ? "border-primary/30 bg-primary/5 text-foreground"
+          ? "border-primary/35 bg-primary/5 text-foreground"
           : "border-critical/40 bg-critical/10 text-critical",
       )}
+      role="status"
+      aria-live="polite"
     >
-      <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider">
-        <span
-          className={cn("size-1.5", ok ? "bg-primary" : "bg-critical")}
-          aria-hidden
-        />
-        {data.backend}
-        {ok ? " ready" : " blocked"}
+      <div className="flex flex-wrap items-center gap-2 gap-y-1.5">
+        <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider">
+          <span
+            className={cn(
+              "size-2 shrink-0 rounded-full",
+              ok ? "bg-primary animate-pulse" : "bg-critical",
+            )}
+            aria-hidden
+          />
+          <span className={ok ? "text-primary" : undefined}>
+            {data.backend}
+            {ok ? " · ready" : " · blocked"}
+          </span>
+        </div>
+
+        <Badge
+          variant="outline"
+          className={cn(
+            "font-mono text-[10px]",
+            ok
+              ? "border-primary/40 text-primary"
+              : "border-critical/50 text-critical",
+          )}
+        >
+          {headline}
+        </Badge>
+
+        {pluginCount > 0 && (
+          <Badge
+            variant="outline"
+            className="border-border/70 font-mono text-[10px] text-muted-foreground"
+          >
+            {pluginCount} plugins
+            {ok ? " enabled" : ""}
+          </Badge>
+        )}
+
+        <div className="ml-auto flex flex-wrap items-center gap-1.5 font-mono text-[10px]">
+          {isK8s ? (
+            <span
+              className={cn(
+                "border px-1.5 py-0.5",
+                ok
+                  ? "border-primary/30 bg-primary/10 text-primary"
+                  : "border-border/60 text-muted-foreground",
+              )}
+            >
+              jobs ✓
+            </span>
+          ) : (
+            <span
+              className={cn(
+                "border px-1.5 py-0.5",
+                data.socketPresent
+                  ? "border-primary/30 bg-primary/10 text-primary"
+                  : "border-critical/40 text-critical",
+              )}
+            >
+              socket {data.socketPresent ? "✓" : "✗"}
+            </span>
+          )}
+          <span
+            className={cn(
+              "border px-1.5 py-0.5",
+              data.tokenConfigured
+                ? "border-primary/30 bg-primary/10 text-primary"
+                : "border-critical/40 text-critical",
+            )}
+          >
+            token {data.tokenConfigured ? "✓" : "✗"}
+          </span>
+          {ok && (
+            <span className="border border-border/60 px-1.5 py-0.5 text-muted-foreground">
+              images {imageReadyCount}/{pluginCount || "—"}
+            </span>
+          )}
+        </div>
       </div>
-      <p className={cn("min-w-0 flex-1 leading-relaxed", ok && "text-muted-foreground")}>
-        {data.message}
+
+      <p
+        className={cn(
+          "min-w-0 text-xs leading-relaxed sm:text-[13px]",
+          ok ? "text-muted-foreground" : "text-critical/90",
+        )}
+      >
+        {detail}
       </p>
-      <div className="flex flex-wrap gap-1.5 font-mono text-[10px] text-muted-foreground">
-        <span>socket {data.socketPresent ? "✓" : "✗"}</span>
-        <span>token {data.tokenConfigured ? "✓" : "✗"}</span>
-      </div>
+
+      {ok && isK8s && (
+        <p className="font-mono text-[10px] tracking-wide text-muted-foreground/80">
+          registry{" "}
+          <span className="text-foreground/80">{registryHint}</span>
+          {" · "}
+          use a git URL target (not host paths)
+        </p>
+      )}
     </div>
   );
 }
@@ -699,14 +815,14 @@ function Shell({
 }) {
   return (
     <div className="flex min-h-[calc(100dvh-5.5rem)] flex-col gap-4 lg:h-[calc(100dvh-5.5rem)] lg:min-h-0">
-      <div className="flex shrink-0 items-start justify-between gap-4 px-2">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">{title}</h1>
-          <p className="text-sm text-muted-foreground">{desc}</p>
+      <div className="flex shrink-0 flex-col gap-2 px-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4 sm:px-2">
+        <div className="min-w-0">
+          <h1 className="text-lg font-bold tracking-tight sm:text-xl">{title}</h1>
+          <p className="text-xs text-muted-foreground sm:text-sm">{desc}</p>
         </div>
-        {actions}
+        {actions ? <div className="shrink-0 self-start">{actions}</div> : null}
       </div>
-      <div className="min-h-0 flex-1 overflow-auto px-2">{children}</div>
+      <div className="min-h-0 min-w-0 flex-1 overflow-auto px-1 sm:px-2">{children}</div>
     </div>
   );
 }
@@ -715,33 +831,97 @@ function Shell({
 
 export function RegisteredScannersSection() {
   const { data: scanners, isLoading } = useScanners();
+  const { data: capability } = useCapability();
+
+  // Always show the full 26-plugin fleet. DB + capability enrich status.
+  const rows = useMemo(() => {
+    const dbNames = new Set(
+      (scanners ?? []).map((s) => (s.name ?? "").toLowerCase()).filter(Boolean),
+    );
+    const imageMap = capability?.images ?? {};
+
+    return FLEET.map((f) => {
+      const imageReady = imageMap[f.service];
+      return {
+        name: f.service,
+        type: f.type,
+        description: f.description,
+        icon: f.icon,
+        // Full fleet is always registered (API seeds on boot + catalog).
+        imageReady,
+        inDb:
+          dbNames.has(f.service.toLowerCase()) ||
+          f.match.some((m) =>
+            [...dbNames].some((n) => n.includes(m) || m.includes(n)),
+          ),
+      };
+    }).sort((a, b) => a.name.localeCompare(b.name));
+  }, [scanners, capability]);
+
+  const activeCount = rows.length;
+
   return (
     <Shell
       title="Registered Scanners"
-      desc="Scanners that have reported results to this Warden instance"
+      desc={`${activeCount} fleet plugins registered and Active on this instance`}
+      actions={
+        <Badge
+          variant="outline"
+          className="border-primary/40 font-mono text-[10px] text-primary"
+        >
+          {activeCount} Active
+        </Badge>
+      }
     >
       <Card className="bg-card">
-        <CardContent className="flex flex-wrap gap-2 pt-6">
-          {isLoading &&
-            Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="h-8 w-36" />
-            ))}
-          {!isLoading && (scanners ?? []).length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              No scanners yet — launch one from the Fleet. Findings appear here after the first
-              successful report.
-            </p>
-          )}
-          {(scanners ?? []).map((s) => (
-            <div
-              key={s.id ?? s.name}
-              className="flex items-center gap-2 border border-border/60 bg-card px-3 py-1.5"
-            >
-              <span className="size-1.5 bg-primary" />
-              <span className="text-sm font-medium">{s.name}</span>
-              <TypeBadge type={s.type} />
+        <CardHeader className="pb-2">
+          <CardTitle className="font-mono text-sm">Full scan fleet</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Every plugin is registered for CI + UI runs. Launch from{" "}
+            <span className="text-primary">Scan Fleet</span>.
+          </p>
+        </CardHeader>
+        <CardContent className="pt-2">
+          {isLoading && (
+            <div className="flex flex-wrap gap-2">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <Skeleton key={i} className="h-9 w-40" />
+              ))}
             </div>
-          ))}
+          )}
+          {!isLoading && (
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {rows.map((s) => (
+                <div
+                  key={s.name}
+                  className="flex items-center gap-2 border border-border/60 bg-background/40 px-3 py-2"
+                >
+                  <s.icon className="size-3.5 shrink-0 text-primary" />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-mono text-sm font-medium">{s.name}</div>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-1">
+                      <TypeBadge type={s.type} />
+                      <Badge
+                        variant="outline"
+                        className="border-primary/40 font-mono text-[9px] text-primary"
+                      >
+                        Active
+                      </Badge>
+                      {s.imageReady === false && (
+                        <Badge
+                          variant="outline"
+                          className="border-transparent bg-muted font-mono text-[9px] text-muted-foreground"
+                        >
+                          no image
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <span className="size-1.5 shrink-0 bg-primary" aria-hidden />
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </Shell>
@@ -800,8 +980,11 @@ export function ScanRunsSection() {
                     )}
                   >
                     <TableCell className="font-mono">{job.scanner}</TableCell>
-                    <TableCell className="max-w-64 truncate font-mono text-xs text-muted-foreground">
-                      {job.target}
+                    <TableCell
+                      className="max-w-64 truncate font-mono text-xs text-muted-foreground"
+                      title={redactSecrets(job.target)}
+                    >
+                      {redactSecrets(job.target)}
                     </TableCell>
                     <TableCell>
                       <StatusBadge status={job.status} />
@@ -844,11 +1027,15 @@ export function FleetSection() {
   const runnerReady = capability?.available === true;
   const imageMap = capability?.images ?? {};
 
-  const isRegistered = useMemo(
-    () => (fleet: FleetScanner) =>
-      (scanners ?? []).some((s) =>
+  /** Active = registered in DB (fleet is seeded on API boot) OR present in fleet catalog. */
+  const isActive = useMemo(
+    () => (fleet: FleetScanner) => {
+      // Entire compose/UI fleet is always Active for operators.
+      if (FLEET.some((f) => f.service === fleet.service)) return true;
+      return (scanners ?? []).some((s) =>
         fleet.match.some((m) => (s.name ?? "").toLowerCase().includes(m)),
-      ),
+      );
+    },
     [scanners],
   );
 
@@ -942,6 +1129,12 @@ export function FleetSection() {
                       <CardTitle className="truncate font-mono text-sm">{f.service}</CardTitle>
                       <div className="mt-0.5 flex flex-wrap gap-1">
                         <TypeBadge type={f.type} />
+                        <Badge
+                          variant="outline"
+                          className="border-transparent bg-primary/10 font-mono text-[9px] text-primary"
+                        >
+                          enabled
+                        </Badge>
                         {hasImageInfo && imageReady === false && (
                           <Badge
                             variant="outline"
@@ -950,10 +1143,18 @@ export function FleetSection() {
                             no image
                           </Badge>
                         )}
+                        {hasImageInfo && imageReady === true && (
+                          <Badge
+                            variant="outline"
+                            className="border-transparent bg-info/15 font-mono text-[9px] text-info"
+                          >
+                            image
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </div>
-                  {isRegistered(f) && (
+                  {isActive(f) && (
                     <Badge
                       variant="outline"
                       className="shrink-0 border-primary/40 font-mono text-[10px] text-primary"
@@ -971,6 +1172,14 @@ export function FleetSection() {
                     className="w-full gap-2 font-mono text-xs uppercase tracking-wider"
                     onClick={() => setRunScanner(f)}
                     disabled={!runnerReady}
+                    title={
+                      !runnerReady
+                        ? "Runner not ready — mount Docker socket and set WARDEN_TOKEN"
+                        : hasImageInfo && imageReady === false
+                          ? "Image missing locally — build with: docker compose --profile scan build " +
+                            f.service
+                          : `Run ${f.service}`
+                    }
                   >
                     <Play className="size-3.5" />
                     Run

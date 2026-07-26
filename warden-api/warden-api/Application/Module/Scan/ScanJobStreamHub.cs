@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using Warden.Application.Module.Scan.Model;
 using Warden.Core.Enum;
+using Warden.Core.Utils;
 
 namespace Warden.Application.Module.Scan;
 
@@ -64,7 +65,8 @@ public sealed record ScanJobStreamEvent(
         new("hello", null, null, null, null, null, null, DateTimeOffset.UtcNow);
 
     public static ScanJobStreamEvent FromJob(ScanJobInfo job, string type) =>
-        new(type, job.Id, job.Scanner, job.Status.ToString(), job.Target, null, job.Log, DateTimeOffset.UtcNow);
+        new(type, job.Id, job.Scanner, job.Status.ToString(), SecretRedactor.Redact(job.Target), null,
+            SecretRedactor.Redact(job.Log), DateTimeOffset.UtcNow);
 
     public static ScanJobStreamEvent FromStatus(Guid jobId, string scanner, ScanJobStatus status, string? target = null) =>
         new(status switch
@@ -74,8 +76,9 @@ public sealed record ScanJobStreamEvent(
             ScanJobStatus.Succeeded => "job.completed",
             ScanJobStatus.Failed => "job.failed",
             _ => "job.status"
-        }, jobId, scanner, status.ToString(), target, null, null, DateTimeOffset.UtcNow);
+        }, jobId, scanner, status.ToString(), SecretRedactor.Redact(target), null, null, DateTimeOffset.UtcNow);
 
     public static ScanJobStreamEvent LogLine(Guid jobId, string scanner, string line) =>
-        new("job.log", jobId, scanner, ScanJobStatus.Running.ToString(), null, line, null, DateTimeOffset.UtcNow);
+        new("job.log", jobId, scanner, ScanJobStatus.Running.ToString(), null, SecretRedactor.Redact(line), null,
+            DateTimeOffset.UtcNow);
 }

@@ -2,7 +2,6 @@ using Warden.Application.Module.Scan.Model;
 using Warden.Core.Entity;
 using Warden.Core.Enum;
 using Microsoft.EntityFrameworkCore;
-// AppDbContext + Configuration
 
 namespace Warden.Application.Module.Scan;
 
@@ -12,6 +11,7 @@ public interface IScanJobService
     Task<List<ScanJobInfo>> ListAsync(ScanJobFilter filter, int limit = 50);
     Task<ScanJobInfo?> GetAsync(Guid id);
     Task<ScanRunnerCapability> GetCapabilityAsync(CancellationToken cancellationToken = default);
+    Task<List<FleetPluginInfo>> ListFleetAsync(CancellationToken cancellationToken = default);
 }
 
 public class ScanJobService(
@@ -52,8 +52,29 @@ public class ScanJobService(
             ["augustus"] = ScanTargetType.Llm,
         };
 
+    /// <summary>Full fleet as operator-facing plugin rows (all enabled for UI Run).</summary>
+    public static List<FleetPluginInfo> BuildFleetPlugins(
+        IReadOnlyDictionary<string, bool>? images,
+        bool enabled = true)
+    {
+        return Fleet
+            .OrderBy(kv => kv.Key, StringComparer.OrdinalIgnoreCase)
+            .Select(kv => new FleetPluginInfo
+            {
+                Service = kv.Key,
+                TargetType = kv.Value.ToString(),
+                Enabled = enabled,
+                ImageReady = images != null &&
+                             images.TryGetValue(kv.Key, out var ready) && ready
+            })
+            .ToList();
+    }
+
     public Task<ScanRunnerCapability> GetCapabilityAsync(CancellationToken cancellationToken = default) =>
         backend.GetCapabilityAsync(cancellationToken);
+
+    public Task<List<FleetPluginInfo>> ListFleetAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult(BuildFleetPlugins(null, enabled: true));
 
     public async Task<ScanJobInfo> CreateAsync(CreateScanJobRequest request)
     {
@@ -62,6 +83,9 @@ public class ScanJobService(
         var target = request.Target.Trim();
         if (string.IsNullOrEmpty(target))
             throw new ArgumentException("Target is required");
+        // Persist clean URLs only — credentials are injected at clone time.
+        if (targetType == ScanTargetType.Repository && DockerScanExecutionBackend.IsGitUrl(target))
+            target = Core.Utils.SecretRedactor.StripUrlCredentials(target);
         if (targetType == ScanTargetType.Repository && !target.StartsWith('/') && !DockerScanExecutionBackend.IsGitUrl(target))
             throw new ArgumentException(
                 "Repository target must be a git URL (recommended) or an absolute host path");
@@ -116,11 +140,12 @@ public class ScanJobService(
         Id = job.Id,
         Scanner = job.Scanner,
         TargetType = job.TargetType,
-        Target = job.Target,
+        // Never expose embedded PATs / basic-auth in clone URLs to the UI.
+        Target = Core.Utils.SecretRedactor.Redact(job.Target),
         RepoName = job.RepoName,
         Branch = job.Branch,
         Status = job.Status,
-        Log = job.Log,
+        Log = Core.Utils.SecretRedactor.Redact(job.Log),
         CreatedAt = job.CreatedAt,
         StartedAt = job.StartedAt,
         CompletedAt = job.CompletedAt

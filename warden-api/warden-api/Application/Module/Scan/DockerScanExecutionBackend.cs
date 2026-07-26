@@ -6,6 +6,7 @@ using Warden.Application;
 using Warden.Application.Module.Scan.Model;
 using Warden.Core.Entity;
 using Warden.Core.Enum;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Warden.Application.Module.Scan;
 
@@ -16,6 +17,7 @@ namespace Warden.Application.Module.Scan;
 /// </summary>
 public sealed class DockerScanExecutionBackend(
     IScanJobStreamHub streamHub,
+    IServiceScopeFactory scopeFactory,
     ILogger<DockerScanExecutionBackend> logger
 ) : IScanExecutionBackend
 {
@@ -86,7 +88,8 @@ public sealed class DockerScanExecutionBackend(
             TokenConfigured = tokenOk,
             SocketPresent = socketPresent,
             Message = message,
-            Images = images
+            Images = images,
+            Plugins = ScanJobService.BuildFleetPlugins(images, enabled: true)
         };
     }
 
@@ -376,11 +379,15 @@ public sealed class DockerScanExecutionBackend(
 
     private async Task CloneRepoAsync(string url, string? branch, string dest, ScanJobs job, CancellationToken cancellationToken)
     {
-        streamHub.Publish(ScanJobStreamEvent.LogLine(job.Id, job.Scanner, $"[warden] cloning {url}…"));
-        var cloneUrl = url;
-        var token = Configuration.ScanGitToken;
-        if (!string.IsNullOrEmpty(token) && url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-            cloneUrl = "https://x-access-token:" + token + "@" + url["https://".Length..];
+        var display = Core.Utils.SecretRedactor.Redact(url);
+        streamHub.Publish(ScanJobStreamEvent.LogLine(job.Id, job.Scanner, $"[warden] cloning {display}…"));
+
+        string cloneUrl;
+        using (var scope = scopeFactory.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            cloneUrl = await GitCloneAuth.ResolveCloneUrlAsync(db, url, cancellationToken);
+        }
 
         var args = new List<string> { "clone", "--depth", "1" };
         if (!string.IsNullOrEmpty(branch)) { args.Add("--branch"); args.Add(branch); }
@@ -401,8 +408,8 @@ public sealed class DockerScanExecutionBackend(
         await proc.WaitForExitAsync(cancellationToken);
         if (proc.ExitCode != 0)
         {
-            var safe = string.IsNullOrEmpty(token) ? stderr : stderr.Replace(token, "***");
-            throw new InvalidOperationException($"git clone failed: {safe.Trim()}");
+            throw new InvalidOperationException(
+                $"git clone failed: {Core.Utils.SecretRedactor.Redact(stderr).Trim()}");
         }
         streamHub.Publish(ScanJobStreamEvent.LogLine(job.Id, job.Scanner, "[warden] clone complete"));
     }
