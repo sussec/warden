@@ -24,6 +24,7 @@ public class OpenIdConnectSetting
             Authority = Authority,
             ClientId = ClientId,
             ClientSecret = ClientSecret,
+            // Public path on the same origin as the web UI (Next.js rewrites this to the API).
             CallbackPath = "/auth/oidc/callback",
             RequireHttpsMetadata = false,
             ResponseType = OpenIdConnectResponseType.Code,
@@ -36,6 +37,14 @@ public class OpenIdConnectSetting
                 ValidateLifetime = true
             }
         };
+
+        // IdP redirect is a cross-site top-level navigation — Strict cookies would
+        // drop correlation/nonce state and break the code exchange.
+        options.CorrelationCookie.SameSite = SameSiteMode.Lax;
+        options.NonceCookie.SameSite = SameSiteMode.Lax;
+        options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        options.NonceCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+
         return options;
     }
 }

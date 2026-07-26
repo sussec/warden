@@ -26,9 +26,9 @@ public static class AuthSettingExtension
         context.AppSettings.Update(setting);
         await context.SaveChangesAsync();
         authSetting = request;
+        var authProvider = await authProviderManager.FindBySchemeAsync(OpenIdConnectDefaults.AuthenticationScheme);
         if (request.OpenIdConnectSetting.Enable)
         {
-            var authProvider = await authProviderManager.FindBySchemeAsync(OpenIdConnectDefaults.AuthenticationScheme);
             if (authProvider == null)
             {
                 await authProviderManager.AddAsync(new AuthProviders
@@ -38,23 +38,22 @@ public static class AuthSettingExtension
                         authProviderManager.ManagedHandlerType.First(t => t.Name == nameof(OpenIdConnectHandler)),
                     DisplayName = request.OpenIdConnectSetting.DisplayName,
                     Options = request.OpenIdConnectSetting.ToOpenIdConnectOptions(),
-                    Enable = request.OpenIdConnectSetting.Enable
+                    Enable = true
                 });
             }
             else
             {
-                if (authProvider.Options is OpenIdConnectOptions authOptions)
-                {
-                    authOptions.Authority = request.OpenIdConnectSetting.Authority;
-                    authOptions.ClientId = request.OpenIdConnectSetting.ClientId;
-                    authOptions.ClientSecret = request.OpenIdConnectSetting.ClientSecret;
-                    authProvider.Options = authOptions;
-                }
-
+                // Rebuild options so cookie SameSite/callback path stay in sync with code defaults.
+                authProvider.Options = request.OpenIdConnectSetting.ToOpenIdConnectOptions();
                 authProvider.DisplayName = request.OpenIdConnectSetting.DisplayName;
-                authProvider.Enable = request.OpenIdConnectSetting.Enable;
+                authProvider.Enable = true;
                 await authProviderManager.UpdateAsync(authProvider);
             }
+        }
+        else if (authProvider != null)
+        {
+            authProvider.Enable = false;
+            await authProviderManager.UpdateAsync(authProvider);
         }
     }
 }

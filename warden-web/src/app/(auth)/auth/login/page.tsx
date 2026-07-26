@@ -2,15 +2,17 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
 import { getAuthConfig, login } from "@/client/sdk.gen";
 import { GuestGuard } from "@/lib/auth/guard";
+import { ssoStartUrl } from "@/lib/auth/sso";
 import { WardenLogo } from "@/components/layout/logo";
 import { LoginBackdrop } from "@/components/auth/login-backdrop";
 import { GlassCard } from "@/components/auth/glass-card";
@@ -18,14 +20,20 @@ import { GlassCard } from "@/components/auth/glass-card";
 function LoginForm() {
   const router = useRouter();
   const search = useSearchParams();
+  const returnUrl = search.get("returnUrl") ?? "/dashboard";
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const { data: authConfig } = useQuery({
+  const { data: authConfig, isLoading: authConfigLoading } = useQuery({
     queryKey: ["auth-config"],
     queryFn: async () => (await getAuthConfig({ throwOnError: true })).data,
   });
+
+  useEffect(() => {
+    const err = search.get("error");
+    if (err) toast.error(err);
+  }, [search]);
 
   const signIn = useMutation({
     mutationFn: async () =>
@@ -41,11 +49,16 @@ function LoginForm() {
       }
       if (data?.accessToken) {
         // session cookies were set by the API (httpOnly)
-        router.replace(search.get("returnUrl") ?? "/dashboard");
+        router.replace(returnUrl.startsWith("/") ? returnUrl : "/dashboard");
       }
     },
     onError: () => toast.error("Sign in failed. Check your credentials."),
   });
+
+  const ssoEnabled = Boolean(authConfig?.openIdConnectEnable);
+  const passwordEnabled = !authConfig?.disablePasswordLogon;
+  const ssoHref = ssoStartUrl(returnUrl);
+  const providerLabel = authConfig?.openIdConnectProvider?.trim() || "SSO";
 
   return (
     /* Self-contained, viewport-level auth surface. The shared (auth) layout wraps
@@ -54,13 +67,8 @@ function LoginForm() {
        sits over that wrapper (it stays untouched in the DOM behind this) and host
        the backdrop + GlassCard here. All existing auth logic/fields are unchanged. */
     <div className="fixed inset-0 z-20 flex items-center justify-center overflow-y-auto p-4">
-      {/* Ambient WebGL field (plan §3.1) — sits behind the GlassCard within this
-          layer. Falls back to a static, token-driven gradient under
-          reduced-motion / no-WebGL. The component itself is fixed inset-0. */}
       <LoginBackdrop />
 
-      {/* Frosted auth card (plan §3.2) — wraps the existing form, all auth logic
-          and fields unchanged. Sits over the backdrop. */}
       <GlassCard className="relative z-10 w-full max-w-xl p-8 sm:p-10 warden-ops-panel">
         <div className="flex flex-col items-center gap-2">
           <WardenLogo className="mb-2 size-12 text-primary" />
@@ -79,9 +87,30 @@ function LoginForm() {
             }}
           >
             <p className="text-center text-sm text-muted-foreground">
-              Enter your credential to access your account
+              {ssoEnabled && !passwordEnabled
+                ? "Continue with your organization identity provider"
+                : "Enter your credential to access your account"}
             </p>
-            {!authConfig?.disablePasswordLogon && (
+
+            {/* General OIDC / SSO — full-page navigation (IdP redirect chain) */}
+            {!authConfigLoading && ssoEnabled && (
+              <div className="space-y-3">
+                <Button asChild variant={passwordEnabled ? "secondary" : "default"} className="w-full">
+                  <a href={ssoHref}>Sign in with {providerLabel}</a>
+                </Button>
+                {passwordEnabled && (
+                  <div className="flex items-center gap-3">
+                    <Separator className="flex-1" />
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                      or email
+                    </span>
+                    <Separator className="flex-1" />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {passwordEnabled && (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="username">Email</Label>
@@ -129,13 +158,12 @@ function LoginForm() {
                 </Button>
               </>
             )}
-            {authConfig?.openIdConnectEnable && (
-              <Button asChild variant="secondary" className="w-full">
-                {/* full page navigation — OIDC handshake is a server redirect chain */}
-                <a href="/api/login/oidc">
-                  Sign in with {authConfig.openIdConnectProvider || "SSO"}
-                </a>
-              </Button>
+
+            {!authConfigLoading && !passwordEnabled && !ssoEnabled && (
+              <p className="text-center text-sm text-critical">
+                No sign-in methods are enabled. Ask an administrator to configure password
+                logon or OpenID Connect under Setting → Authentication.
+              </p>
             )}
           </form>
         </div>

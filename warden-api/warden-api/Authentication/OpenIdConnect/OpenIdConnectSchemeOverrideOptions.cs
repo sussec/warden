@@ -15,6 +15,12 @@ public class OpenIdConnectSchemeOverrideOptions(IServiceScopeFactory scopeFactor
 {
     public void PostConfigure(string? name, OpenIdConnectOptions options)
     {
+        // Always harden OIDC state cookies (dynamic provider load may skip ToOpenIdConnectOptions fields).
+        options.CorrelationCookie.SameSite = SameSiteMode.Lax;
+        options.NonceCookie.SameSite = SameSiteMode.Lax;
+        options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        options.NonceCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+
         using var scope = scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var setting = context.GetAuthSettingAsync().GetAwaiter().GetResult();

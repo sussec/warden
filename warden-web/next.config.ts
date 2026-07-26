@@ -12,6 +12,9 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       { source: "/api/:path*", destination: `${API_INTERNAL_URL}/api/:path*` },
+      // OIDC provider callback hits the public host (same origin as the UI).
+      // ASP.NET OpenIdConnect middleware owns /auth/oidc/* — must not stay on Next.
+      { source: "/auth/oidc/:path*", destination: `${API_INTERNAL_URL}/auth/oidc/:path*` },
       { source: "/openapi/:path*", destination: `${API_INTERNAL_URL}/openapi/:path*` },
       { source: "/mcp", destination: `${API_INTERNAL_URL}/mcp` },
       { source: "/healthz", destination: `${API_INTERNAL_URL}/healthz` },
