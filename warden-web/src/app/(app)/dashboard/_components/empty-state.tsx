@@ -36,7 +36,7 @@ export function EmptyState({
     >
       <div
         className={cn(
-          "relative overflow-hidden rounded-lg border border-border/60 bg-card/40 shadow-sm",
+          "relative overflow-hidden rounded-none border border-border bg-card",
           compact ? "size-20" : "size-28 sm:size-32",
         )}
       >

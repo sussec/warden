@@ -85,7 +85,7 @@ export default function CiTokenPage() {
     {
       key: "name",
       header: "Name",
-      cell: (t) => <span className="font-semibold">{t.name ?? "—"}</span>,
+      cell: (t) => <span className="font-medium">{t.name ?? "—"}</span>,
     },
     {
       key: "createdAt",
@@ -126,7 +126,7 @@ export default function CiTokenPage() {
       {/* header */}
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-lg font-bold tracking-tight">CI Tokens</h1>
+          <h1 className="text-lg font-medium tracking-tight">CI Tokens</h1>
           <p className="text-xs text-muted-foreground">
             Tokens used by CI pipelines to upload scan results
           </p>
@@ -138,7 +138,7 @@ export default function CiTokenPage() {
       </div>
 
       {/* body — scrolls inside, page stays fixed */}
-      <Card className="min-h-0 flex-1 overflow-auto border-border/60 bg-card/70 p-4 shadow-sm backdrop-blur-md">
+      <Card className="min-h-0 flex-1 overflow-auto border-border bg-card p-4">
         <DataTable
           columns={columns}
           rows={pageRows}

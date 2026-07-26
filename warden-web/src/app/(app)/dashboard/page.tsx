@@ -33,10 +33,10 @@ export default function DashboardPage() {
 
   return (
     <div className="relative mx-auto w-full max-w-[1600px] space-y-5 pb-8">
-      {/* Generated ops hero field (Techanv-inspired atmospheric backdrop) */}
+      {/* Odyssey hero field — generated matte black × red HUD art */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 -top-2 h-64 overflow-hidden rounded-xl sm:h-72"
+        className="pointer-events-none absolute inset-x-0 -top-2 h-52 overflow-hidden sm:h-64"
       >
         <Image
           src="/dashboard/hero-ops.jpg"
@@ -44,17 +44,17 @@ export default function DashboardPage() {
           fill
           priority
           sizes="(max-width: 1600px) 100vw, 1600px"
-          className="object-cover object-center opacity-40 dark:opacity-55"
+          className="object-cover object-center opacity-50"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/55 to-background" />
-        <div className="absolute inset-0 opacity-50 warden-dot-grid mix-blend-soft-light" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/70 to-background" />
+        <div className="absolute inset-0 warden-ops-wash opacity-60" />
       </div>
 
       {/* Command header */}
       <header className="relative space-y-3">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex min-w-0 items-start gap-3 sm:gap-4">
-            <div className="relative mt-0.5 hidden size-12 shrink-0 overflow-hidden rounded-lg border border-primary/30 shadow-[0_0_24px_-6px_color-mix(in_oklab,var(--primary)_55%,transparent)] sm:block">
+            <div className="relative mt-0.5 hidden size-12 shrink-0 overflow-hidden rounded-none border border-primary/40 sm:block">
               <Image
                 src="/dashboard/mark.jpg"
                 alt=""
@@ -67,13 +67,13 @@ export default function DashboardPage() {
             <div className="space-y-1.5">
               <p className="warden-mono-label flex items-center gap-2">
                 <Shield className="size-3.5 text-primary" aria-hidden />
-                Ops · Security posture
+                ops · security posture
               </p>
               <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-                  Security Posture
+                <h1 className="text-2xl font-normal tracking-tight sm:text-3xl">
+                  <span className="text-primary">$_</span>security posture
                 </h1>
-                <span className="warden-live-chip">Live</span>
+                <span className="warden-live-chip">live</span>
               </div>
               <p className="max-w-xl text-sm text-muted-foreground">
                 Blocking constraint view across SAST, SCA, and dependency risk — security baked into
@@ -85,7 +85,7 @@ export default function DashboardPage() {
           <Select value={days} onValueChange={setDays}>
             <SelectTrigger
               size="sm"
-              className="w-44 border-border/80 bg-card/80 font-mono text-xs backdrop-blur-md"
+              className="w-44 border-border bg-card font-mono text-xs"
             >
               <CalendarDays className="size-3.5 text-primary" />
               <SelectValue />
@@ -120,12 +120,12 @@ export default function DashboardPage() {
       </header>
 
       <Tabs defaultValue="overview" className="relative gap-4">
-        <TabsList className="h-10 border border-border/70 bg-card/70 p-1 font-mono text-xs backdrop-blur-md">
+        <TabsList className="h-10 border border-border bg-card p-1 font-mono text-xs">
           <TabsTrigger value="overview" className="px-4 font-mono text-xs tracking-wide">
-            Overview
+            overview
           </TabsTrigger>
           <TabsTrigger value="findings" className="px-4 font-mono text-xs tracking-wide">
-            Findings
+            findings
           </TabsTrigger>
         </TabsList>
         <TabsContent value="overview">

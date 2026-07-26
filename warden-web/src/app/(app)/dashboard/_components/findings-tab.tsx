@@ -79,7 +79,7 @@ export function FindingsTab({ body }: { body: { startDate: string; endDate: stri
     .map((c) => ({
       category: c.category,
       label: CATEGORY_META[c.category]?.label ?? c.category,
-      color: CATEGORY_META[c.category]?.color ?? "#9ca3af",
+      color: CATEGORY_META[c.category]?.color ?? "#7a7a7a",
       count: n(c.count),
     }))
     .sort((a, b) => b.count - a.count);

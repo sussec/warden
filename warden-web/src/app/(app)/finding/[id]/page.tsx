@@ -354,7 +354,7 @@ export default function FindingDetailPage() {
 
       {/* ── collapsible AI dock ───────────────────────────────────── */}
       {aiOpen && (
-        <aside className="flex w-[min(420px,40vw)] shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+        <aside className="flex w-[min(420px,40vw)] shrink-0 flex-col overflow-hidden rounded-none border border-border bg-card ">
           <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
             <div className="flex min-w-0 items-center gap-2">
               <Sparkles className="size-4 shrink-0 text-primary" />

@@ -112,7 +112,7 @@ export default function ProjectListPage() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            className="w-64 bg-card/70 pl-9 backdrop-blur-md"
+            className="w-64 bg-card pl-9"
             placeholder="Search…"
             value={name}
             onChange={(e) => {
@@ -122,7 +122,7 @@ export default function ProjectListPage() {
           />
         </div>
         <Select value={sortBy} onValueChange={(v) => setSortBy(v as ProjectSortField)}>
-          <SelectTrigger className="w-40 bg-card/70 backdrop-blur-md">
+          <SelectTrigger className="w-40 bg-card">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>
@@ -138,7 +138,7 @@ export default function ProjectListPage() {
             setPage((p) => ({ ...p, page: 1 }));
           }}
         >
-          <SelectTrigger className="w-48 bg-card/70 backdrop-blur-md">
+          <SelectTrigger className="w-48 bg-card">
             <SelectValue placeholder="Source control" />
           </SelectTrigger>
           <SelectContent>
@@ -153,7 +153,7 @@ export default function ProjectListPage() {
       </div>
 
       {/* table region owns the scroll — page itself never scrolls */}
-      <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-border/60 bg-card/70 p-3 shadow-sm backdrop-blur-md">
+      <div className="min-h-0 flex-1 overflow-auto rounded-none border border-border bg-card p-3">
         <DataTable
           columns={columns}
           rows={data?.items}

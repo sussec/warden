@@ -91,7 +91,7 @@ export default function AiSettingPage() {
       {/* header */}
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-lg font-bold tracking-tight">AI</h1>
+          <h1 className="text-lg font-medium tracking-tight">AI</h1>
           <p className="text-xs text-muted-foreground">
             LLM endpoint for remediation suggestions, triage &amp; semantic search
           </p>
@@ -99,7 +99,7 @@ export default function AiSettingPage() {
       </div>
 
       {/* scrollable form region — page stays fixed */}
-      <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-border/60 bg-card/70 shadow-sm backdrop-blur-md">
+      <div className="min-h-0 flex-1 overflow-auto rounded-none border border-border bg-card">
         <Card className="border-0 bg-transparent shadow-none">
         <CardHeader>
           <CardTitle>AI provider</CardTitle>
@@ -179,7 +179,7 @@ export default function AiSettingPage() {
 
             <Separator />
             <div className="space-y-1">
-              <h3 className="text-sm font-semibold">Embeddings (semantic search)</h3>
+              <h3 className="text-sm font-medium">Embeddings (semantic search)</h3>
               <p className="text-xs text-muted-foreground">
                 Embeddings always use an OpenAI-compatible endpoint.
                 {isAnthropic

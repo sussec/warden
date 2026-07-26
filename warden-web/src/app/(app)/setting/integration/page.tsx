@@ -244,7 +244,7 @@ function JiraCard() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border bg-muted/50">
-              <FaJira className="size-4.5 text-[#0052cc] dark:text-[#4c9aff]" />
+              <FaJira className="size-4.5 text-primary" />
             </div>
             <div>
             <CardTitle>Jira</CardTitle>
@@ -424,7 +424,7 @@ function RedmineCard() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border bg-muted/50">
-              <SiRedmine className="size-4.5 text-[#b32024] dark:text-[#e0565a]" />
+              <SiRedmine className="size-4.5 text-primary" />
             </div>
             <div>
             <CardTitle>Redmine</CardTitle>
@@ -563,7 +563,7 @@ function TeamsCard() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border bg-muted/50">
-              <FaMicrosoft className="size-4.5 text-[#6264a7] dark:text-[#9ea2ff]" />
+              <FaMicrosoft className="size-4.5 text-primary" />
             </div>
             <div>
             <CardTitle>Microsoft Teams</CardTitle>
@@ -971,7 +971,7 @@ function JiraWebhookCard() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border bg-muted/50">
-              <FaJira className="size-4.5 text-[#0052cc] dark:text-[#4c9aff]" />
+              <FaJira className="size-4.5 text-primary" />
             </div>
             <div>
             <CardTitle>Jira Webhook</CardTitle>
@@ -1191,7 +1191,7 @@ export default function IntegrationPage() {
       </div>
 
       {/* scroll region — page stays fixed, settings scroll inside */}
-      <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-border/60 bg-card/70 p-4 shadow-sm backdrop-blur-md">
+      <div className="min-h-0 flex-1 overflow-auto rounded-none border border-border bg-card p-4">
         <div className="grid gap-4 lg:grid-cols-2">
           <JiraCard />
           <JiraWebhookCard />

@@ -222,7 +222,7 @@ export default function ProjectOverviewPage() {
       </div>
 
       {/* scan history table — owns its own scroll, page stays fixed */}
-      <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-border/60 bg-card/70 p-3 shadow-sm backdrop-blur-md">
+      <div className="min-h-0 flex-1 overflow-auto rounded-none border border-border bg-card p-3">
         <DataTable
           columns={columns}
           rows={data?.items}

@@ -94,8 +94,8 @@ export default function SlaSettingPage() {
       </div>
 
       {/* form — scrolls inside, page stays fixed */}
-      <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-border/60 bg-card/70 shadow-sm backdrop-blur-md">
-        <Card className="border-0 bg-transparent shadow-none backdrop-blur-none">
+      <div className="min-h-0 flex-1 overflow-auto rounded-none border border-border bg-card">
+        <Card className="border-0 bg-transparent shadow-none">
           <CardHeader>
             <CardTitle>SLA</CardTitle>
             <CardDescription>Remediation deadlines (in days) per severity.</CardDescription>

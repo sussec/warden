@@ -112,7 +112,7 @@ export default function ProjectIntegrationPage() {
         <h2 className="text-lg font-bold tracking-tight">Integrations</h2>
         <p className="text-xs text-muted-foreground">Connect issue trackers and alerting for this project</p>
       </div>
-      <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-border/60 bg-card/70 p-3 shadow-sm backdrop-blur-md">
+      <div className="min-h-0 flex-1 overflow-auto rounded-none border border-border bg-card p-3">
         <div className="grid gap-4 sm:grid-cols-2">
         {cards.map((c) => {
           const Icon = c.icon;

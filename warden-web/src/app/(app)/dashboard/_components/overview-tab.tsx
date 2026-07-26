@@ -25,6 +25,7 @@ import {
   n,
 } from "./dashboard-ui";
 import { EmptyState } from "./empty-state";
+import { BLACK, RED } from "@/lib/palette";
 
 export function OverviewTab({ body }: { body: { startDate: string; endDate: string } }) {
   const router = useRouter();
@@ -91,10 +92,10 @@ export function OverviewTab({ body }: { body: { startDate: string; endDate: stri
 
   // Remediation pipeline (SAST finding lifecycle).
   const pipeline = [
-    { label: "Open", value: n(sast?.status.open), color: "#eb722a" },
-    { label: "Confirmed", value: n(sast?.status.confirmed), color: "#f0a92a" },
-    { label: "Accepted risk", value: n(sast?.status.acceptedRisk), color: "#8b95a5" },
-    { label: "Fixed", value: n(sast?.status.fixed), color: "#30a46c" },
+    { label: "Open", value: n(sast?.status.open), color: RED[13] },
+    { label: "Confirmed", value: n(sast?.status.confirmed), color: RED[15] },
+    { label: "Accepted risk", value: n(sast?.status.acceptedRisk), color: BLACK[14] },
+    { label: "Fixed", value: n(sast?.status.fixed), color: RED[10] },
   ];
   const pipelineMax = Math.max(1, ...pipeline.map((p) => p.value));
 
@@ -102,7 +103,7 @@ export function OverviewTab({ body }: { body: { startDate: string; endDate: stri
     .map((c) => ({
       category: c.category,
       label: CATEGORY_META[c.category]?.label ?? c.category,
-      color: CATEGORY_META[c.category]?.color ?? "#9ca3af",
+      color: CATEGORY_META[c.category]?.color ?? BLACK[16],
       count: n(c.count),
     }))
     .sort((a, b) => b.count - a.count);
@@ -121,7 +122,7 @@ export function OverviewTab({ body }: { body: { startDate: string; endDate: stri
       value: fmt(criticalHigh),
       count: criticalHigh,
       sub: "needs attention",
-      accent: "#e5484d",
+      accent: RED[13],
       onClick: () => router.push("/finding?severity=Critical&severity=High"),
     },
     {
@@ -129,7 +130,7 @@ export function OverviewTab({ body }: { body: { startDate: string; endDate: stri
       value: fmt(open),
       count: open,
       sub: "awaiting triage",
-      accent: "#eb722a",
+      accent: RED[15],
       onClick: () => router.push("/finding"),
     },
     {
@@ -138,7 +139,7 @@ export function OverviewTab({ body }: { body: { startDate: string; endDate: stri
       count: mttr ? mttr.meanDaysToFix : undefined,
       suffix: "d",
       sub: mttr ? `${fmt(mttr.fixedCount)} fixed this period` : "",
-      accent: "#30a46c",
+      accent: RED[11],
     },
     {
       label: "Resolved rate",
@@ -146,7 +147,7 @@ export function OverviewTab({ body }: { body: { startDate: string; endDate: stri
       count: resolvedRate,
       suffix: "%",
       sub: mttr ? `${mttr.meanOpenAgeDays}d avg open age` : "",
-      accent: "#0ea5e9",
+      accent: RED[17],
     },
   ];
 
@@ -160,7 +161,7 @@ export function OverviewTab({ body }: { body: { startDate: string; endDate: stri
       </Stagger>
 
       {/* Visual pipeline strip — generated HUD art */}
-      <div className="relative overflow-hidden rounded-lg border border-border/70 warden-ops-panel">
+      <div className="relative overflow-hidden rounded-none border border-border warden-ops-panel">
         <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
           <div className="relative min-h-[140px] md:min-h-[168px]">
             <Image
@@ -174,8 +175,8 @@ export function OverviewTab({ body }: { body: { startDate: string; endDate: stri
           </div>
           <div className="relative flex flex-col justify-center gap-2 p-4 sm:p-5">
             <p className="warden-mono-label">7-tool CI · blocking gates</p>
-            <h2 className="text-lg font-semibold tracking-tight sm:text-xl">
-              Security baked into every phase
+            <h2 className="text-lg font-normal tracking-tight sm:text-xl">
+              security baked into every phase
             </h2>
             <p className="max-w-md text-sm text-muted-foreground">
               SAST, secrets, SCA, and container signals roll into one posture feed. Critical and high
@@ -240,7 +241,7 @@ export function OverviewTab({ body }: { body: { startDate: string; endDate: stri
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2 border-t border-border/50 pt-3 text-center">
             <div>
-              <div className="font-mono text-xl font-semibold tabular-nums text-[color:var(--severity-info,#30a46c)]">
+              <div className="font-mono text-xl font-medium tabular-nums text-primary">
                 {mttr ? `${mttr.meanDaysToFix}d` : "—"}
               </div>
               <div className="warden-mono-label mt-1 justify-center">mean time-to-fix</div>

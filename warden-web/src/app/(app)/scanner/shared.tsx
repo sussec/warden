@@ -173,7 +173,7 @@ function CommandSnippet({ command }: { command: string }) {
           setTimeout(() => setCopied(false), 1500);
         }}
       >
-        {copied ? <Check className="size-3.5 text-info" /> : <Copy className="size-3.5" />}
+        {copied ? <Check className="size-3.5 text-primary" /> : <Copy className="size-3.5" />}
       </Button>
     </div>
   );
@@ -301,7 +301,7 @@ export function RegisteredScannersSection() {
   const { data: scanners, isLoading } = useScanners();
   return (
     <Shell title="Registered Scanners" desc="Scanners that have reported results to this Warden instance">
-      <Card className="bg-card/70 backdrop-blur-md">
+      <Card className="bg-card">
         <CardContent className="flex flex-wrap gap-2 pt-6">
           {isLoading && Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-8 w-36 rounded-md" />)}
           {!isLoading && (scanners ?? []).length === 0 && (
@@ -310,8 +310,8 @@ export function RegisteredScannersSection() {
             </p>
           )}
           {(scanners ?? []).map((s) => (
-            <div key={s.id ?? s.name} className="flex items-center gap-2 rounded-md border border-border/60 bg-card/70 px-3 py-1.5 backdrop-blur-md">
-              <span className="size-1.5 rounded-full bg-info" />
+            <div key={s.id ?? s.name} className="flex items-center gap-2 rounded-md border border-border/60 bg-card px-3 py-1.5 ">
+              <span className="size-1.5 rounded-full bg-primary" />
               <span className="text-sm font-medium">{s.name}</span>
               <TypeBadge type={s.type} />
             </div>
@@ -327,7 +327,7 @@ export function ScanRunsSection() {
   const [logJob, setLogJob] = useState<ScanJobInfo | null>(null);
   return (
     <Shell title="Scan Runs" desc="On-demand scans executed by Warden — newest first">
-      <Card className="bg-card/70 backdrop-blur-md">
+      <Card className="bg-card">
         <CardContent className="pt-6">
           {(jobs ?? []).length === 0 ? (
             <p className="text-sm text-muted-foreground">No runs yet — hit <span className="font-medium">Run</span> on a scanner in the Fleet.</p>
@@ -382,7 +382,7 @@ export function FleetSection() {
     >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {FLEET.map((f) => (
-          <Card key={f.service} className="gap-3 bg-card/70 backdrop-blur-md">
+          <Card key={f.service} className="gap-3 bg-card">
             <CardHeader className="flex flex-row items-center justify-between">
               <div className="flex items-center gap-2">
                 <f.icon className="size-4 text-muted-foreground" />
@@ -390,7 +390,7 @@ export function FleetSection() {
                 <TypeBadge type={f.type} />
               </div>
               {isRegistered(f) && (
-                <Badge variant="outline" className="border-info/40 text-info">
+                <Badge variant="outline" className="border-primary/40 text-primary">
                   <ScanSearch className="size-3" /> Active
                 </Badge>
               )}

@@ -14,32 +14,34 @@ import { CountUp } from "@/components/ui/count-up";
 import { prefersReducedMotion } from "@/components/charts/chart-helpers";
 import { GlowCard } from "./glow-card";
 
-// Severity palette — single source of truth, ordered most→least severe.
+import { BLACK, RED, SEVERITY_HEX } from "@/lib/palette";
+
+// Severity palette — red intensity only (matte black × chatak red).
 export const SEV = [
-  { key: "critical", label: "Critical", color: "#e5484d" },
-  { key: "high", label: "High", color: "#eb722a" },
-  { key: "medium", label: "Medium", color: "#f0a92a" },
-  { key: "low", label: "Low", color: "#6b8cff" },
+  { key: "critical", label: "Critical", color: RED[13] },
+  { key: "high", label: "High", color: RED[15] },
+  { key: "medium", label: "Medium", color: RED[17] },
+  { key: "low", label: "Low", color: RED[10] },
 ] as const;
 
 export const SEVERITY_COLOR: Record<string, string> = {
-  Critical: "#e5484d",
-  High: "#eb722a",
-  Medium: "#f0a92a",
-  Low: "#6b8cff",
-  Info: "#8b95a5",
+  Critical: SEVERITY_HEX.Critical,
+  High: SEVERITY_HEX.High,
+  Medium: SEVERITY_HEX.Medium,
+  Low: SEVERITY_HEX.Low,
+  Info: SEVERITY_HEX.Info,
 };
 
-// Friendly label + colour per scanner category (ScannerType).
+// Scanner categories — red / black greys only (no blue/green/amber).
 export const CATEGORY_META: Record<string, { label: string; color: string }> = {
-  Sast: { label: "Code (SAST)", color: "#3b82f6" },
-  Secret: { label: "Secrets", color: "#a855f7" },
-  Dast: { label: "DAST / Web", color: "#f0a92a" },
-  Iast: { label: "IAST", color: "#6b8cff" },
-  Container: { label: "Container", color: "#14b8a6" },
-  Dependency: { label: "Dependencies", color: "#21b3b3" },
-  Ai: { label: "AI / LLM", color: "#ec4899" },
-  Cloud: { label: "Cloud (CSPM)", color: "#0ea5e9" },
+  Sast: { label: "Code (SAST)", color: RED[15] },
+  Secret: { label: "Secrets", color: RED[13] },
+  Dast: { label: "DAST / Web", color: RED[17] },
+  Iast: { label: "IAST", color: BLACK[16] },
+  Container: { label: "Container", color: RED[11] },
+  Dependency: { label: "Dependencies", color: BLACK[19] },
+  Ai: { label: "AI / LLM", color: RED[13] },
+  Cloud: { label: "Cloud (CSPM)", color: RED[10] },
 };
 
 export function n(v: number | undefined | null): number {
@@ -58,7 +60,7 @@ export function fmtDay(d: string): string {
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
 }
 
-/** Card wrapper with a header row — Techanv ops panel chrome. */
+/** Card wrapper with a header row — Odyssey ops panel chrome. */
 export function Panel({
   title,
   subtitle,
@@ -79,7 +81,7 @@ export function Panel({
     <div className="mb-3 flex items-start justify-between gap-2 border-b border-border/50 pb-2.5">
       <div className="min-w-0">
         {title && (
-          <h3 className="text-sm font-semibold leading-tight tracking-tight">{title}</h3>
+          <h3 className="text-sm font-medium leading-tight tracking-tight lowercase">{title}</h3>
         )}
         {subtitle && (
           <p className="mt-0.5 font-mono text-[11px] tracking-wide text-muted-foreground">
@@ -92,7 +94,7 @@ export function Panel({
   );
 
   const surface =
-    "flex flex-col rounded-lg border border-border/70 bg-card/80 p-4 backdrop-blur-md warden-ops-panel";
+    "flex flex-col rounded-none border border-border bg-card p-4 warden-ops-panel";
 
   // Plain (non-glow): the surface itself is the grid item and carries `className`.
   if (!glow) {
@@ -108,7 +110,7 @@ export function Panel({
   // on it). The inner surface fills the slot (`h-full`) and owns the corner
   // accent + visual treatment.
   return (
-    <GlowCard className={`rounded-lg ${className ?? ""}`}>
+    <GlowCard className={`rounded-none ${className ?? ""}`}>
       <div className={`${surface} h-full warden-card-accent`}>
         {header}
         {children}
@@ -142,16 +144,16 @@ export function KpiCard({
   onClick?: () => void;
 }) {
   return (
-    <GlowCard className="rounded-lg">
+    <GlowCard className="rounded-none">
       <button
         type="button"
         onClick={onClick}
         disabled={!onClick}
-        className="group warden-card-accent warden-ops-panel flex h-full w-full cursor-pointer flex-col items-start rounded-lg border border-border/70 bg-card/80 p-4 text-left backdrop-blur-md transition-colors enabled:hover:border-primary/40 enabled:hover:bg-card disabled:cursor-default"
+        className="group warden-card-accent warden-ops-panel flex h-full w-full cursor-pointer flex-col items-start rounded-none border border-border bg-card p-4 text-left transition-colors enabled:hover:border-primary enabled:hover:bg-[var(--ody-bg-hover)] disabled:cursor-default"
       >
         <span className="warden-mono-label">{label}</span>
         <span
-          className="mt-2 font-mono text-3xl font-semibold leading-none tracking-tight tabular-nums"
+          className="mt-2 font-mono text-3xl font-medium leading-none tracking-tight tabular-nums"
           style={accent ? { color: accent } : undefined}
         >
           {count === undefined ? (
@@ -220,7 +222,7 @@ export function Bar({
 
 /** Small coloured severity chip. */
 export function SeverityChip({ severity }: { severity: string }) {
-  const color = SEVERITY_COLOR[severity] ?? "#8b95a5";
+  const color = SEVERITY_COLOR[severity] ?? BLACK[14];
   return (
     <span
       className="inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium"

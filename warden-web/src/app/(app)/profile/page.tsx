@@ -34,7 +34,7 @@ function ChangePasswordCard() {
   });
 
   return (
-    <Card className="border-border/60 bg-card/70 backdrop-blur-md">
+    <Card className="border-border/60 bg-card">
       <CardHeader>
         <CardTitle>Change password</CardTitle>
         <CardDescription>
@@ -116,7 +116,7 @@ export default function ProfilePage() {
       {/* form sections — scroll inside, page stays fixed */}
       <div className="min-h-0 flex-1 overflow-auto">
         <div className="max-w-2xl space-y-6 pb-2">
-          <Card className="border-border/60 bg-card/70 backdrop-blur-md">
+          <Card className="border-border/60 bg-card">
             <CardHeader>
               <CardTitle>Account</CardTitle>
               <CardDescription>Your account details.</CardDescription>

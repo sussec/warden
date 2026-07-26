@@ -101,7 +101,7 @@ export default function RuleListPage() {
       key: "scanner",
       header: "Scanner",
       cell: (r) => (
-        <span className="inline-flex items-center rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
+        <span className="inline-flex items-center rounded bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
           {r.scannerName ?? "Unknown"}
         </span>
       ),
@@ -116,7 +116,7 @@ export default function RuleListPage() {
       header: "Findings (✓ / ✗ / ?)",
       cell: (r) => (
         <span className="font-mono text-sm tabular-nums">
-          <span className="text-info">{r.correctFinding}</span>
+          <span className="text-primary">{r.correctFinding}</span>
           {" / "}
           <span className="text-critical">{r.incorrectFinding}</span>
           {" / "}
@@ -145,7 +145,7 @@ export default function RuleListPage() {
       {/* header + filters */}
       <div className="flex shrink-0 flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h1 className="text-lg font-bold tracking-tight">Rules</h1>
+          <h1 className="text-lg font-medium tracking-tight">Rules</h1>
           <Button onClick={() => syncMut.mutate()} disabled={syncMut.isPending}>
             <RefreshCw className={syncMut.isPending ? "size-4 animate-spin" : "size-4"} />
             {syncMut.isPending ? "Syncing…" : "Sync"}
@@ -155,7 +155,7 @@ export default function RuleListPage() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              className="w-64 pl-9 bg-card/70 backdrop-blur-md"
+              className="w-64 pl-9 bg-card"
               placeholder="Search rules…"
               value={name}
               onChange={(e) => {
@@ -171,7 +171,7 @@ export default function RuleListPage() {
               setPage((p) => ({ ...p, page: 1 }));
             }}
           >
-            <SelectTrigger className="w-48 bg-card/70 backdrop-blur-md">
+            <SelectTrigger className="w-48 bg-card">
               <SelectValue placeholder="Scanner" />
             </SelectTrigger>
             <SelectContent>
@@ -187,7 +187,7 @@ export default function RuleListPage() {
       </div>
 
       {/* table region — scrolls inside; page stays fixed */}
-      <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-border/60 bg-card/70 p-3 shadow-sm backdrop-blur-md">
+      <div className="min-h-0 flex-1 overflow-auto rounded-none border border-border bg-card p-3">
         <DataTable
           columns={columns}
           rows={data?.items}

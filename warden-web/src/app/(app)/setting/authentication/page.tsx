@@ -59,7 +59,7 @@ export default function AuthenticationSettingPage() {
 
       {/* scroll region — form scrolls, page stays fixed */}
       <div className="min-h-0 flex-1 overflow-auto">
-        <Card className="bg-card/70 backdrop-blur-md">
+        <Card className="bg-card">
         <CardHeader>
           <CardTitle>Authentication</CardTitle>
           <CardDescription>Login methods and OpenID Connect (SSO).</CardDescription>

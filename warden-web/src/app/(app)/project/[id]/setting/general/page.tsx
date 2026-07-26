@@ -178,7 +178,7 @@ export default function ProjectGeneralSettingPage() {
       </div>
 
       {/* scrollable form region — page stays fixed */}
-      <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-auto rounded-xl border border-border/60 bg-card/70 p-4 shadow-sm backdrop-blur-md">
+      <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-auto rounded-none border border-border bg-card p-4">
       <div className="flex w-full max-w-3xl flex-col gap-6">
       <div className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">General</h2>

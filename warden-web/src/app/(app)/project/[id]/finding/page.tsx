@@ -143,7 +143,7 @@ function ProjectFindingPageInner() {
         </Select>
       </div>
       {/* table region — scrolls; the page itself does not */}
-      <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-border/60 bg-card/70 p-3 shadow-sm backdrop-blur-md">
+      <div className="min-h-0 flex-1 overflow-auto rounded-none border border-border bg-card p-3">
         <DataTable
           columns={columns}
           rows={data?.items}
