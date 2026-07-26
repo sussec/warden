@@ -41,12 +41,14 @@ Production checklist:
   [ ] Set api.env.trustedProxies if behind an ingress/LB
   [ ] Prefer postgresql external managed DB for HA
   [ ] networkPolicy.enabled=true for namespace isolation
-  [ ] api.dockerSocket.enabled remains false on Kubernetes (use CI scanners)
+  [ ] SCAN_BACKEND={{ .Values.api.env.scanBackend | default "auto" }} (kubernetes Jobs when no Docker)
+  [ ] Push fleet images: scripts/build-push-scanners.sh → {{ .Values.api.env.scanImagePrefix }}*
 
 {{- if and .Values.api.enabled (not .Values.api.dockerSocket.enabled) }}
 
-UI scan fleet: Docker socket is disabled (production default). Use CI scanner
-images with WARDEN_TOKEN, or enable api.dockerSocket only on trusted nodes.
+UI scan fleet: Docker socket is off. The API runs scanners as Kubernetes Jobs
+(scan RBAC + SCAN_IMAGE_PREFIX). Ensure secrets.wardenToken is set and images
+are in the registry (gitleaks, semgrep, trivy, …).
 {{- end }}
 
 Docs: charts/warden/README.md

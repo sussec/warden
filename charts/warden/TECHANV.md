@@ -88,5 +88,27 @@ Fix: use Cloudflare DNS (`1.1.1.1`), clear cache, confirm CF DNS CNAME for `ward
 
 ## UI agent scans on k8s
 
-Docker socket is **off** by default. Prefer CI scanners + `WARDEN_TOKEN`.  
+## UI scanner fleet (all plugins)
+
+On k3s there is **no Docker**. The API uses the **Kubernetes Job** backend (`scanBackend: kubernetes`) so gitleaks, semgrep, trivy, and the rest of the fleet run as Jobs.
+
+1. Ensure `secrets.wardenToken` is a valid CI token from **Setting → Access Token**.
+2. Create a Harbor pull secret (if images are private):
+   ```bash
+   kubectl -n warden create secret docker-registry harbor-pull \
+     --docker-server=harbor.techanv.com \
+     --docker-username=admin \
+     --docker-password='…'
+   ```
+3. Build and push every scanner image:
+   ```bash
+   docker login harbor.techanv.com
+   REGISTRY=harbor.techanv.com/library ./scripts/build-push-scanners.sh
+   # or start with core tools:
+   REGISTRY=harbor.techanv.com/library ./scripts/build-push-scanners.sh gitleaks semgrep trivy trufflehog
+   ```
+4. Helm sets `SCAN_IMAGE_PREFIX=harbor.techanv.com/library/warden-` and scan RBAC automatically.
+5. In the UI: **Scanner → Fleet** → Run (git URL targets). Capability should show `backend: kubernetes` and all plugins enabled.
+
+Docker socket is **off** by default on Kubernetes. Prefer K8s Jobs or CI scanners + `WARDEN_TOKEN`.  
 Scanner images: `harbor.techanv.com/library/warden-gitleaks:latest` (and others as you push).

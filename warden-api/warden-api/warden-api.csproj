@@ -19,6 +19,7 @@
         <PackageReference Include="ClosedXML" Version="0.105.0" />
         <PackageReference Include="Docker.DotNet" Version="3.125.15" />
         <PackageReference Include="FluentResults" Version="4.0.0" />
+        <PackageReference Include="KubernetesClient" Version="17.0.14" />
         <PackageReference Include="MailKit" Version="4.17.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.8" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.8" />

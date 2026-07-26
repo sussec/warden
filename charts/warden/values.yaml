@@ -126,6 +126,11 @@ api:
     # Scanner images: harbor.techanv.com/library/warden-gitleaks etc.
     scanImagePrefix: "harbor.techanv.com/library/warden-"
     scanWorkspacePath: /scan-workspace
+    # auto | docker | kubernetes — auto uses Docker socket if present, else K8s Jobs
+    scanBackend: "auto"
+    # Optional pull secret for private Harbor projects (must exist in the release namespace)
+    scanImagePullSecret: ""
+    scanGitImage: "alpine/git:2.47.2"
     osvServiceUrl: ""
   extraEnv: []
   # - name: MY_VAR
@@ -137,6 +142,9 @@ api:
     # RWO is fine for replicaCount=1; use RWX (e.g. NFS/EFS) if scaling API
     accessModes:
       - ReadWriteOnce
+  # RBAC so the API can create scan Jobs / read pod logs (Kubernetes backend)
+  scanJobs:
+    rbac: true
   dockerSocket:
     enabled: false
     path: /var/run/docker.sock

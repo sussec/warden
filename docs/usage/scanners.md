@@ -44,8 +44,10 @@ Warden queues the job, then the built-in runner launches the matching scanner im
 
 ## Requirements
 
-- The `scan`-profile scanner images must be built locally (`docker compose --profile scan build`) or available to the daemon, since the runner launches them by name (`warden-semgrep`, `warden-gitleaks`, …).
-- A CI access token (**Setting → Access Token**) set as `WARDEN_TOKEN` in `.env`, so scanners can ingest results.
+- A CI access token (**Setting → Access Token**) set as `WARDEN_TOKEN` (compose `.env` or Helm `secrets.wardenToken`), so scanners can ingest results.
+- **Docker Compose / local:** mount the Docker socket, build images with `docker compose --profile scan build` (or `scripts/build-push-scanners.sh`). Runner backend = `docker`.
+- **Kubernetes (production):** no Docker socket. The API creates **Jobs** (`SCAN_BACKEND=kubernetes` or `auto`). Push images to your registry and set `SCAN_IMAGE_PREFIX` (e.g. `harbor.techanv.com/library/warden-`). Helm installs scan RBAC automatically. Capability shows every fleet plugin as **enabled**.
+- Repository targets on Kubernetes must be **git URLs** (not host paths).
 
 ## CLI equivalent
 

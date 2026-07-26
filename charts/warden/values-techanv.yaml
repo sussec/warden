@@ -19,20 +19,29 @@ api:
     tag: latest
     pullPolicy: Always
   replicaCount: 1
+  # No Docker on k3s — UI fleet runs as Kubernetes Jobs (all plugins enabled)
   dockerSocket:
     enabled: false
+  scanJobs:
+    rbac: true
   env:
     frontendUrl: https://warden-prod.techanv.com
     openApiEnabled: "true"
     trustedProxies: "10.42.0.0/16,10.43.0.0/16"
-    # Scanners pulled from Harbor by domain
+    scanBackend: "kubernetes"
+    # Scanners pulled from Harbor by domain (scripts/build-push-scanners.sh)
     scanImagePrefix: "harbor.techanv.com/library/warden-"
+    # Optional if project is private:
+    # kubectl -n warden create secret docker-registry harbor-pull \
+    #   --docker-server=harbor.techanv.com --docker-username=… --docker-password=…
+    scanImagePullSecret: ""
   resources:
     requests:
-      cpu: 200m
-      memory: 512Mi
+      cpu: 500m
+      memory: 1Gi
     limits:
-      memory: 2Gi
+      cpu: "2"
+      memory: 4Gi
 
 web:
   image:
@@ -43,10 +52,11 @@ web:
   apiInternalUrl: http://warden:8080
   resources:
     requests:
-      cpu: 50m
-      memory: 128Mi
+      cpu: 100m
+      memory: 256Mi
     limits:
-      memory: 512Mi
+      cpu: "1"
+      memory: 1Gi
 
 osv:
   image:

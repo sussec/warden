@@ -129,6 +129,27 @@ Open `http://localhost:8080` and sign in with the username `system` and the pass
 - The backend API can additionally be exposed directly (for example on an internal port) for CI access tokens, the MCP endpoint at `/mcp`, and OpenAPI tooling at `/openapi/v1.json`.
 - For production, terminate TLS at a reverse proxy in front of the `web` service and set `FRONTEND_URL` to the public HTTPS URL. List the proxy in `TRUSTED_PROXIES`.
 
+## OpenID Connect / SSO
+
+Warden supports **general OIDC** (any standards-compliant IdP: Keycloak, Entra ID, Okta, Auth0, Google Workspace, Authentik, Dex, …). Configuration is stored in the database via **Setting → Authentication** — no rebuild required.
+
+| Public path | Role |
+|---|---|
+| `/auth/sso?returnUrl=/dashboard` | Next.js SSO entry (sets return cookie, starts OIDC) |
+| `/api/login/oidc` | API OpenID Connect challenge (proxied by web) |
+| `/auth/oidc/callback` | OIDC redirect URI (proxied to API middleware) |
+| `/auth/callback` | Post-login landing (reads return cookie → app) |
+
+1. Create a **confidential** OIDC client at your IdP.
+2. Set redirect URI to `https://<your-host>/auth/oidc/callback`.
+3. Grant scopes `openid profile email` and ensure the email (or UPN) claim is present.
+4. In Warden: enable OIDC, set Authority (issuer base URL), Client ID, Client Secret.
+5. Behind TLS termination set **Scheme override** to `https`.
+6. Set `FRONTEND_URL` to the public HTTPS origin (used for the final redirect after cookie issue).
+7. Sign in at `/auth/login` — the **Sign in with …** button appears when OIDC is enabled.
+
+Password logon can be disabled for SSO-only deployments.
+
 ## UI-triggered scans
 
 Warden can launch the bundled scanner images on demand from the **Scanner** page (see [Using Warden → Scanners](usage/scanners.md)). The API container does this by talking to the host Docker daemon and starting each scanner as a **sibling container** (docker-out-of-docker) — no Docker-in-Docker, no `--privileged`.

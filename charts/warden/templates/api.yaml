@@ -166,6 +166,8 @@ spec:
                 secretKeyRef:
                   name: {{ include "warden.secretName" . }}
                   key: warden-token
+            - name: SCAN_BACKEND
+              value: {{ .Values.api.env.scanBackend | default "auto" | quote }}
             - name: SCAN_IMAGE_PREFIX
               value: {{ .Values.api.env.scanImagePrefix | quote }}
             - name: SCAN_WORKSPACE_PATH
@@ -174,8 +176,14 @@ spec:
               value: {{ include "warden.scanWorkspacePvc" . | quote }}
             - name: SCAN_NETWORK
               value: {{ .Release.Namespace | quote }}
+            - name: SCAN_NAMESPACE
+              value: {{ .Release.Namespace | quote }}
             - name: SCAN_WARDEN_URL
               value: {{ printf "http://%s:%v" (include "warden.apiServiceName" .) .Values.api.service.port | quote }}
+            - name: SCAN_IMAGE_PULL_SECRET
+              value: {{ .Values.api.env.scanImagePullSecret | default "" | quote }}
+            - name: SCAN_GIT_IMAGE
+              value: {{ .Values.api.env.scanGitImage | default "alpine/git:2.47.2" | quote }}
             - name: SCAN_GIT_TOKEN
               valueFrom:
                 secretKeyRef:
