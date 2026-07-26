@@ -64,7 +64,7 @@ export function SankeyChart({
           triggerOn: "mousemove",
           backgroundColor: "rgba(20,20,28,0.95)",
           borderColor: "rgba(255,255,255,0.1)",
-          textStyle: { color: "#e5e7eb", fontSize: 12 },
+          textStyle: { color: "#f2eeea", fontSize: 12 },
         },
         series: [
           {
@@ -80,7 +80,7 @@ export function SankeyChart({
             data: nodes.map((n) => ({
               name: n.name,
               value: n.value,
-              itemStyle: { color: n.color ?? "#3b82f6", borderColor: "transparent" },
+              itemStyle: { color: n.color ?? "#ff0033", borderColor: "transparent" },
             })),
             links: links.map((l) => ({
               source: l.source,
@@ -89,14 +89,14 @@ export function SankeyChart({
             })),
             lineStyle: { color: "gradient", opacity: 0.42, curveness: 0.5 },
             label: {
-              color: "#cbd5e1",
+              color: "#cfcbc6",
               fontSize: 12,
               fontWeight: 500,
               formatter: (p: { name: string; value: number }) =>
                 p.value ? `{v|${p.value.toLocaleString()}}\n{n|${p.name}}` : p.name,
               rich: {
-                v: { color: "#f8fafc", fontSize: 13, fontWeight: 700, lineHeight: 16 },
-                n: { color: "#94a3b8", fontSize: 11, lineHeight: 14 },
+                v: { color: "#f2eeea", fontSize: 13, fontWeight: 700, lineHeight: 16 },
+                n: { color: "#8a8680", fontSize: 11, lineHeight: 14 },
               },
             },
           },

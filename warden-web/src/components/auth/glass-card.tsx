@@ -103,38 +103,25 @@ export const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(function Gla
     [onPointerMove],
   );
 
-  const blur = frost === "strong" ? "28px" : "18px";
+  // frost kept for API compat; Odyssey cards are flat opaque panels (no glass).
+  void frost;
 
   return (
     <div
       ref={setRefs}
       onPointerMove={handlePointerMove}
       className={cn(
-        // Layout / shape — squircle-ish radius matching the premium dashboard cards.
-        "relative isolate overflow-hidden rounded-2xl",
-        // Foundation proximity-glow border (token-tinted, reduced-motion-safe).
+        // Odyssey: sharp black panel, hairline border — no frost blob.
+        "relative isolate overflow-hidden rounded-none",
         glow && "glow-card",
         className,
       )}
       style={{
-        // Translucent token fill — sits over the backdrop so the blur reads.
-        background: "color-mix(in oklab, var(--card) 62%, transparent)",
-        // Frosted blur (vendor-prefixed for Safari). The wrapper is the glass.
-        backdropFilter: `blur(${blur}) saturate(135%)`,
-        WebkitBackdropFilter: `blur(${blur}) saturate(135%)`,
-        // Subtle base border from the theme token.
-        border: "1px solid color-mix(in oklab, var(--border) 80%, transparent)",
-        // Light edge (top/left highlight from the references) + ambient lift
-        // shadow, both token-driven so they invert correctly per theme.
-        boxShadow: [
-          // inner top/left highlight — the "glass catches the light" edge
-          "inset 0 1px 0 0 color-mix(in oklab, var(--card-foreground) 14%, transparent)",
-          "inset 1px 0 0 0 color-mix(in oklab, var(--card-foreground) 8%, transparent)",
-          // soft, wide ambient shadow grounded in the sidebar tone
-          "0 24px 60px -20px color-mix(in oklab, var(--sidebar) 70%, transparent)",
-          // faint primary-tinted halo so the card belongs to the brand palette
-          "0 0 0 1px color-mix(in oklab, var(--primary) 6%, transparent)",
-        ].join(", "),
+        background: "var(--card)",
+        backdropFilter: "none",
+        WebkitBackdropFilter: "none",
+        border: "1px solid var(--border)",
+        boxShadow: "none",
         ...style,
       }}
       {...rest}

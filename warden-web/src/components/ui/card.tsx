@@ -7,7 +7,7 @@ function Card({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card"
       className={cn(
-        "flex flex-col gap-6 rounded-xl border bg-card py-6 text-card-foreground shadow-sm",
+        "flex flex-col gap-6 rounded-none border border-border bg-card py-6 text-card-foreground shadow-none",
         // One-shot mount/route-change rise-in (8px, ~420ms, ease-out) so every
         // <Card> across the app animates in. Theme-safe (uses token-driven
         // surface) and reduced-motion safe — `.warden-reveal` no-ops to
@@ -39,7 +39,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-title"
-      className={cn("leading-none font-semibold", className)}
+      className={cn("leading-none font-medium", className)}
       {...props}
     />
   )

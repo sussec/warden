@@ -30,7 +30,8 @@ export function registerCharts() {
 
 /** Canvas can't resolve CSS var()/oklch strings — read computed values. */
 export function cssVar(name: string): string {
-  if (typeof window === "undefined") return "#888888";
+  // SSR fallback — matte mute grey from the black scale (never cyan/green).
+  if (typeof window === "undefined") return "#7a7a7a";
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 

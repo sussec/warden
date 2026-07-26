@@ -64,10 +64,10 @@ export function DataTable<T>({
       {/* only the table body scrolls; header stays sticky, pagination pinned */}
       <div className="min-h-0 flex-1 overflow-auto">
       <Table>
-        <TableHeader className="sticky top-0 z-10 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+        <TableHeader className="sticky top-0 z-10 bg-card">
           <TableRow>
             {columns.map((col) => (
-              <TableHead key={col.key} className={cn("uppercase text-xs font-bold", col.className)}>
+              <TableHead key={col.key} className={cn("uppercase text-xs font-medium", col.className)}>
                 {col.header}
               </TableHead>
             ))}

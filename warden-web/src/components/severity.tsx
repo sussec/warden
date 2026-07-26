@@ -17,7 +17,7 @@ export function SeverityBadge({ severity }: { severity?: string | null }) {
     text: "text-muted-foreground",
   };
   return (
-    <span className={cn("rounded px-2 py-0.5 text-xs font-semibold", style.bar)}>
+    <span className={cn("rounded-none px-2 py-0.5 text-xs font-medium tracking-wide", style.bar)}>
       {severity ?? "Unknown"}
     </span>
   );
@@ -30,7 +30,7 @@ export function CountBar({
   segments: { label: string; value: number; className: string }[];
 }) {
   return (
-    <div className="flex h-7 items-stretch gap-px overflow-hidden rounded-md font-mono shadow-sm">
+    <div className="flex h-7 items-stretch gap-px overflow-hidden rounded-none font-mono">
       {segments.map((s) => (
         <span
           key={s.label}

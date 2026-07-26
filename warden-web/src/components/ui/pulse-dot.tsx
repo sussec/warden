@@ -66,7 +66,7 @@ export function PulseDot({
       aria-label={label}
       aria-hidden={label ? undefined : true}
       className={[
-        "inline-block shrink-0 rounded-full bg-current align-middle",
+        "inline-block shrink-0 rounded-none bg-current align-middle",
         isStatic ? "" : "warden-pulse-glow",
         className ?? "",
       ]
@@ -116,9 +116,9 @@ export function StatusGlow({
       role="status"
       aria-label={label}
       className={[
-        "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5",
+        "inline-flex items-center gap-1.5 rounded-none border px-2 py-0.5",
         "text-[10px] font-semibold uppercase tracking-wide leading-none",
-        "backdrop-blur-sm",
+        "",
         className ?? "",
       ]
         .filter(Boolean)

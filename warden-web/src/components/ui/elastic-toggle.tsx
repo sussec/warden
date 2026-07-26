@@ -107,10 +107,10 @@ export function ElasticToggle({
         } as CSSProperties
       }
       className={cn(
-        "group/elastic relative inline-flex shrink-0 cursor-pointer items-center rounded-full",
-        "border border-border/70 shadow-sm outline-none",
-        // Track colour: muted when off, primary when on.
-        "bg-muted-foreground/25 data-[state=checked]:bg-primary",
+        "group/elastic relative inline-flex shrink-0 cursor-pointer items-center rounded-none",
+        "border border-border outline-none",
+        // Track: matte mute off, chatak red on.
+        "bg-muted data-[state=checked]:bg-primary",
         // Track tint transition uses a gentle, professional ease (not elastic).
         "transition-colors duration-200 ease-out",
         // Keyboard focus ring, token-coloured.
@@ -125,8 +125,8 @@ export function ElasticToggle({
         aria-hidden
         data-slot="elastic-thumb"
         className={cn(
-          "pointer-events-none block rounded-full bg-card shadow-sm",
-          "dark:bg-card-foreground",
+          "pointer-events-none block rounded-none bg-black-22",
+          "group-data-[state=checked]/elastic:bg-black-24",
           // Position is *state*, so the translate stays in every motion mode.
           // `transform-origin` flips toward the leading edge so the brief
           // horizontal stretch reads as the thumb "snapping" into place.
