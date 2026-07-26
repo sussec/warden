@@ -1,11 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { FaEnvelope, FaGithub, FaJira, FaMicrosoft } from "react-icons/fa6";
+import { FaEnvelope, FaGithub, FaGitlab, FaJira, FaMicrosoft } from "react-icons/fa6";
 import { SiRedmine } from "react-icons/si";
-import { Webhook as WebhookIcon } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  ExternalLink,
+  FolderGit2,
+  Loader2,
+  Lock,
+  ScanSearch,
+  Webhook as WebhookIcon,
+} from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,9 +24,14 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -756,6 +772,532 @@ function MailCard() {
   );
 }
 
+/* ---------------------------- SCM types (inline, no openapi regen) -------- */
+
+type ScmRepo = {
+  provider: string;
+  id: string;
+  fullName: string;
+  cloneUrl: string;
+  htmlUrl?: string;
+  defaultBranch?: string;
+  private?: boolean;
+  alreadyImported?: boolean;
+};
+
+type GitLabSetting = {
+  active?: boolean;
+  apiUrl?: string | null;
+  token?: string | null;
+  /** Server-side only flag — true when a PAT is stored (value never returned). */
+  tokenConfigured?: boolean;
+};
+
+const DEFAULT_SCANNERS = ["gitleaks", "cve-lite", "trufflehog"] as const;
+
+async function scmFetchRepos(provider: "github" | "gitlab"): Promise<ScmRepo[]> {
+  const res = await fetch(`/api/integration/scm/${provider}/repos`, {
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error((body as { message?: string }).message || `List failed (${res.status})`);
+  }
+  return res.json();
+}
+
+async function scmImportRepos(body: {
+  provider: string;
+  importAll?: boolean;
+  repoIds?: string[];
+  scanners?: string[];
+}) {
+  const res = await fetch("/api/integration/scm/import", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as { message?: string }).message || `Import failed (${res.status})`);
+  }
+  return res.json() as Promise<{
+    imported: number;
+    updated: number;
+    scansQueued: number;
+  }>;
+}
+
+function StatusPill({
+  ok,
+  label,
+  tone = "default",
+}: {
+  ok: boolean;
+  label: string;
+  tone?: "default" | "warn" | "danger";
+}) {
+  const styles =
+    tone === "danger"
+      ? "border-critical/40 bg-critical/10 text-critical"
+      : tone === "warn"
+        ? "border-medium/40 bg-medium/10 text-medium"
+        : ok
+          ? "border-primary/35 bg-primary/10 text-primary"
+          : "border-border/70 bg-muted/30 text-muted-foreground";
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider",
+        styles,
+      )}
+    >
+      <span
+        className={cn(
+          "size-1.5 shrink-0",
+          tone === "danger"
+            ? "bg-critical"
+            : tone === "warn"
+              ? "bg-medium"
+              : ok
+                ? "bg-primary"
+                : "bg-muted-foreground/50",
+        )}
+        aria-hidden
+      />
+      {label}
+    </span>
+  );
+}
+
+const FLEET_SCANNERS = ["gitleaks", "cve-lite", "trufflehog", "trivy", "semgrep"] as const;
+
+/** Shared multi-select repo picker + bulk import for GitHub / GitLab. */
+function ScmDiscoverPanel({
+  provider,
+  enabled,
+  onConfigure,
+}: {
+  provider: "github" | "gitlab";
+  enabled: boolean;
+  onConfigure?: () => void;
+}) {
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [scanners, setScanners] = useState<string[]>([...DEFAULT_SCANNERS]);
+  const [filter, setFilter] = useState("");
+  const [confirmAllOpen, setConfirmAllOpen] = useState(false);
+  const [lastImport, setLastImport] = useState<{
+    imported: number;
+    updated: number;
+    scansQueued: number;
+  } | null>(null);
+
+  const reposQuery = useQuery({
+    queryKey: ["scm-repos", provider],
+    enabled,
+    retry: false,
+    queryFn: () => scmFetchRepos(provider),
+  });
+
+  const importMut = useMutation({
+    mutationFn: async (mode: "selected" | "all") => {
+      return scmImportRepos({
+        provider,
+        importAll: mode === "all",
+        repoIds: mode === "selected" ? [...selected] : undefined,
+        scanners,
+      });
+    },
+    onSuccess: (r) => {
+      setLastImport(r);
+      setConfirmAllOpen(false);
+      toast.success(
+        `Imported ${r.imported} new · updated ${r.updated} · queued ${r.scansQueued} scan(s)`,
+      );
+      reposQuery.refetch();
+      setSelected(new Set());
+    },
+    onError: (e: Error) => toast.error(e.message || "Import failed"),
+  });
+
+  const repos = useMemo(() => {
+    const all = reposQuery.data ?? [];
+    const q = filter.trim().toLowerCase();
+    if (!q) return all;
+    return all.filter(
+      (r) =>
+        r.fullName.toLowerCase().includes(q) ||
+        r.cloneUrl.toLowerCase().includes(q),
+    );
+  }, [reposQuery.data, filter]);
+
+  const allIds = repos.map((r) => r.id);
+  const allSelected = allIds.length > 0 && allIds.every((id) => selected.has(id));
+  const importedCount = (reposQuery.data ?? []).filter((r) => r.alreadyImported).length;
+  const newCount = (reposQuery.data?.length ?? 0) - importedCount;
+
+  if (!enabled) {
+    return (
+      <div className="border border-dashed border-border/70 bg-muted/15 px-3 py-4">
+        <div className="flex items-start gap-2.5">
+          <div className="mt-0.5 flex size-7 shrink-0 items-center justify-center border border-border/60 bg-background/60">
+            <FolderGit2 className="size-3.5 text-muted-foreground" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium text-foreground">Connect first</p>
+            <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+              Paste a personal access token, save, then turn the integration{" "}
+              <span className="text-foreground">on</span> to list repos and queue fleet scans.
+            </p>
+            {onConfigure && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-3 h-8 font-mono text-[11px]"
+                onClick={onConfigure}
+              >
+                Configure token
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3 border border-border/60 bg-background/40 p-3">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-sm font-medium tracking-tight">Discover &amp; scan</p>
+          <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
+            Import repos as projects and queue fleet scanners as Kubernetes Jobs.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {reposQuery.data && !reposQuery.isError && (
+            <StatusPill
+              ok
+              label={`${reposQuery.data.length} repos · ${importedCount} in Warden`}
+            />
+          )}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 font-mono text-[11px]"
+            disabled={reposQuery.isFetching}
+            onClick={() => {
+              setLastImport(null);
+              reposQuery.refetch();
+            }}
+          >
+            {reposQuery.isFetching ? (
+              <>
+                <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                Loading
+              </>
+            ) : (
+              "Refresh"
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {lastImport && (
+        <div className="flex flex-col gap-2 border border-primary/30 bg-primary/5 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-2 text-xs">
+            <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-primary" />
+            <div>
+              <p className="font-medium text-foreground">
+                Import complete · {lastImport.scansQueued} scan(s) queued
+              </p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">
+                {lastImport.imported} new project(s), {lastImport.updated} updated. Follow progress
+                under Scan Runs.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            <Button asChild variant="outline" size="sm" className="h-7 font-mono text-[10px]">
+              <Link href="/project">
+                <FolderGit2 className="mr-1 size-3" />
+                Projects
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="h-7 font-mono text-[10px]">
+              <Link href="/scanner/runs">
+                <ScanSearch className="mr-1 size-3" />
+                Scan runs
+              </Link>
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {reposQuery.isLoading && (
+        <div className="space-y-2" aria-busy="true" aria-label="Loading repositories">
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-2/3" />
+        </div>
+      )}
+
+      {reposQuery.isError && (
+        <div className="flex items-start gap-2 border border-critical/40 bg-critical/10 px-3 py-2.5 text-xs text-critical">
+          <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
+          <div className="min-w-0">
+            <p className="font-medium">Could not list repositories</p>
+            <p className="mt-0.5 text-[11px] leading-relaxed opacity-90">
+              {(reposQuery.error as Error)?.message ||
+                "Check the token scopes (repo / read_api) and try Refresh."}
+            </p>
+            {onConfigure && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-2 h-7 border-critical/30 font-mono text-[10px] text-critical hover:bg-critical/10"
+                onClick={onConfigure}
+              >
+                Update token
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {!reposQuery.isLoading && !reposQuery.isError && (reposQuery.data?.length ?? 0) === 0 && (
+        <div className="border border-border/60 px-3 py-6 text-center">
+          <FolderGit2 className="mx-auto size-5 text-muted-foreground/60" />
+          <p className="mt-2 text-xs font-medium text-foreground">No repositories found</p>
+          <p className="mx-auto mt-1 max-w-sm text-[11px] leading-relaxed text-muted-foreground">
+            This token returned zero repos. Confirm org SSO authorization and scopes, then Refresh.
+          </p>
+        </div>
+      )}
+
+      {(reposQuery.data?.length ?? 0) > 0 && (
+        <>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Input
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              placeholder="Filter by name…"
+              className="h-8 font-mono text-xs sm:max-w-xs"
+              aria-label="Filter repositories"
+            />
+            <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+              <Checkbox
+                checked={allSelected}
+                onCheckedChange={(v) => {
+                  setSelected(v ? new Set(allIds) : new Set());
+                }}
+              />
+              Select all visible ({repos.length})
+            </label>
+            <div className="flex flex-wrap items-center gap-1.5 sm:ml-auto">
+              {newCount > 0 && (
+                <Badge variant="outline" className="font-mono text-[10px] text-muted-foreground">
+                  {newCount} new
+                </Badge>
+              )}
+              <span className="font-mono text-[10px] text-muted-foreground">
+                {selected.size} selected
+              </span>
+            </div>
+          </div>
+
+          <ScrollArea className="h-52 border border-border/50 bg-card/40">
+            <div className="space-y-0.5 p-1.5" role="listbox" aria-label="Repositories">
+              {repos.map((r) => {
+                const isSelected = selected.has(r.id);
+                return (
+                  <div
+                    key={r.id}
+                    role="option"
+                    aria-selected={isSelected}
+                    className={cn(
+                      "flex items-center gap-2.5 px-2 py-1.5 transition-colors",
+                      isSelected ? "bg-primary/8" : "hover:bg-primary/5",
+                      r.alreadyImported && "opacity-80",
+                    )}
+                  >
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={(v) => {
+                        setSelected((prev) => {
+                          const next = new Set(prev);
+                          if (v) next.add(r.id);
+                          else next.delete(r.id);
+                          return next;
+                        });
+                      }}
+                      aria-label={`Select ${r.fullName}`}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="truncate font-mono text-xs font-medium text-foreground">
+                          {r.fullName}
+                        </span>
+                        {r.private ? (
+                          <Lock className="size-3 shrink-0 text-muted-foreground" aria-label="Private" />
+                        ) : null}
+                      </div>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-1.5 font-mono text-[10px] text-muted-foreground">
+                        <span>{r.private ? "private" : "public"}</span>
+                        {r.defaultBranch ? <span>· {r.defaultBranch}</span> : null}
+                        {r.alreadyImported ? (
+                          <span className="text-primary">· already imported</span>
+                        ) : (
+                          <span className="text-foreground/70">· new</span>
+                        )}
+                      </div>
+                    </div>
+                    {r.htmlUrl ? (
+                      <a
+                        href={r.htmlUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="shrink-0 p-1 text-muted-foreground transition-colors hover:text-foreground"
+                        aria-label={`Open ${r.fullName} in new tab`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <ExternalLink className="size-3.5" />
+                      </a>
+                    ) : null}
+                  </div>
+                );
+              })}
+              {repos.length === 0 && filter && (
+                <p className="px-2 py-6 text-center text-[11px] text-muted-foreground">
+                  No matches for “{filter}”.
+                </p>
+              )}
+            </div>
+          </ScrollArea>
+
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <Label className="text-[11px] text-muted-foreground">Scanners to queue</Label>
+              {scanners.length === 0 && (
+                <span className="font-mono text-[10px] text-critical">Select at least one</span>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Scanners">
+              {FLEET_SCANNERS.map((s) => {
+                const on = scanners.includes(s);
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() =>
+                      setScanners((prev) =>
+                        on ? prev.filter((x) => x !== s) : [...new Set([...prev, s])],
+                      )
+                    }
+                    className={cn(
+                      "border px-2 py-1 font-mono text-[11px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      on
+                        ? "border-primary/40 bg-primary/10 text-primary"
+                        : "border-border/70 text-muted-foreground hover:border-border hover:text-foreground",
+                    )}
+                  >
+                    {s}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2 border-t border-border/40 pt-3 sm:flex-row sm:flex-wrap sm:items-center">
+            <Button
+              type="button"
+              size="sm"
+              className="font-mono text-xs"
+              disabled={selected.size === 0 || importMut.isPending || scanners.length === 0}
+              onClick={() => importMut.mutate("selected")}
+            >
+              {importMut.isPending ? (
+                <>
+                  <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                  Importing…
+                </>
+              ) : (
+                `Import selected (${selected.size})`
+              )}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              className="font-mono text-xs"
+              disabled={
+                (reposQuery.data?.length ?? 0) === 0 ||
+                importMut.isPending ||
+                scanners.length === 0
+              }
+              onClick={() => setConfirmAllOpen(true)}
+            >
+              Import &amp; scan all ({reposQuery.data?.length ?? 0})
+            </Button>
+            <p className="text-[10px] leading-relaxed text-muted-foreground sm:ml-auto sm:max-w-[14rem] sm:text-right">
+              Private clones use the stored PAT. Jobs land in Scan Fleet.
+            </p>
+          </div>
+        </>
+      )}
+
+      <Dialog open={confirmAllOpen} onOpenChange={setConfirmAllOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Import every repository?</DialogTitle>
+            <DialogDescription className="text-xs leading-relaxed">
+              This imports{" "}
+              <span className="font-mono text-foreground">{reposQuery.data?.length ?? 0}</span>{" "}
+              {provider === "github" ? "GitHub" : "GitLab"} repo(s) as Warden projects and queues{" "}
+              <span className="font-mono text-foreground">{scanners.join(", ") || "no scanners"}</span>{" "}
+              for each. Already-imported projects are updated, not duplicated.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setConfirmAllOpen(false)}
+              disabled={importMut.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              className="font-mono text-xs"
+              disabled={importMut.isPending || scanners.length === 0}
+              onClick={() => importMut.mutate("all")}
+            >
+              {importMut.isPending ? (
+                <>
+                  <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                  Importing…
+                </>
+              ) : (
+                "Confirm import all"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
 /* ---------------------------- GitHub ---------------------------- */
 
 function GitHubCard() {
@@ -780,6 +1322,7 @@ function GitHubCard() {
     onSuccess: () => {
       toast.success("GitHub settings saved");
       queryClient.invalidateQueries({ queryKey: ["integration-github"] });
+      queryClient.invalidateQueries({ queryKey: ["scm-repos", "github"] });
     },
     onError: () => toast.error("Failed to save GitHub settings"),
   });
@@ -795,12 +1338,11 @@ function GitHubCard() {
     onError: () => toast.error("GitHub test failed"),
   });
 
-  // Repo picker fed by metadata; pass form so unsaved token works. Falls back
-  // to free-text owner/repo inputs when the listing can't be fetched.
-  const hasToken = Boolean(form.token);
+  // Ticket-tracker repo picker (optional default owner/repo for issue creation).
+  const hasToken = Boolean(form.token) || Boolean(data && form.active);
   const metadataQuery = useQuery({
-    queryKey: ["integration-github-metadata", form.apiUrl],
-    enabled: open && hasToken,
+    queryKey: ["integration-github-metadata", form.apiUrl, open],
+    enabled: open && (Boolean(form.token) || Boolean(form.active)),
     retry: false,
     queryFn: async () => {
       const res = await getGitHubMetadataIntegration({ body: form, throwOnError: false });
@@ -813,47 +1355,89 @@ function GitHubCard() {
       Boolean(r.fullName),
     )
     .map((r) => ({ value: r.fullName, label: r.fullName }));
-  // Selecting a repo sets owner + repo together (fullName = "owner/name").
   const selectedFullName = form.owner && form.repo ? `${form.owner}/${form.repo}` : "";
 
+  const connected = Boolean(form.active);
+
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border bg-muted/50">
-              <FaGithub className="size-4.5 text-foreground" />
+    <Card className="border-border/80">
+      <CardHeader className="space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-start gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center border border-border/70 bg-muted/40">
+              <FaGithub className="size-5 text-foreground" />
             </div>
-            <div>
-            <CardTitle>GitHub Issues</CardTitle>
-            <CardDescription>Create issues from findings.</CardDescription>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <CardTitle className="text-base">GitHub</CardTitle>
+                <StatusPill ok={connected} label={connected ? "enabled" : "off"} />
+              </div>
+              <CardDescription className="mt-1 text-xs leading-relaxed">
+                PAT-based discovery of every accessible repo. Import as projects and queue fleet
+                scanners. Optional default repo for issue tickets.
+              </CardDescription>
             </div>
           </div>
           <Switch
             checked={form.active ?? false}
-            onCheckedChange={(v) => save.mutate({ ...form, active: v })}
+            onCheckedChange={(v) => {
+              if (v) {
+                // Turning on without a prior save still works if token already stored server-side.
+                save.mutate({ ...form, active: true });
+              } else {
+                save.mutate({ ...form, active: false });
+              }
+            }}
             aria-label="Enable GitHub"
           />
         </div>
       </CardHeader>
-      <CardContent>
-        <Button variant="outline" onClick={() => setOpen(true)}>
-          Configure
-        </Button>
+      <CardContent className="space-y-3">
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" className="h-8" onClick={() => setOpen(true)}>
+            Configure token
+          </Button>
+          {connected && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-muted-foreground"
+              disabled={test.isPending}
+              onClick={() => test.mutate(form)}
+            >
+              {test.isPending ? "Testing…" : "Test connection"}
+            </Button>
+          )}
+        </div>
+        <ScmDiscoverPanel
+          provider="github"
+          enabled={connected}
+          onConfigure={() => setOpen(true)}
+        />
       </CardContent>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>GitHub Configuration</DialogTitle>
+            <DialogTitle>GitHub configuration</DialogTitle>
+            <DialogDescription className="text-xs leading-relaxed">
+              Classic PAT needs <code className="font-mono text-foreground">repo</code> (private)
+              or <code className="font-mono text-foreground">public_repo</code>. Fine-grained:
+              Contents Read on target orgs. Token is stored server-side and never shown again after
+              save — leave blank to keep the existing token.
+            </DialogDescription>
           </DialogHeader>
           <form
             id="github-form"
             className="space-y-4"
             onSubmit={(e) => {
               e.preventDefault();
-              save.mutate(form);
-              setOpen(false);
+              save.mutate(
+                { ...form, active: form.active ?? true },
+                {
+                  onSuccess: () => setOpen(false),
+                },
+              );
             }}
           >
             <div className="space-y-2">
@@ -863,18 +1447,22 @@ function GitHubCard() {
                 placeholder="https://api.github.com"
                 value={form.apiUrl ?? ""}
                 onChange={(e) => setForm((f) => ({ ...f, apiUrl: e.target.value }))}
+                autoComplete="off"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="github-token">Token</Label>
+              <Label htmlFor="github-token">Personal access token</Label>
               <Input
                 id="github-token"
                 type="password"
-                placeholder="••••••••"
+                placeholder="ghp_… or github_pat_… (leave blank to keep)"
                 value={form.token ?? ""}
                 onChange={(e) => setForm((f) => ({ ...f, token: e.target.value }))}
+                autoComplete="off"
               />
             </div>
+            <Separator />
+            <p className="text-xs font-medium">Default issue tracker repo (optional)</p>
             {repoOptions && repoOptions.length > 0 ? (
               <div className="space-y-2">
                 <Label htmlFor="github-repo-picker">Repository</Label>
@@ -928,7 +1516,239 @@ function GitHubCard() {
               {test.isPending ? "Testing…" : "Test"}
             </Button>
             <Button type="submit" form="github-form" disabled={save.isPending}>
-              Save
+              {save.isPending ? "Saving…" : "Save & enable"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </Card>
+  );
+}
+
+/* ---------------------------- GitLab ---------------------------- */
+
+function GitLabCard() {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState<GitLabSetting>({
+    apiUrl: "https://gitlab.com/api/v4",
+  });
+
+  const { data } = useQuery({
+    queryKey: ["integration-gitlab"],
+    queryFn: async () => {
+      const res = await fetch("/api/integration/gitlab", {
+        credentials: "include",
+        headers: { Accept: "application/json" },
+      });
+      if (!res.ok) throw new Error("Failed to load GitLab settings");
+      return (await res.json()) as GitLabSetting;
+    },
+  });
+  const [seededFrom, setSeededFrom] = useState<unknown>(null);
+  if (data && data !== seededFrom) {
+    setSeededFrom(data);
+    // Never keep a leftover typed token from a previous edit session.
+    setForm({ ...data, token: "" });
+  }
+
+  const save = useMutation({
+    mutationFn: async (body: GitLabSetting) => {
+      const payload = {
+        active: body.active ?? false,
+        apiUrl: (body.apiUrl ?? "").trim(),
+        // Trim PAT — trailing spaces caused 401s against self-hosted GitLab.
+        token: (body.token ?? "").trim(),
+      };
+      const res = await fetch("/api/integration/gitlab", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as { message?: string }).message || `Save failed (${res.status})`);
+      }
+    },
+    onSuccess: () => {
+      toast.success("GitLab settings saved");
+      queryClient.invalidateQueries({ queryKey: ["integration-gitlab"] });
+      queryClient.invalidateQueries({ queryKey: ["scm-repos", "gitlab"] });
+    },
+    onError: (e: Error) => toast.error(e.message || "Failed to save GitLab settings"),
+  });
+
+  const test = useMutation({
+    mutationFn: async (body: GitLabSetting) => {
+      await save.mutateAsync({ ...body, active: true });
+      const res = await fetch("/api/integration/gitlab/test", {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as { message?: string }).message || "Test failed");
+      }
+      return true;
+    },
+    onSuccess: () => {
+      toast.success("GitLab connection OK");
+      queryClient.invalidateQueries({ queryKey: ["integration-gitlab"] });
+      queryClient.invalidateQueries({ queryKey: ["scm-repos", "gitlab"] });
+    },
+    onError: (e: Error) => toast.error(e.message || "GitLab test failed"),
+  });
+
+  const connected = Boolean(form.active);
+  const tokenReady = Boolean(form.tokenConfigured || form.token);
+  const apiHost = useMemo(() => {
+    try {
+      if (!form.apiUrl) return null;
+      return new URL(form.apiUrl).host;
+    } catch {
+      return form.apiUrl ?? null;
+    }
+  }, [form.apiUrl]);
+
+  return (
+    <Card className="border-border/80">
+      <CardHeader className="space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-start gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center border border-border/70 bg-muted/40">
+              <FaGitlab className="size-5 text-foreground" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <CardTitle className="text-base">GitLab</CardTitle>
+                <StatusPill ok={connected} label={connected ? "enabled" : "off"} />
+                {tokenReady && (
+                  <StatusPill ok label="token saved" />
+                )}
+              </div>
+              <CardDescription className="mt-1 text-xs leading-relaxed">
+                List group and user projects, import as Warden projects, and queue the scan fleet
+                (SaaS or self-managed).
+              </CardDescription>
+              {apiHost && (
+                <p className="mt-1 truncate font-mono text-[10px] text-muted-foreground">
+                  {apiHost}
+                </p>
+              )}
+            </div>
+          </div>
+          <Switch
+            checked={form.active ?? false}
+            onCheckedChange={(v) => {
+              if (v && !tokenReady) {
+                toast.error("Configure a GitLab PAT first, then enable.");
+                setOpen(true);
+                return;
+              }
+              save.mutate({ ...form, active: v, token: "" });
+            }}
+            aria-label="Enable GitLab"
+          />
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" className="h-8" onClick={() => setOpen(true)}>
+            Configure token
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 text-muted-foreground"
+            disabled={test.isPending || !tokenReady}
+            onClick={() => test.mutate({ ...form, token: form.token ?? "" })}
+          >
+            {test.isPending ? "Testing…" : "Test connection"}
+          </Button>
+        </div>
+        {!connected && tokenReady && (
+          <div className="border border-medium/40 bg-medium/10 px-3 py-2 text-[11px] leading-relaxed text-foreground">
+            Token is saved but the integration switch is <strong>off</strong>. Turn it on (or click{" "}
+            <span className="font-medium">Save &amp; enable</span>) to list repositories.
+          </div>
+        )}
+        <ScmDiscoverPanel
+          provider="gitlab"
+          enabled={connected}
+          onConfigure={() => setOpen(true)}
+        />
+      </CardContent>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>GitLab configuration</DialogTitle>
+            <DialogDescription className="text-xs leading-relaxed">
+              Scopes: <code className="font-mono text-foreground">read_api</code> +{" "}
+              <code className="font-mono text-foreground">read_repository</code> for discovery;
+              add <code className="font-mono text-foreground">api</code> to create issues from
+              findings (CodeRabbit-style PAT — no OAuth App). Self-managed:{" "}
+              <code className="font-mono text-foreground">
+                https://gitlab.example.com/api/v4
+              </code>
+              . Leave token blank to keep the existing one.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            id="gitlab-form"
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              // Always enable on explicit Save & enable (was stuck off when form.active was false).
+              save.mutate(
+                { ...form, active: true },
+                {
+                  onSuccess: () => setOpen(false),
+                },
+              );
+            }}
+          >
+            <div className="space-y-2">
+              <Label htmlFor="gitlab-apiurl">API URL</Label>
+              <Input
+                id="gitlab-apiurl"
+                placeholder="https://gitlab.com/api/v4 or https://gitlab.example.com/api/v4"
+                value={form.apiUrl ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, apiUrl: e.target.value }))}
+                autoComplete="off"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                Your instance is currently set to self-hosted when the host is not gitlab.com.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="gitlab-token">Personal access token</Label>
+              <Input
+                id="gitlab-token"
+                type="password"
+                placeholder={
+                  form.tokenConfigured
+                    ? "•••••••• (leave blank to keep existing)"
+                    : "glpat-…"
+                }
+                value={form.token ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, token: e.target.value }))}
+                autoComplete="off"
+              />
+            </div>
+          </form>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              type="button"
+              disabled={test.isPending}
+              onClick={() => test.mutate(form)}
+            >
+              {test.isPending ? "Testing…" : "Test"}
+            </Button>
+            <Button type="submit" form="gitlab-form" disabled={save.isPending}>
+              {save.isPending ? "Saving…" : "Save & enable"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1177,30 +1997,77 @@ function WebhookCard() {
   );
 }
 
+const SCM_STEPS = [
+  { n: "01", label: "Configure PAT" },
+  { n: "02", label: "Enable switch" },
+  { n: "03", label: "Refresh repos" },
+  { n: "04", label: "Import & scan" },
+] as const;
+
 export default function IntegrationPage() {
   return (
-    <div className="flex h-[calc(100dvh-5.5rem)] flex-col gap-4">
-      {/* header */}
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
-        <div>
-          <h1 className="text-lg font-bold tracking-tight">Integrations</h1>
-          <p className="text-xs text-muted-foreground">
-            Connect issue trackers and alert channels
-          </p>
-        </div>
+    <div className="flex h-[calc(100dvh-5.5rem)] flex-col gap-3 sm:gap-4">
+      <div className="shrink-0 px-0.5">
+        <h1 className="text-lg font-bold tracking-tight sm:text-xl">Integrations</h1>
+        <p className="mt-0.5 max-w-2xl text-xs text-muted-foreground sm:text-sm">
+          Source control for repo discovery and fleet scans, plus tickets and alerts for findings.
+        </p>
       </div>
 
-      {/* scroll region — page stays fixed, settings scroll inside */}
-      <div className="min-h-0 flex-1 overflow-auto rounded-none border border-border bg-card p-4">
-        <div className="grid gap-4 lg:grid-cols-2">
-          <JiraCard />
-          <JiraWebhookCard />
-          <RedmineCard />
-          <GitHubCard />
-          <TeamsCard />
-          <MailCard />
-          <WebhookCard />
-        </div>
+      <div className="min-h-0 flex-1 space-y-6 overflow-auto pb-4">
+        <section className="space-y-3" aria-labelledby="scm-section-title">
+          <div className="border-b border-border/50 pb-3">
+            <h2
+              id="scm-section-title"
+              className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground"
+            >
+              Source control &amp; scanning
+            </h2>
+            <p className="mt-1 max-w-3xl text-[11px] leading-relaxed text-muted-foreground sm:text-xs">
+              Private clones use the stored token. Scans run as Kubernetes Jobs in the cluster.
+            </p>
+            <ol className="mt-3 flex flex-wrap gap-2" aria-label="Setup steps">
+              {SCM_STEPS.map((step, i) => (
+                <li
+                  key={step.n}
+                  className="inline-flex items-center gap-2 border border-border/60 bg-muted/20 px-2.5 py-1.5"
+                >
+                  <span className="font-mono text-[10px] text-primary">{step.n}</span>
+                  <span className="text-[11px] text-foreground/90">{step.label}</span>
+                  {i < SCM_STEPS.length - 1 ? (
+                    <span className="sr-only">then</span>
+                  ) : null}
+                </li>
+              ))}
+            </ol>
+          </div>
+          <div className="grid gap-3 sm:gap-4 lg:grid-cols-2">
+            <GitHubCard />
+            <GitLabCard />
+          </div>
+        </section>
+
+        <section className="space-y-3" aria-labelledby="tickets-section-title">
+          <div className="border-b border-border/50 pb-2">
+            <h2
+              id="tickets-section-title"
+              className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground"
+            >
+              Tickets &amp; alerts
+            </h2>
+            <p className="mt-1 text-[11px] text-muted-foreground sm:text-xs">
+              Issue trackers and notification channels for the findings lifecycle.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:gap-4 lg:grid-cols-2">
+            <JiraCard />
+            <JiraWebhookCard />
+            <RedmineCard />
+            <TeamsCard />
+            <MailCard />
+            <WebhookCard />
+          </div>
+        </section>
       </div>
     </div>
   );

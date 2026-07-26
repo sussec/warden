@@ -1,5 +1,12 @@
 /** Runner readiness — GET /api/scan-job/capability (UI-only scans). */
 
+export type FleetPluginInfo = {
+  service: string;
+  targetType: string;
+  enabled: boolean;
+  imageReady?: boolean;
+};
+
 export type ScanRunnerCapability = {
   backend: string;
   available: boolean;
@@ -7,6 +14,8 @@ export type ScanRunnerCapability = {
   socketPresent: boolean;
   message: string;
   images: Record<string, boolean>;
+  /** All fleet plugins (gitleaks, semgrep, …) — enabled for UI Run */
+  plugins?: FleetPluginInfo[];
 };
 
 export async function fetchScanCapability(): Promise<ScanRunnerCapability> {
