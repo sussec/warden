@@ -4,14 +4,29 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Warden.Api.Scan;
 
+/// <summary>
+/// UI-first scan jobs: create from the browser, worker runs them, stream shows live logs.
+/// No CLI required for operators.
+/// </summary>
 [Route("api/scan-job")]
 public class ScanJobController(IScanJobService scanJobService) : BaseController
 {
     [HttpPost]
     [Route("")]
-    public Task<ScanJobInfo> CreateScanJob(CreateScanJobRequest request)
+    public async Task<ActionResult<ScanJobInfo>> CreateScanJob(CreateScanJobRequest request)
     {
-        return scanJobService.CreateAsync(request);
+        try
+        {
+            return await scanJobService.CreateAsync(request);
+        }
+        catch (ArgumentException e)
+        {
+            return BadRequest(new { message = e.Message });
+        }
+        catch (InvalidOperationException e)
+        {
+            return Conflict(new { message = e.Message });
+        }
     }
 
     [HttpPost]
@@ -19,6 +34,14 @@ public class ScanJobController(IScanJobService scanJobService) : BaseController
     public Task<List<ScanJobInfo>> GetScanJobs(ScanJobFilter filter)
     {
         return scanJobService.ListAsync(filter);
+    }
+
+    /// <summary>Runner readiness for the fleet UI (backend kind, token, images).</summary>
+    [HttpGet]
+    [Route("capability")]
+    public Task<ScanRunnerCapability> GetCapability(CancellationToken cancellationToken)
+    {
+        return scanJobService.GetCapabilityAsync(cancellationToken);
     }
 
     [HttpGet]

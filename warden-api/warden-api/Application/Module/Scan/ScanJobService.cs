@@ -2,6 +2,7 @@ using Warden.Application.Module.Scan.Model;
 using Warden.Core.Entity;
 using Warden.Core.Enum;
 using Microsoft.EntityFrameworkCore;
+// AppDbContext + Configuration
 
 namespace Warden.Application.Module.Scan;
 
@@ -10,9 +11,14 @@ public interface IScanJobService
     Task<ScanJobInfo> CreateAsync(CreateScanJobRequest request);
     Task<List<ScanJobInfo>> ListAsync(ScanJobFilter filter, int limit = 50);
     Task<ScanJobInfo?> GetAsync(Guid id);
+    Task<ScanRunnerCapability> GetCapabilityAsync(CancellationToken cancellationToken = default);
 }
 
-public class ScanJobService(AppDbContext context) : IScanJobService
+public class ScanJobService(
+    AppDbContext context,
+    IScanJobStreamHub streamHub,
+    IScanExecutionBackend backend
+) : IScanJobService
 {
     /// Compose scan-profile services and the kind of target each expects.
     public static readonly IReadOnlyDictionary<string, ScanTargetType> Fleet =
@@ -46,6 +52,9 @@ public class ScanJobService(AppDbContext context) : IScanJobService
             ["augustus"] = ScanTargetType.Llm,
         };
 
+    public Task<ScanRunnerCapability> GetCapabilityAsync(CancellationToken cancellationToken = default) =>
+        backend.GetCapabilityAsync(cancellationToken);
+
     public async Task<ScanJobInfo> CreateAsync(CreateScanJobRequest request)
     {
         if (!Fleet.TryGetValue(request.Scanner.Trim(), out var targetType))
@@ -53,10 +62,19 @@ public class ScanJobService(AppDbContext context) : IScanJobService
         var target = request.Target.Trim();
         if (string.IsNullOrEmpty(target))
             throw new ArgumentException("Target is required");
-        if (targetType == ScanTargetType.Repository && !target.StartsWith('/') && !ScanRunnerWorker.IsGitUrl(target))
-            throw new ArgumentException("Repository target must be an absolute host path or a git URL");
+        if (targetType == ScanTargetType.Repository && !target.StartsWith('/') && !DockerScanExecutionBackend.IsGitUrl(target))
+            throw new ArgumentException(
+                "Repository target must be a git URL (recommended) or an absolute host path");
         if (targetType == ScanTargetType.Url && !Uri.TryCreate(target, UriKind.Absolute, out _))
             throw new ArgumentException("Target must be an absolute URL");
+
+        // Fail fast so the UI never queues jobs that the worker will immediately reject.
+        if (!backend.IsAvailable)
+            throw new InvalidOperationException(
+                "Scan runner is not available. Mount the Docker socket and set DOCKER_GID (or switch to the K8s backend).");
+        if (string.IsNullOrWhiteSpace(Configuration.ScanToken))
+            throw new InvalidOperationException(
+                "WARDEN_TOKEN is not set. Create a CI token under Settings → Access Token and put it in .env.");
 
         var job = new ScanJobs
         {
@@ -70,7 +88,9 @@ public class ScanJobService(AppDbContext context) : IScanJobService
         };
         context.ScanJobs.Add(job);
         await context.SaveChangesAsync();
-        return ToInfo(job);
+        var info = ToInfo(job);
+        streamHub.Publish(ScanJobStreamEvent.FromJob(info, "job.queued"));
+        return info;
     }
 
     public async Task<List<ScanJobInfo>> ListAsync(ScanJobFilter filter, int limit = 50)
