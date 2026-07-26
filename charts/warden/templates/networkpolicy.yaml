@@ -1,0 +1,196 @@
+{{- if .Values.networkPolicy.enabled }}
+# Default deny all ingress within the release namespace for Warden pods
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "warden.fullname" . }}-default-deny
+  labels:
+    {{- include "warden.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "warden.selectorLabels" . | nindent 6 }}
+  policyTypes:
+    - Ingress
+    {{- if .Values.networkPolicy.restrictEgress }}
+    - Egress
+    {{- end }}
+---
+{{- if .Values.web.enabled }}
+# Ingress → web (from anywhere / ingress controller)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "warden.fullname" . }}-web-ingress
+  labels:
+    {{- include "warden.labels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "warden.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: web
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 3000
+  egress:
+    # DNS
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # API
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "warden.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: api
+      ports:
+        - protocol: TCP
+          port: {{ .Values.api.service.port }}
+---
+{{- end }}
+{{- if .Values.api.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "warden.fullname" . }}-api
+  labels:
+    {{- include "warden.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "warden.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: api
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "warden.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: web
+      ports:
+        - protocol: TCP
+          port: 8080
+    # Allow same-namespace tooling / ingress controllers selecting by namespace
+    - ports:
+        - protocol: TCP
+          port: 8080
+  egress:
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    {{- if .Values.postgresql.enabled }}
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "warden.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: postgresql
+      ports:
+        - protocol: TCP
+          port: {{ .Values.postgresql.service.port }}
+    {{- end }}
+    {{- if .Values.osv.enabled }}
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "warden.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: osv
+      ports:
+        - protocol: TCP
+          port: {{ .Values.osv.service.port }}
+    {{- end }}
+    {{- if not .Values.networkPolicy.restrictEgress }}
+    # AI endpoints, git hosts, package registries, etc.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 22
+    {{- end }}
+---
+{{- end }}
+{{- if and .Values.osv.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "warden.fullname" . }}-osv
+  labels:
+    {{- include "warden.labels" . | nindent 4 }}
+    app.kubernetes.io/component: osv
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "warden.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: osv
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "warden.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: api
+      ports:
+        - protocol: TCP
+          port: 9000
+  egress:
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    {{- if not .Values.networkPolicy.restrictEgress }}
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
+    {{- end }}
+---
+{{- end }}
+{{- if .Values.postgresql.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "warden.fullname" . }}-postgresql
+  labels:
+    {{- include "warden.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "warden.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: postgresql
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "warden.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: api
+      ports:
+        - protocol: TCP
+          port: 5432
+{{- end }}
+{{- end }}

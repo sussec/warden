@@ -1,36 +1,95 @@
-# Production-oriented overrides (example)
-# helm upgrade --install warden ./charts/warden -n warden -f charts/warden/values-production.yaml \
+# Production overrides — pair with required secrets via --set / sealed-secrets / external-secrets
+#
+# helm upgrade --install warden ./charts/warden -n warden --create-namespace \
+#   -f charts/warden/values-production.yaml \
 #   --set secrets.systemPassword='...' \
 #   --set secrets.accessTokenKey='...' \
 #   --set secrets.refreshTokenKey='...' \
 #   --set secrets.postgresPassword='...' \
 #   --set secrets.wardenToken='...' \
-#   --set api.env.frontendUrl='https://warden.example.com'
+#   --set api.env.frontendUrl='https://warden.example.com' \
+#   --set ingress.hosts[0].host=warden.example.com \
+#   --set ingress.tls[0].hosts[0]=warden.example.com
+
+global:
+  defaultStorageClass: ""
 
 api:
+  image:
+    pullPolicy: Always
   replicaCount: 2
   dockerSocket:
     enabled: false
+  scanWorkspace:
+    # Multi-replica API: use RWX storage if UI scans need shared clones
+    accessModes:
+      - ReadWriteOnce
   resources:
     requests:
       cpu: 250m
       memory: 512Mi
     limits:
+      cpu: "2"
       memory: 2Gi
   env:
     openApiEnabled: "false"
     frontendUrl: "https://warden.example.com"
+    trustedProxies: ""
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+  podAntiAffinity: soft
 
 web:
+  image:
+    pullPolicy: Always
   replicaCount: 2
   resources:
     requests:
       cpu: 100m
       memory: 256Mi
     limits:
+      cpu: "1"
       memory: 1Gi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 70
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+  podAntiAffinity: soft
+
+osv:
+  image:
+    pullPolicy: Always
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 4
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+  podAntiAffinity: soft
 
 postgresql:
+  image:
+    pullPolicy: IfNotPresent
   persistence:
     size: 50Gi
   resources:
@@ -38,10 +97,12 @@ postgresql:
       cpu: 250m
       memory: 512Mi
     limits:
+      cpu: "2"
       memory: 2Gi
 
-osv:
-  replicaCount: 2
+networkPolicy:
+  enabled: true
+  restrictEgress: false
 
 ingress:
   enabled: true
@@ -49,6 +110,8 @@ ingress:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
   hosts:
     - host: warden.example.com
       paths:

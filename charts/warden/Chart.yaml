@@ -1,8 +1,8 @@
 apiVersion: v2
 name: warden
-description: Techanv Warden - security platform (API, web UI, OSV, PostgreSQL with pgvector)
+description: Techanv Warden - production-ready chart (API, web, OSV, PostgreSQL/pgvector)
 type: application
-version: 0.1.0
+version: 0.2.0
 appVersion: "latest"
 home: https://github.com/sussec/warden
 sources:
@@ -14,6 +14,7 @@ keywords:
   - dast
   - vulnerability
   - warden
+  - asp
 maintainers:
   - name: Techanv Sussec
     url: https://github.com/sussec/warden

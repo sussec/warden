@@ -1,0 +1,47 @@
+{{- if and .Values.api.enabled .Values.api.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "warden.fullname" . }}-api
+  labels:
+    {{- include "warden.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  minAvailable: {{ .Values.api.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "warden.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: api
+---
+{{- end }}
+{{- if and .Values.web.enabled .Values.web.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "warden.fullname" . }}-web
+  labels:
+    {{- include "warden.labels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+spec:
+  minAvailable: {{ .Values.web.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "warden.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: web
+---
+{{- end }}
+{{- if and .Values.osv.enabled .Values.osv.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "warden.fullname" . }}-osv
+  labels:
+    {{- include "warden.labels" . | nindent 4 }}
+    app.kubernetes.io/component: osv
+spec:
+  minAvailable: {{ .Values.osv.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "warden.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: osv
+{{- end }}

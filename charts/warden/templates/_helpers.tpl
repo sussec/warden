@@ -1,13 +1,7 @@
-{{/*
-Expand the name of the chart.
-*/}}
 {{- define "warden.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-{{/*
-Create a default fully qualified app name.
-*/}}
 {{- define "warden.fullname" -}}
 {{- if .Values.fullnameOverride -}}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
@@ -32,11 +26,17 @@ helm.sh/chart: {{ include "warden.chart" . }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
+app.kubernetes.io/part-of: warden
 {{- end -}}
 
 {{- define "warden.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "warden.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end -}}
+
+{{- define "warden.componentLabels" -}}
+{{- include "warden.labels" . }}
+app.kubernetes.io/component: {{ .component }}
 {{- end -}}
 
 {{- define "warden.serviceAccountName" -}}
@@ -55,9 +55,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 {{- end -}}
 
-{{/*
-API Service DNS name used by web rewrites and scanners (compose-compatible: warden)
-*/}}
 {{- define "warden.apiServiceName" -}}
 {{- if .Values.api.compatServiceName -}}
 warden
@@ -112,4 +109,40 @@ osv-api
 
 {{- define "warden.scanWorkspacePvc" -}}
 {{- printf "%s-scan-workspace" (include "warden.fullname" .) -}}
+{{- end -}}
+
+{{- define "warden.storageClass" -}}
+{{- $sc := .storageClass | default .root.Values.global.defaultStorageClass -}}
+{{- if $sc -}}
+storageClassName: {{ $sc | quote }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Soft pod anti-affinity for a component (spreads across nodes).
+Usage: include "warden.podAntiAffinity" (dict "root" . "component" "api")
+*/}}
+{{- define "warden.podAntiAffinity" -}}
+{{- $mode := .mode | default "soft" -}}
+{{- if eq $mode "hard" }}
+podAntiAffinity:
+  requiredDuringSchedulingIgnoredDuringExecution:
+    - labelSelector:
+        matchLabels:
+          app.kubernetes.io/name: {{ include "warden.name" .root }}
+          app.kubernetes.io/instance: {{ .root.Release.Name }}
+          app.kubernetes.io/component: {{ .component }}
+      topologyKey: kubernetes.io/hostname
+{{- else if eq $mode "soft" }}
+podAntiAffinity:
+  preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: {{ include "warden.name" .root }}
+            app.kubernetes.io/instance: {{ .root.Release.Name }}
+            app.kubernetes.io/component: {{ .component }}
+        topologyKey: kubernetes.io/hostname
+{{- end -}}
 {{- end -}}

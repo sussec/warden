@@ -1,29 +1,31 @@
-# Warden Helm Chart
+# Warden Helm Chart (production-ready)
 
-End-to-end Kubernetes deployment for Techanv Warden:
+End-to-end Kubernetes deployment matching **docker-compose** core services:
 
-| Component | Image | Description |
-|-----------|--------|-------------|
-| **API** | `ghcr.io/sussec/warden` | ASP.NET Core API + scan job runner |
-| **Web** | `ghcr.io/sussec/warden-web` | Next.js UI (proxies `/api` and `/ws` to the API) |
-| **OSV** | `ghcr.io/sussec/warden-osv` | OSV.dev advisory enrichment |
-| **PostgreSQL** | `pgvector/pgvector:pg18` | Primary DB with vector support |
+| Compose service | Chart component | Default image |
+|-----------------|-----------------|---------------|
+| `web` | Deployment + Service `*-web` | `ghcr.io/sussec/warden-web` |
+| `warden` | Deployment + Service **`warden`** | `ghcr.io/sussec/warden` |
+| `osv-api` | Deployment + Service **`osv-api`** | `ghcr.io/sussec/warden-osv` |
+| `db` | StatefulSet + PVC | `pgvector/pgvector:pg18` |
 
-Aligned with `docker-compose.yml` service names so stock images work without rebuild:
-- API Service DNS: **`warden`** (`api.compatServiceName: true`)
-- OSV Service DNS: **`osv-api`**
+Optional compose profiles (`llama`, `vllm`, on-demand scanners) stay outside the chart — run those via CI or separate AI charts.
 
-## Prerequisites
+## Production features
 
-- Kubernetes 1.25+
-- Helm 3.12+
-- StorageClass for PVCs (or disable persistence)
-- Optional: Ingress controller (nginx) + cert-manager for TLS
+- Non-root containers, `seccomp` RuntimeDefault, drop ALL capabilities
+- Init container waits for PostgreSQL before API start
+- Rolling updates (`maxUnavailable: 0`)
+- Optional **HPA**, **PDB**, **NetworkPolicy**, **ServiceMonitor**
+- Soft pod anti-affinity for multi-replica components
+- Secrets with upgrade-safe key retention (`lookup`)
+- External PostgreSQL support
+- Ingress + optional raw API ingress (OpenAPI / MCP)
+- `values-production.yaml` defaults for HA-ish deploy
 
-## Quick start
+## Install (dev / eval)
 
 ```bash
-# From repo root
 helm upgrade --install warden ./charts/warden \
   --namespace warden --create-namespace \
   --set secrets.systemPassword='YourStrongSystemPass!' \
@@ -31,14 +33,11 @@ helm upgrade --install warden ./charts/warden \
   --set secrets.refreshTokenKey="$(openssl rand -hex 16)" \
   --set secrets.postgresPassword="$(openssl rand -hex 16)"
 
-# Port-forward UI
 kubectl -n warden port-forward svc/warden-web 8080:3000
-# open http://localhost:8080  →  system / YourStrongSystemPass!
+# http://localhost:8080 → system / YourStrongSystemPass!
 ```
 
-Release name defaults the web service to `{release}-web`. With default release name `warden`, the service is `warden-web`.
-
-## Production
+## Install (production)
 
 ```bash
 helm upgrade --install warden ./charts/warden \
@@ -49,29 +48,44 @@ helm upgrade --install warden ./charts/warden \
   --set secrets.refreshTokenKey='...' \
   --set secrets.postgresPassword='...' \
   --set secrets.wardenToken='...' \
-  --set api.env.frontendUrl='https://warden.example.com'
+  --set api.env.frontendUrl='https://warden.example.com' \
+  --set ingress.hosts[0].host=warden.example.com \
+  --set ingress.tls[0].hosts[0]=warden.example.com \
+  --set ingress.tls[0].secretName=warden-tls
 ```
 
-## Configuration
+## Compose → Helm env map
 
-| Key | Default | Description |
-|-----|---------|-------------|
-| `secrets.systemPassword` | `ChangeMe_L0cal!` | Login password for `system` user |
-| `secrets.accessTokenKey` | auto | JWT signing key (pin on upgrades) |
-| `secrets.refreshTokenKey` | auto | Refresh token key |
-| `secrets.postgresPassword` | `warden` | DB password |
-| `secrets.wardenToken` | `""` | CI token for UI scan runners |
-| `secrets.existingSecret` | `""` | Use an existing Secret instead |
-| `api.compatServiceName` | `true` | Create Service named `warden` for stock web images |
-| `api.dockerSocket.enabled` | `false` | Mount host Docker socket (dev only) |
-| `api.scanWorkspace.enabled` | `true` | PVC for git clones on UI scans |
-| `postgresql.enabled` | `true` | Deploy pgvector PostgreSQL |
-| `postgresql.external.host` | | External DB when `postgresql.enabled=false` |
-| `osv.enabled` | `true` | OSV enrichment API |
-| `ingress.enabled` | `false` | Expose web via Ingress |
-| `apiIngress.enabled` | `false` | Expose API directly (OpenAPI/MCP) |
+| Compose env | Helm value / secret key |
+|-------------|-------------------------|
+| `DB_SERVER` | auto → `*-postgresql` or `postgresql.external.host` |
+| `DB_USERNAME` / `DB_NAME` | `postgresql.auth.*` |
+| `DB_PASSWORD` | `secrets.postgresPassword` |
+| `SYSTEM_PASSWORD` | `secrets.systemPassword` |
+| `ACCESS_TOKEN_KEY` | `secrets.accessTokenKey` |
+| `REFRESH_TOKEN_KEY` | `secrets.refreshTokenKey` |
+| `FRONTEND_URL` | `api.env.frontendUrl` |
+| `OPENAPI_ENABLED` | `api.env.openApiEnabled` |
+| `TRUSTED_PROXIES` | `api.env.trustedProxies` |
+| `AI_ENDPOINT` / `AI_MODEL` / `WARDEN_AI_API_KEY` | `api.env.*` |
+| `WARDEN_TOKEN` | `secrets.wardenToken` |
+| `SCAN_IMAGE_PREFIX` | `api.env.scanImagePrefix` |
+| `SCAN_GIT_TOKEN` | `secrets.scanGitToken` |
+| `OSV_SERVICE_URL` | auto `http://osv-api:9000` when `osv.enabled` |
+| `API_INTERNAL_URL` (web) | `web.apiInternalUrl` (build-time on stock images: `http://warden:8080`) |
 
-See [values.yaml](./values.yaml) for the full tree.
+## Configuration highlights
+
+| Key | Default | Notes |
+|-----|---------|--------|
+| `api.compatServiceName` | `true` | Service named `warden` for stock web images |
+| `api.dockerSocket.enabled` | `false` | Host docker.sock — **dev only** |
+| `networkPolicy.enabled` | `false` / prod `true` | Namespace isolation |
+| `api.autoscaling.enabled` | `false` / prod `true` | HPA |
+| `postgresql.enabled` | `true` | Set `false` + external host for managed DB |
+| `secrets.existingSecret` | `""` | Use SealedSecrets / ExternalSecrets |
+
+Full tree: [values.yaml](./values.yaml).
 
 ### External database
 
@@ -95,69 +109,43 @@ secrets:
   existingSecret: warden-creds
 ```
 
-Required keys:
-
-- `system-password`
-- `access-token-key`
-- `refresh-token-key`
-- `postgres-password`
-- `warden-token`
-- `scan-git-token` (may be empty)
+Required keys: `system-password`, `access-token-key`, `refresh-token-key`, `postgres-password`, `warden-token`, `scan-git-token`.
 
 ## Architecture
 
 ```
-                 ┌─────────────┐
-  Browser ──────►│ Ingress/Web │  :3000
-                 └──────┬──────┘
-                        │ rewrite /api /ws
-                 ┌──────▼──────┐     ┌──────────┐
-                 │  API warden │────►│ Postgres │
-                 └──────┬──────┘     │ pgvector │
-                        │            └──────────┘
-                 ┌──────▼──────┐
-                 │   osv-api   │ ──► api.osv.dev
-                 └─────────────┘
+Browser ──► Ingress ──► web (:3000)
+                           │ rewrite /api /ws
+                           ▼
+                        warden (:8080) ──► postgresql (pgvector)
+                           │
+                           └──► osv-api (:9000) ──► api.osv.dev
 ```
 
 ## UI-triggered scans on Kubernetes
 
-The API’s Docker execution backend needs a Docker socket (compose default). On Kubernetes that is **off by default** (`api.dockerSocket.enabled=false`).
+Compose mounts the host Docker socket. On Kubernetes that is **off by default**.
 
-Options:
+| Approach | When |
+|----------|------|
+| CI scanners + `WARDEN_TOKEN` | **Recommended production** |
+| `api.dockerSocket.enabled=true` | Trusted single-node / lab only |
+| Future K8s Job backend | `IScanExecutionBackend` already abstracted in the API |
 
-1. **CI pipelines** (recommended): run scanner images in GitHub Actions / GitLab with `WARDEN_TOKEN`.
-2. **Dev only**: set `api.dockerSocket.enabled=true` on a node that has Docker (not production-safe).
-3. **Future**: swap `IScanExecutionBackend` to Kubernetes Jobs (interface already abstracted).
-
-## Validation
+## Validate
 
 ```bash
 helm lint ./charts/warden
-helm template warden ./charts/warden --debug | head
+helm template warden ./charts/warden \
+  --set secrets.accessTokenKey=pin-this \
+  --set secrets.refreshTokenKey=pin-this-too \
+  -f charts/warden/values-production.yaml >/dev/null
 ```
 
-## Upgrade / uninstall
+## Uninstall
 
 ```bash
-helm upgrade warden ./charts/warden -n warden -f my-values.yaml
 helm uninstall warden -n warden
-# PVCs are retained by default — delete manually if desired:
+# PVCs retained — delete if desired:
 # kubectl -n warden delete pvc --all
-```
-
-## Images
-
-Public/private GHCR images:
-
-- `ghcr.io/sussec/warden:latest`
-- `ghcr.io/sussec/warden-web:latest`
-- `ghcr.io/sussec/warden-osv:latest`
-
-If private, create a pull secret and set:
-
-```yaml
-global:
-  imagePullSecrets:
-    - name: ghcr-creds
 ```

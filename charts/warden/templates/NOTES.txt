@@ -1,51 +1,52 @@
-Warden has been deployed.
+Warden {{ .Chart.Version }} deployed.
 
 Release:   {{ .Release.Name }}
 Namespace: {{ .Release.Namespace }}
 
-Components:
+Stack (compose parity):
   {{- if .Values.postgresql.enabled }}
-  - PostgreSQL (pgvector): {{ include "warden.dbHost" . }}:{{ include "warden.dbPort" . }}
+  - db          → Service {{ include "warden.dbHost" . }}:{{ include "warden.dbPort" . }}  (pgvector/pgvector)
+  {{- else }}
+  - db          → external {{ include "warden.dbHost" . }}:{{ include "warden.dbPort" . }}
   {{- end }}
   {{- if .Values.api.enabled }}
-  - API:  Service {{ include "warden.apiServiceName" . }}:{{ .Values.api.service.port }}
+  - warden/api  → Service {{ include "warden.apiServiceName" . }}:{{ .Values.api.service.port }}
   {{- end }}
   {{- if .Values.web.enabled }}
-  - Web:  Service {{ include "warden.fullname" . }}-web:{{ .Values.web.service.port }}
+  - web         → Service {{ include "warden.fullname" . }}-web:{{ .Values.web.service.port }}
   {{- end }}
   {{- if .Values.osv.enabled }}
-  - OSV:  Service {{ include "warden.osvServiceName" . }}:{{ .Values.osv.service.port }}
+  - osv-api     → Service {{ include "warden.osvServiceName" . }}:{{ .Values.osv.service.port }}
   {{- end }}
 
-Login:
-  Username: system
-  Password: value of secrets.systemPassword (default ChangeMe_L0cal! — change it)
+Login:  system  /  (secrets.systemPassword)
 
 {{- if .Values.ingress.enabled }}
 
-Ingress hosts:
+UI:
 {{- range .Values.ingress.hosts }}
-  - http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
+  https://{{ .host }}
 {{- end }}
 {{- else }}
 
-Port-forward the UI:
-  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "warden.fullname" . }}-web 8080:{{ .Values.web.service.port }}
-
-Then open http://localhost:8080
+Port-forward:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "warden.fullname" . }}-web {{ .Values.web.service.port }}:{{ .Values.web.service.port }}
+  open http://localhost:{{ .Values.web.service.port }}
 {{- end }}
+
+Production checklist:
+  [ ] Pin secrets.accessTokenKey / refreshTokenKey (do not re-randomize on upgrade)
+  [ ] Set secrets.wardenToken to a Settings → Access Token value for CI / UI runners
+  [ ] Set api.env.frontendUrl to the public UI URL
+  [ ] Set api.env.trustedProxies if behind an ingress/LB
+  [ ] Prefer postgresql external managed DB for HA
+  [ ] networkPolicy.enabled=true for namespace isolation
+  [ ] api.dockerSocket.enabled remains false on Kubernetes (use CI scanners)
 
 {{- if and .Values.api.enabled (not .Values.api.dockerSocket.enabled) }}
 
-UI-triggered scan fleet:
-  Docker socket is disabled (recommended on Kubernetes). Jobs that need sibling
-  containers will not run until you enable api.dockerSocket or ship a K8s Job backend.
-  CI scanners still work via WARDEN_TOKEN / pipeline images.
+UI scan fleet: Docker socket is disabled (production default). Use CI scanner
+images with WARDEN_TOKEN, or enable api.dockerSocket only on trusted nodes.
 {{- end }}
-
-Next steps:
-  1. Create a CI access token in Settings → Access Token
-  2. Set secrets.wardenToken to that value and helm upgrade
-  3. Point pipelines at the API URL with WARDEN_TOKEN
 
 Docs: charts/warden/README.md

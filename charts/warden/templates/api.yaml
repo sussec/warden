@@ -1,5 +1,5 @@
 {{- if .Values.api.enabled }}
-{{- if and .Values.api.scanWorkspace.enabled }}
+{{- if .Values.api.scanWorkspace.enabled }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -10,8 +10,9 @@ metadata:
 spec:
   accessModes:
     {{- toYaml .Values.api.scanWorkspace.accessModes | nindent 4 }}
-  {{- if .Values.api.scanWorkspace.storageClass }}
-  storageClassName: {{ .Values.api.scanWorkspace.storageClass | quote }}
+  {{- $sc := .Values.api.scanWorkspace.storageClass | default .Values.global.defaultStorageClass }}
+  {{- if $sc }}
+  storageClassName: {{ $sc | quote }}
   {{- end }}
   resources:
     requests:
@@ -25,6 +26,10 @@ metadata:
   labels:
     {{- include "warden.labels" . | nindent 4 }}
     app.kubernetes.io/component: api
+  {{- with .Values.api.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   type: {{ .Values.api.service.type }}
   ports:
@@ -37,7 +42,6 @@ spec:
     app.kubernetes.io/component: api
 {{- if and .Values.api.compatServiceName (ne (include "warden.apiServiceName" .) (printf "%s-api" (include "warden.fullname" .))) }}
 ---
-# Secondary Service name for tooling / fullname-based discovery
 apiVersion: v1
 kind: Service
 metadata:
@@ -65,7 +69,12 @@ metadata:
     {{- include "warden.labels" . | nindent 4 }}
     app.kubernetes.io/component: api
 spec:
+  {{- if not .Values.api.autoscaling.enabled }}
   replicas: {{ .Values.api.replicaCount }}
+  {{- end }}
+  revisionHistoryLimit: {{ .Values.api.revisionHistoryLimit }}
+  strategy:
+    {{- toYaml .Values.api.strategy | nindent 4 }}
   selector:
     matchLabels:
       {{- include "warden.selectorLabels" . | nindent 6 }}
@@ -76,7 +85,8 @@ spec:
         {{- include "warden.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: api
       annotations:
-        checksum/config: {{ printf "%s-%s-%s" .Values.api.env.frontendUrl .Values.api.env.scanImagePrefix (include "warden.osvUrl" .) | sha256sum }}
+        checksum/secret: {{ include "warden.secretName" . | sha256sum }}
+        checksum/config: {{ printf "%s|%s|%s|%s" .Values.api.env.frontendUrl .Values.api.env.scanImagePrefix .Values.api.env.trustedProxies (include "warden.osvUrl" .) | sha256sum }}
     spec:
       serviceAccountName: {{ include "warden.serviceAccountName" . }}
       {{- with .Values.global.imagePullSecrets }}
@@ -85,8 +95,20 @@ spec:
       {{- end }}
       securityContext:
         {{- toYaml .Values.api.podSecurityContext | nindent 8 }}
-      {{- if .Values.api.dockerSocket.enabled }}
-      # Allow talking to host docker for UI-triggered scans (dev / node-local only)
+      {{- if .Values.postgresql.enabled }}
+      initContainers:
+        - name: wait-for-db
+          image: "{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}"
+          imagePullPolicy: {{ .Values.postgresql.image.pullPolicy }}
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              until pg_isready -h "{{ include "warden.dbHost" . }}" -p "{{ include "warden.dbPort" . }}" -U "{{ include "warden.dbUser" . }}"; do
+                echo "waiting for postgres {{ include "warden.dbHost" . }}...";
+                sleep 2;
+              done
+              echo "postgres is ready"
       {{- end }}
       containers:
         - name: api
@@ -131,6 +153,8 @@ spec:
               value: {{ .Values.api.env.frontendUrl | quote }}
             - name: OPENAPI_ENABLED
               value: {{ .Values.api.env.openApiEnabled | quote }}
+            - name: TRUSTED_PROXIES
+              value: {{ .Values.api.env.trustedProxies | quote }}
             - name: AI_ENDPOINT
               value: {{ .Values.api.env.aiEndpoint | quote }}
             - name: AI_MODEL
@@ -149,7 +173,7 @@ spec:
             - name: SCAN_WORKSPACE_VOLUME
               value: {{ include "warden.scanWorkspacePvc" . | quote }}
             - name: SCAN_NETWORK
-              value: {{ printf "%s" .Release.Namespace | quote }}
+              value: {{ .Release.Namespace | quote }}
             - name: SCAN_WARDEN_URL
               value: {{ printf "http://%s:%v" (include "warden.apiServiceName" .) .Values.api.service.port | quote }}
             - name: SCAN_GIT_TOKEN
@@ -163,6 +187,9 @@ spec:
             - name: SCAN_DOCKER_SOCKET
               value: "unix:///var/run/docker.sock"
             {{- end }}
+            {{- with .Values.api.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           volumeMounts:
             {{- if .Values.api.scanWorkspace.enabled }}
             - name: scan-workspace
@@ -172,6 +199,16 @@ spec:
             - name: docker-sock
               mountPath: /var/run/docker.sock
             {{- end }}
+            - name: tmp
+              mountPath: /tmp
+          {{- if .Values.api.startupProbe.enabled }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.api.startupProbe.httpGet.path }}
+              port: {{ .Values.api.startupProbe.httpGet.port }}
+            periodSeconds: {{ .Values.api.startupProbe.periodSeconds }}
+            failureThreshold: {{ .Values.api.startupProbe.failureThreshold }}
+          {{- end }}
           livenessProbe:
             {{- toYaml .Values.api.livenessProbe | nindent 12 }}
           readinessProbe:
@@ -179,6 +216,8 @@ spec:
           resources:
             {{- toYaml .Values.api.resources | nindent 12 }}
       volumes:
+        - name: tmp
+          emptyDir: {}
         {{- if .Values.api.scanWorkspace.enabled }}
         - name: scan-workspace
           persistentVolumeClaim:
@@ -194,12 +233,22 @@ spec:
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.api.affinity }}
+      {{- $affinity := .Values.api.affinity }}
+      {{- if or $affinity .Values.api.podAntiAffinity }}
       affinity:
+        {{- with $affinity }}
         {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if .Values.api.podAntiAffinity }}
+        {{- include "warden.podAntiAffinity" (dict "root" . "component" "api" "mode" .Values.api.podAntiAffinity) | nindent 8 }}
+        {{- end }}
       {{- end }}
       {{- with .Values.api.tolerations }}
       tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.api.topologySpreadConstraints }}
+      topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
       {{- end }}
 {{- end }}

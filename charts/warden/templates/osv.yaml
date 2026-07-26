@@ -25,7 +25,10 @@ metadata:
     {{- include "warden.labels" . | nindent 4 }}
     app.kubernetes.io/component: osv
 spec:
+  {{- if not .Values.osv.autoscaling.enabled }}
   replicas: {{ .Values.osv.replicaCount }}
+  {{- end }}
+  revisionHistoryLimit: {{ .Values.osv.revisionHistoryLimit }}
   selector:
     matchLabels:
       {{- include "warden.selectorLabels" . | nindent 6 }}
@@ -41,10 +44,14 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      securityContext:
+        {{- toYaml .Values.osv.podSecurityContext | nindent 8 }}
       containers:
         - name: osv
           image: "{{ .Values.osv.image.repository }}:{{ .Values.osv.image.tag }}"
           imagePullPolicy: {{ .Values.osv.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.osv.securityContext | nindent 12 }}
           ports:
             - name: http
               containerPort: 9000
@@ -54,29 +61,25 @@ spec:
               value: {{ .Values.osv.env.osvUrl | quote }}
             - name: CACHE_TTL
               value: {{ .Values.osv.env.cacheTtl | quote }}
-          readinessProbe:
-            httpGet:
-              path: /healthz
-              port: http
-            initialDelaySeconds: 5
-            periodSeconds: 15
-            failureThreshold: 6
           livenessProbe:
-            httpGet:
-              path: /healthz
-              port: http
-            initialDelaySeconds: 15
-            periodSeconds: 30
-            failureThreshold: 6
+            {{- toYaml .Values.osv.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.osv.readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.osv.resources | nindent 12 }}
       {{- with .Values.osv.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.osv.affinity }}
+      {{- $affinity := .Values.osv.affinity }}
+      {{- if or $affinity .Values.osv.podAntiAffinity }}
       affinity:
+        {{- with $affinity }}
         {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if .Values.osv.podAntiAffinity }}
+        {{- include "warden.podAntiAffinity" (dict "root" . "component" "osv" "mode" .Values.osv.podAntiAffinity) | nindent 8 }}
+        {{- end }}
       {{- end }}
       {{- with .Values.osv.tolerations }}
       tolerations:

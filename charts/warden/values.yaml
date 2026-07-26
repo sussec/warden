@@ -1,43 +1,41 @@
-# Warden Helm chart — full stack (API + Web + OSV + PostgreSQL/pgvector)
-# Install:
-#   helm upgrade --install warden ./charts/warden \
-#     --namespace warden --create-namespace \
+# Warden Helm chart — production-capable full stack
+# Mirrors docker-compose core services: web, warden (api), osv-api, db (pgvector)
+#
+#   helm upgrade --install warden ./charts/warden -n warden --create-namespace \
 #     --set secrets.systemPassword='...' \
 #     --set secrets.accessTokenKey='...' \
-#     --set secrets.refreshTokenKey='...'
+#     --set secrets.refreshTokenKey='...' \
+#     --set secrets.postgresPassword='...'
 #
-# Pre-built images expect the API Service DNS name "warden" (compose-compatible).
-# Keep api.compatServiceName=true unless you rebuild warden-web with a custom API_INTERNAL_URL.
+# Stock warden-web images rewrite to http://warden:8080 — keep api.compatServiceName=true.
 
 nameOverride: ""
 fullnameOverride: ""
 
-# Global labels / image pull
 global:
   imagePullSecrets: []
   # imagePullSecrets:
   #   - name: ghcr-creds
+  defaultStorageClass: ""
 
 # ---------------------------------------------------------------------------
-# Secrets (required for a real deploy — override in values or --set)
+# Secrets
 # ---------------------------------------------------------------------------
 secrets:
-  # Create a Kubernetes Secret from these values (set create=false to use existingSecret)
   create: true
   existingSecret: ""
-  # Must match keys expected by the API when using existingSecret:
-  #   system-password, access-token-key, refresh-token-key, postgres-password, warden-token
+  # Keys when using existingSecret:
+  #   system-password, access-token-key, refresh-token-key,
+  #   postgres-password, warden-token, scan-git-token
   systemPassword: "ChangeMe_L0cal!"
-  accessTokenKey: ""          # auto-generated if empty (install only; pin for upgrades)
+  accessTokenKey: ""
   refreshTokenKey: ""
   postgresPassword: "warden"
-  # CI token scanners use to upload findings (Settings → Access Token value)
   wardenToken: ""
-  # Optional token for private git clones (UI scan jobs)
   scanGitToken: ""
 
 # ---------------------------------------------------------------------------
-# PostgreSQL + pgvector
+# PostgreSQL + pgvector (compose: db / pgvector/pgvector:pg18)
 # ---------------------------------------------------------------------------
 postgresql:
   enabled: true
@@ -48,7 +46,6 @@ postgresql:
   auth:
     username: warden
     database: warden
-    # password from secrets.postgresPassword
   service:
     port: 5432
   persistence:
@@ -62,85 +59,131 @@ postgresql:
       cpu: 100m
       memory: 256Mi
     limits:
-      memory: 1Gi
-  # External DB when postgresql.enabled=false
+      cpu: "2"
+      memory: 2Gi
+  podSecurityContext:
+    fsGroup: 999
+  securityContext:
+    runAsUser: 999
+    runAsGroup: 999
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
+    seccompProfile:
+      type: RuntimeDefault
   external:
     host: ""
     port: 5432
     username: warden
     database: warden
-    # password via secrets.postgresPassword or existing secret
 
 # ---------------------------------------------------------------------------
-# Warden API
+# Warden API (compose: warden)
 # ---------------------------------------------------------------------------
 api:
   enabled: true
-  # Compose-compatible Service name so stock warden-web images reach the API
   compatServiceName: true
   image:
     repository: ghcr.io/sussec/warden
     tag: latest
     pullPolicy: IfNotPresent
   replicaCount: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   service:
     type: ClusterIP
     port: 8080
+    annotations: {}
   resources:
     requests:
-      cpu: 100m
-      memory: 256Mi
+      cpu: 200m
+      memory: 512Mi
     limits:
-      memory: 1Gi
+      cpu: "2"
+      memory: 2Gi
   env:
     openApiEnabled: "true"
-    # Public URL of the web UI (cookies / redirects)
     frontendUrl: "http://localhost:8080"
+    # Comma-separated proxy CIDRs (set to cluster pod CIDR / ingress when behind LB)
+    trustedProxies: ""
     aiEndpoint: ""
     aiModel: ""
     wardenAiApiKey: ""
-    # Scanner image prefix for UI-triggered jobs (Docker backend)
     scanImagePrefix: "warden-"
     scanWorkspacePath: /scan-workspace
-    # Empty disables OSV enrichment
-    osvServiceUrl: ""  # auto: http://osv-api:9000 when osv.enabled
-  # Shared workspace for git clone during UI scans
+    osvServiceUrl: ""
+  extraEnv: []
+  # - name: MY_VAR
+  #   value: "x"
   scanWorkspace:
     enabled: true
     size: 10Gi
     storageClass: ""
+    # RWO is fine for replicaCount=1; use RWX (e.g. NFS/EFS) if scaling API
     accessModes:
       - ReadWriteOnce
-  # Mount host docker.sock for UI-triggered sibling scanners (dev only; prefer K8s Job backend later)
   dockerSocket:
     enabled: false
     path: /var/run/docker.sock
-    # GID of docker group on the node (required when dockerSocket.enabled)
     gid: 0
   podSecurityContext:
     fsGroup: 1654
+    seccompProfile:
+      type: RuntimeDefault
   securityContext:
     runAsUser: 1654
+    runAsGroup: 1654
     runAsNonRoot: true
     allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    capabilities:
+      drop: ["ALL"]
   livenessProbe:
     httpGet:
       path: /healthz
       port: http
-    initialDelaySeconds: 30
-    periodSeconds: 15
+    initialDelaySeconds: 40
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 6
   readinessProbe:
     httpGet:
       path: /healthz
       port: http
-    initialDelaySeconds: 10
+    initialDelaySeconds: 15
     periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+  startupProbe:
+    enabled: true
+    httpGet:
+      path: /healthz
+      port: http
+    periodSeconds: 5
+    failureThreshold: 36
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  podDisruptionBudget:
+    enabled: false
+    minAvailable: 1
+  topologySpreadConstraints: []
   nodeSelector: {}
   tolerations: []
   affinity: {}
+  # Prefer spreading API pods when multi-replica
+  podAntiAffinity: soft
 
 # ---------------------------------------------------------------------------
-# Warden Web (Next.js)
+# Warden Web (compose: web)
 # ---------------------------------------------------------------------------
 web:
   enabled: true
@@ -149,35 +192,67 @@ web:
     tag: latest
     pullPolicy: IfNotPresent
   replicaCount: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   service:
     type: ClusterIP
     port: 3000
+    annotations: {}
   resources:
     requests:
       cpu: 50m
       memory: 128Mi
     limits:
+      cpu: "1"
       memory: 512Mi
-  # Only used when rebuilding the image; stock images bake http://warden:8080
   apiInternalUrl: "http://warden:8080"
+  extraEnv: []
+  podSecurityContext:
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
   livenessProbe:
     httpGet:
       path: /
       port: http
-    initialDelaySeconds: 15
+    initialDelaySeconds: 20
     periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 3
   readinessProbe:
     httpGet:
       path: /
       port: http
     initialDelaySeconds: 5
     periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 70
+  podDisruptionBudget:
+    enabled: false
+    minAvailable: 1
   nodeSelector: {}
   tolerations: []
   affinity: {}
+  podAntiAffinity: soft
 
 # ---------------------------------------------------------------------------
-# OSV enrichment sidecar API
+# OSV enrichment (compose: osv-api)
 # ---------------------------------------------------------------------------
 osv:
   enabled: true
@@ -186,6 +261,7 @@ osv:
     tag: latest
     pullPolicy: IfNotPresent
   replicaCount: 1
+  revisionHistoryLimit: 3
   service:
     type: ClusterIP
     port: 9000
@@ -197,23 +273,61 @@ osv:
       cpu: 50m
       memory: 64Mi
     limits:
+      cpu: "1"
       memory: 256Mi
+  podSecurityContext:
+    seccompProfile:
+      type: RuntimeDefault
+  securityContext:
+    runAsUser: 65532
+    runAsGroup: 65532
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 15
+    periodSeconds: 30
+    failureThreshold: 6
+  readinessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 15
+    failureThreshold: 6
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 4
+    targetCPUUtilizationPercentage: 75
+  podDisruptionBudget:
+    enabled: false
+    minAvailable: 1
   nodeSelector: {}
   tolerations: []
   affinity: {}
+  podAntiAffinity: soft
 
 # ---------------------------------------------------------------------------
-# Ingress (single entry: web UI; API via Next rewrites)
+# NetworkPolicy — default deny ingress inside the release namespace
+# ---------------------------------------------------------------------------
+networkPolicy:
+  enabled: false
+  # Allow web → api, api → postgresql, api → osv, and DNS
+  # Egress: api/osv may reach external (OSV.dev, AI, SCM) unless restrictEgress=true
+  restrictEgress: false
+
+# ---------------------------------------------------------------------------
+# Ingress
 # ---------------------------------------------------------------------------
 ingress:
   enabled: false
   className: ""
   annotations: {}
-    # cert-manager.io/cluster-issuer: letsencrypt
-    # nginx.ingress.kubernetes.io/proxy-body-size: "50m"
-    # nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-    # WebSocket upgrade for /ws if you expose API directly:
-    # nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
   hosts:
     - host: warden.local
       paths:
@@ -221,11 +335,7 @@ ingress:
           pathType: Prefix
           service: web
   tls: []
-  # - secretName: warden-tls
-  #   hosts:
-  #     - warden.local
 
-# Optional second ingress / NodePort for raw API (OpenAPI, MCP, tooling)
 apiIngress:
   enabled: false
   className: ""
@@ -236,6 +346,13 @@ apiIngress:
         - path: /
           pathType: Prefix
   tls: []
+
+# Optional Prometheus Operator ServiceMonitors
+serviceMonitor:
+  enabled: false
+  interval: 30s
+  scrapeTimeout: 10s
+  labels: {}
 
 serviceAccount:
   create: true
