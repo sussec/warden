@@ -2,7 +2,7 @@ apiVersion: v2
 name: warden
 description: Techanv Warden - production-ready chart (API, web, OSV, PostgreSQL/pgvector)
 type: application
-version: 0.2.0
+version: 0.3.0
 appVersion: "latest"
 home: https://github.com/sussec/warden
 sources:

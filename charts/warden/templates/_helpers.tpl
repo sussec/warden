@@ -111,6 +111,31 @@ osv-api
 {{- printf "%s-scan-workspace" (include "warden.fullname" .) -}}
 {{- end -}}
 
+{{/*
+Build full image ref:
+  {global.imageRegistry}/{global.imageProject}/{repository}:{tag}
+If image.repository already contains a slash and no global.imageRegistry, use as-is.
+*/}}
+{{- define "warden.image" -}}
+{{- $root := .root -}}
+{{- $img := .image -}}
+{{- $reg := $root.Values.global.imageRegistry | default "" | trimSuffix "/" -}}
+{{- $proj := $root.Values.global.imageProject | default "" | trimSuffix "/" -}}
+{{- $repo := $img.repository -}}
+{{- $tag := $img.tag | default "latest" -}}
+{{- if and $reg (not (contains "/" $repo)) -}}
+{{- if $proj -}}
+{{- printf "%s/%s/%s:%s" $reg $proj $repo $tag -}}
+{{- else -}}
+{{- printf "%s/%s:%s" $reg $repo $tag -}}
+{{- end -}}
+{{- else if and $reg (hasPrefix "library/" $repo) -}}
+{{- printf "%s/%s:%s" $reg $repo $tag -}}
+{{- else -}}
+{{- printf "%s:%s" $repo $tag -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "warden.storageClass" -}}
 {{- $sc := .storageClass | default .root.Values.global.defaultStorageClass -}}
 {{- if $sc -}}

@@ -48,7 +48,7 @@ spec:
         {{- toYaml .Values.osv.podSecurityContext | nindent 8 }}
       containers:
         - name: osv
-          image: "{{ .Values.osv.image.repository }}:{{ .Values.osv.image.tag }}"
+          image: "{{ .Values.global.imageRegistry }}/{{ .Values.global.imageProject }}/{{ .Values.osv.image.repository }}:{{ .Values.osv.image.tag }}"
           imagePullPolicy: {{ .Values.osv.image.pullPolicy }}
           securityContext:
             {{- toYaml .Values.osv.securityContext | nindent 12 }}

@@ -13,9 +13,15 @@ nameOverride: ""
 fullnameOverride: ""
 
 global:
+  # Harbor (or other registry) host — no trailing slash, no path.
+  # Empty = use full repository paths as written under api/web/osv.image.repository
+  # Techanv example: harbor.techanv.com
+  imageRegistry: "harbor.techanv.com"
+  # Project/namespace on the registry (Harbor project)
+  imageProject: "library"
   imagePullSecrets: []
   # imagePullSecrets:
-  #   - name: ghcr-creds
+  #   - name: harbor-creds
   defaultStorageClass: ""
 
 # ---------------------------------------------------------------------------
@@ -85,9 +91,11 @@ api:
   enabled: true
   compatServiceName: true
   image:
-    repository: ghcr.io/sussec/warden
+    # Final image: {global.imageRegistry}/{global.imageProject}/{repository}:{tag}
+    # With defaults → harbor.techanv.com/library/warden:latest
+    repository: warden
     tag: latest
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
   replicaCount: 1
   revisionHistoryLimit: 3
   strategy:
@@ -108,13 +116,15 @@ api:
       memory: 2Gi
   env:
     openApiEnabled: "true"
-    frontendUrl: "http://localhost:8080"
+    # Public UI URL (Cloudflare / ingress) — must match browser origin for cookies
+    frontendUrl: "https://warden-prod.techanv.com"
     # Comma-separated proxy CIDRs (set to cluster pod CIDR / ingress when behind LB)
-    trustedProxies: ""
+    trustedProxies: "10.42.0.0/16,10.43.0.0/16"
     aiEndpoint: ""
     aiModel: ""
     wardenAiApiKey: ""
-    scanImagePrefix: "warden-"
+    # Scanner images: harbor.techanv.com/library/warden-gitleaks etc.
+    scanImagePrefix: "harbor.techanv.com/library/warden-"
     scanWorkspacePath: /scan-workspace
     osvServiceUrl: ""
   extraEnv: []
@@ -188,9 +198,9 @@ api:
 web:
   enabled: true
   image:
-    repository: ghcr.io/sussec/warden-web
+    repository: warden-web
     tag: latest
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
   replicaCount: 1
   revisionHistoryLimit: 3
   strategy:
@@ -209,6 +219,7 @@ web:
     limits:
       cpu: "1"
       memory: 512Mi
+  # In-cluster API Service (compose-compatible name)
   apiInternalUrl: "http://warden:8080"
   extraEnv: []
   podSecurityContext:
@@ -257,9 +268,9 @@ web:
 osv:
   enabled: true
   image:
-    repository: ghcr.io/sussec/warden-osv
+    repository: warden-osv
     tag: latest
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
   replicaCount: 1
   revisionHistoryLimit: 3
   service:
@@ -325,11 +336,12 @@ networkPolicy:
 # Ingress
 # ---------------------------------------------------------------------------
 ingress:
+  # Prefer Cloudflare Tunnel public hostnames; set enabled=true only for cluster Ingress
   enabled: false
-  className: ""
+  className: traefik
   annotations: {}
   hosts:
-    - host: warden.local
+    - host: warden-prod.techanv.com
       paths:
         - path: /
           pathType: Prefix
@@ -338,10 +350,10 @@ ingress:
 
 apiIngress:
   enabled: false
-  className: ""
+  className: traefik
   annotations: {}
   hosts:
-    - host: api.warden.local
+    - host: api.techanv.com
       paths:
         - path: /
           pathType: Prefix

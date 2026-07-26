@@ -1,0 +1,68 @@
+# Techanv production values — domain only (no IPs)
+# Harbor: https://harbor.techanv.com
+# Warden: https://warden-prod.techanv.com (Cloudflare Tunnel)
+#
+# helm upgrade --install warden ./charts/warden -n warden --create-namespace \
+#   -f charts/warden/values-techanv.yaml \
+#   --set secrets.systemPassword='...' \
+#   --set secrets.accessTokenKey='...' \
+#   --set secrets.refreshTokenKey='...' \
+#   --set secrets.postgresPassword='...'
+
+global:
+  imageRegistry: harbor.techanv.com
+  imageProject: library
+
+api:
+  image:
+    repository: warden
+    tag: latest
+    pullPolicy: Always
+  replicaCount: 1
+  dockerSocket:
+    enabled: false
+  env:
+    frontendUrl: https://warden-prod.techanv.com
+    openApiEnabled: "true"
+    trustedProxies: "10.42.0.0/16,10.43.0.0/16"
+    # Scanners pulled from Harbor by domain
+    scanImagePrefix: "harbor.techanv.com/library/warden-"
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      memory: 2Gi
+
+web:
+  image:
+    repository: warden-web
+    tag: latest
+    pullPolicy: Always
+  replicaCount: 1
+  apiInternalUrl: http://warden:8080
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+
+osv:
+  image:
+    repository: warden-osv
+    tag: latest
+    pullPolicy: Always
+  replicaCount: 1
+
+postgresql:
+  image:
+    repository: docker.io/pgvector/pgvector
+    tag: pg18
+    pullPolicy: IfNotPresent
+  persistence:
+    size: 20Gi
+
+# Public access via Cloudflare Tunnel (not cluster Ingress)
+ingress:
+  enabled: false

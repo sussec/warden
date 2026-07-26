@@ -2,14 +2,25 @@
 
 End-to-end Kubernetes deployment matching **docker-compose** core services:
 
-| Compose service | Chart component | Default image |
-|-----------------|-----------------|---------------|
-| `web` | Deployment + Service `*-web` | `ghcr.io/sussec/warden-web` |
-| `warden` | Deployment + Service **`warden`** | `ghcr.io/sussec/warden` |
-| `osv-api` | Deployment + Service **`osv-api`** | `ghcr.io/sussec/warden-osv` |
-| `db` | StatefulSet + PVC | `pgvector/pgvector:pg18` |
+| Compose service | Chart component | Default image (domain) |
+|-----------------|-----------------|------------------------|
+| `web` | Deployment + Service `*-web` | `harbor.techanv.com/library/warden-web` |
+| `warden` | Deployment + Service **`warden`** | `harbor.techanv.com/library/warden` |
+| `osv-api` | Deployment + Service **`osv-api`** | `harbor.techanv.com/library/warden-osv` |
+| `db` | StatefulSet + PVC | `docker.io/pgvector/pgvector:pg18` |
 
-Optional compose profiles (`llama`, `vllm`, on-demand scanners) stay outside the chart — run those via CI or separate AI charts.
+Registry is **domain-based** (no IP):
+
+```yaml
+global:
+  imageRegistry: harbor.techanv.com
+  imageProject: library
+api:
+  image:
+    repository: warden   # → harbor.techanv.com/library/warden:latest
+```
+
+Techanv cluster file: `values-techanv.yaml`. Optional compose profiles (`llama`, `vllm`, scanners) stay outside the chart.
 
 ## Production features
 
