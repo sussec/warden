@@ -39,7 +39,10 @@ public class AppConfig
     [Option(Env = "OPENAPI_ENABLED", Default = "true")]
     public string OpenApiEnabled { get; set; } = string.Empty;
 
-    // on-demand scan runner (UI-triggered sibling containers via docker socket)
+    // on-demand scan runner (UI-triggered): docker socket and/or Kubernetes Jobs
+    [Option(Env = "SCAN_BACKEND", Default = "auto")]
+    public string ScanBackend { get; set; } = "auto";
+
     [Option(Env = "SCAN_DOCKER_SOCKET", Default = "unix:///var/run/docker.sock")]
     public string ScanDockerSocket { get; set; } = string.Empty;
 
@@ -66,6 +69,18 @@ public class AppConfig
     // Optional token for cloning private https git repos (x-access-token).
     [Option(Env = "SCAN_GIT_TOKEN", Default = "")]
     public string ScanGitToken { get; set; } = string.Empty;
+
+    /// <summary>Namespace for scan Jobs (defaults to the API pod namespace / SCAN_NETWORK).</summary>
+    [Option(Env = "SCAN_NAMESPACE", Default = "")]
+    public string ScanNamespace { get; set; } = string.Empty;
+
+    /// <summary>Optional imagePullSecret name for private scanner registries (Harbor).</summary>
+    [Option(Env = "SCAN_IMAGE_PULL_SECRET", Default = "")]
+    public string ScanImagePullSecret { get; set; } = string.Empty;
+
+    /// <summary>Init-container image used to clone git targets for K8s Jobs.</summary>
+    [Option(Env = "SCAN_GIT_IMAGE", Default = "alpine/git:2.47.2")]
+    public string ScanGitImage { get; set; } = string.Empty;
 
     // warden-osv sidecar for OSV.dev advisory enrichment; empty disables.
     [Option(Env = "OSV_SERVICE_URL", Default = "")]

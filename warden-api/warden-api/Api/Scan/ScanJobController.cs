@@ -1,6 +1,7 @@
 using Warden.Application.Module.Scan;
 using Warden.Application.Module.Scan.Model;
 using Microsoft.AspNetCore.Mvc;
+// FleetPluginInfo lives in Scan.Model
 
 namespace Warden.Api.Scan;
 
@@ -42,6 +43,14 @@ public class ScanJobController(IScanJobService scanJobService) : BaseController
     public Task<ScanRunnerCapability> GetCapability(CancellationToken cancellationToken)
     {
         return scanJobService.GetCapabilityAsync(cancellationToken);
+    }
+
+    /// <summary>All bundled scanner plugins (gitleaks, semgrep, …) — always enabled for UI.</summary>
+    [HttpGet]
+    [Route("fleet")]
+    public Task<List<FleetPluginInfo>> GetFleet(CancellationToken cancellationToken)
+    {
+        return scanJobService.ListFleetAsync(cancellationToken);
     }
 
     [HttpGet]

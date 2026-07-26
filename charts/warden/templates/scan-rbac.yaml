@@ -1,0 +1,32 @@
+{{- if and .Values.api.enabled .Values.api.scanJobs.rbac }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "warden.fullname" . }}-scan
+  labels:
+    {{- include "warden.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+rules:
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["create", "get", "list", "watch", "delete"]
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "warden.fullname" . }}-scan
+  labels:
+    {{- include "warden.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "warden.fullname" . }}-scan
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "warden.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}

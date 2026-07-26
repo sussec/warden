@@ -16,6 +16,7 @@ public static class Configuration
         $"Host={Config.DbServer};Database={Config.DbName};Username={Config.DbUsername};Password={Config.DbPassword}";
     
     public static string SystemPassword => Config.SystemPassword;
+    public static string ScanBackend => Config.ScanBackend;
     public static string ScanDockerSocket => Config.ScanDockerSocket;
     public static string ScanImagePrefix => Config.ScanImagePrefix;
     public static string ScanNetwork => Config.ScanNetwork;
@@ -24,6 +25,10 @@ public static class Configuration
     public static string ScanWorkspaceVolume => Config.ScanWorkspaceVolume;
     public static string ScanWorkspacePath => Config.ScanWorkspacePath;
     public static string ScanGitToken => Config.ScanGitToken;
+    public static string ScanNamespace =>
+        string.IsNullOrWhiteSpace(Config.ScanNamespace) ? Config.ScanNetwork : Config.ScanNamespace;
+    public static string ScanImagePullSecret => Config.ScanImagePullSecret;
+    public static string ScanGitImage => Config.ScanGitImage;
     public static string OsvServiceUrl => Config.OsvServiceUrl;
     public static SecurityKey AccessTokenKey => Config.AccessTokenSecurityKey;
     public static SecurityKey RefreshTokenKey => Config.RefreshTokenSecurityKey;

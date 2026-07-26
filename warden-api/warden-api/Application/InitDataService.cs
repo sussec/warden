@@ -2,11 +2,16 @@ using System.Security.Claims;
 using Warden.Application.Module.Ci;
 using Warden.Application.Module.Ci.Model;
 using Warden.Application.Module.Finding;
+using Warden.Application.Module.Scan;
+using Warden.Application.Module.Scanner;
+using Warden.Application.Module.Scanner.Model;
 using Warden.Authentication;
 using Warden.Authentication.Jwt;
 using Warden.Core.Entity;
 using Warden.Core.Enum;
+using Warden.Core.Extension;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Warden.Application;
 
@@ -14,6 +19,7 @@ public class InitDataService(
     JwtUserManager userManager,
     RoleManager<Roles> roleManager,
     ICiService ciService,
+    AppDbContext context,
     ILogger<InitDataService> logger
 )
 {
@@ -48,9 +54,58 @@ public class InitDataService(
     public async Task InitDataAsync(bool isDevelopment)
     {
         //await context.Database.MigrateAsync();
+        await EnsureSchemaPatchesAsync();
         await CreateDefaultRolesAsync();
         await CreateDefaultSystemUserAsync();
+        await EnsureFleetScannersAsync();
         if (isDevelopment) await CreateSampleData();
+    }
+
+    /// <summary>
+    /// Lightweight DDL patches when full EF migrations are not re-generated in-cluster.
+    /// Safe to re-run (IF NOT EXISTS).
+    /// </summary>
+    private async Task EnsureSchemaPatchesAsync()
+    {
+        try
+        {
+            await context.Database.ExecuteSqlRawAsync(
+                """ALTER TABLE "AppSettings" ADD COLUMN IF NOT EXISTS "GitLabSetting" text;""");
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Schema patch for GitLabSetting skipped");
+        }
+    }
+
+    /// <summary>
+    /// Register every compose/UI fleet scanner so the Fleet page marks them Active
+    /// without requiring a prior successful scan for each tool.
+    /// </summary>
+    private async Task EnsureFleetScannersAsync()
+    {
+        var existingKeys = (await context.Scanners
+                .Select(s => new { s.NormalizedName, s.Type })
+                .ToListAsync())
+            .Select(s => $"{s.NormalizedName}|{(int)s.Type}")
+            .ToHashSet(StringComparer.Ordinal);
+
+        var created = 0;
+        foreach (var (name, type) in FleetScannerCatalog.All)
+        {
+            var key = $"{name.NormalizeUpper()}|{(int)type}";
+            await context.CreateScannerAsync(new CreateScannerRequest
+            {
+                Name = name,
+                Type = type
+            });
+            if (!existingKeys.Contains(key)) created++;
+        }
+
+        logger.LogInformation(
+            "Fleet scanners ready: {Total} plugins ({Created} newly registered)",
+            FleetScannerCatalog.All.Count,
+            created);
     }
 
     private async Task CreateDefaultRolesAsync()
