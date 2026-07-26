@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  AlertTriangle,
   Boxes,
   Braces,
-  Check,
-  Copy,
+  CheckCircle2,
+  Clock3,
   Container,
   FileText,
   FileWarning,
@@ -18,12 +19,15 @@ import {
   PackageCheck,
   PackageSearch,
   Play,
+  Radio,
   Radar,
   ScanSearch,
   ScrollText,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
+  Terminal,
+  XCircle,
 } from "lucide-react";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { toast } from "sonner";
@@ -55,8 +59,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { createScanJob, getScanJobs, getScanners } from "@/client/sdk.gen";
+import { createScanJob, getScanJob, getScanJobs, getScanners } from "@/client/sdk.gen";
 import type { ScanJobInfo, ScanJobStatus, ScannerType } from "@/client/types.gen";
+import { useScanStream } from "@/lib/scan/use-scan-stream";
+import { fetchScanCapability } from "@/lib/scan/capability";
 
 // ---- badges ---------------------------------------------------------------
 
@@ -108,134 +114,469 @@ type FleetScanner = {
   targetKind: TargetKind;
   description: string;
   icon: React.ComponentType<{ className?: string }>;
-  command: string;
 };
 
-const TARGET = "SCAN_TARGET=/path/to/repo";
-const RUN = "docker compose --profile scan run --rm";
-
 const FLEET: FleetScanner[] = [
-  { service: "semgrep", match: ["semgrep"], type: "Sast", targetKind: "repository", description: "Static analysis across 30+ languages with community rulepacks.", icon: Braces, command: `${TARGET} ${RUN} semgrep` },
-  { service: "gitleaks", match: ["gitleaks"], type: "Secret", targetKind: "repository", description: "Secret detection on the working tree (API keys, tokens, credentials).", icon: KeyRound, command: `${TARGET} ${RUN} gitleaks` },
-  { service: "trufflehog", match: ["trufflehog"], type: "Secret", targetKind: "repository", description: "Git-history secret detection — complements the gitleaks working-tree scan.", icon: History, command: `${TARGET} ${RUN} trufflehog` },
-  { service: "trivy", match: ["trivy"], type: "Dependency", targetKind: "repository", description: "Dependency (SCA) scanning of lockfiles and manifests.", icon: PackageSearch, command: `${TARGET} ${RUN} trivy` },
-  { service: "grype", match: ["grype"], type: "Dependency", targetKind: "repository", description: "SCA second opinion with SBOM-grade dependency resolution (Syft).", icon: Boxes, command: `${TARGET} ${RUN} grype` },
-  { service: "osv", match: ["osv", "osv-scanner"], type: "Dependency", targetKind: "repository", description: "Supply-chain SCA across many ecosystems via Google's OSV.dev advisories, including malicious-package detection.", icon: ShieldAlert, command: `${TARGET} ${RUN} osv` },
-  { service: "cve-lite", match: ["cve-lite", "cve-lite-cli"], type: "Dependency", targetKind: "repository", description: "JS/TS lockfile SCA (OWASP CVE Lite CLI) — validated fix versions, direct vs transitive classification, npm/pnpm/Yarn/Bun.", icon: PackageCheck, command: `${TARGET} ${RUN} cve-lite` },
-  { service: "cargo-audit", match: ["cargo-audit"], type: "Dependency", targetKind: "repository", description: "Rust/Cargo SCA (RustSec cargo-audit) — audits Cargo.lock against the RustSec advisory DB. Rust-native scanner.", icon: PackageSearch, command: `${TARGET} ${RUN} cargo-audit` },
-  { service: "cargo-deny", match: ["cargo-deny"], type: "Dependency", targetKind: "repository", description: "Rust advisories + OSS license policy + banned/duplicate crates (EmbarkStudios cargo-deny). Closes the license-compliance gap. Rust-native.", icon: ShieldCheck, command: `${TARGET} ${RUN} cargo-deny` },
-  { service: "cargo-geiger", match: ["cargo-geiger"], type: "Sast", targetKind: "repository", description: "Rust unsafe-code usage counter across the dependency tree (advisory; compiles the project). Rust-native.", icon: Bug, command: `${TARGET} ${RUN} cargo-geiger` },
-  { service: "trivy-license", match: ["trivy-license"], type: "Dependency", targetKind: "repository", description: "OSS license findings (Trivy license scanner) — per-package license policy by category (Forbidden/Restricted/Reciprocal/...).", icon: ScrollText, command: `${TARGET} ${RUN} trivy-license` },
-  { service: "kubescape", match: ["kubescape"], type: "Sast", targetKind: "repository", description: "Kubernetes manifest posture (ARMO kubescape) — NSA/MITRE/CIS misconfiguration controls over YAML/Helm/Kustomize.", icon: Container, command: `${TARGET} ${RUN} kubescape` },
-  { service: "prowler", match: ["prowler"], type: "Cloud", targetKind: "cloud", description: "Cloud security posture (CSPM) — Prowler audits a live AWS/Azure/GCP account against CIS/SOC2/PCI. Credentials via env.", icon: ShieldAlert, command: `PROWLER_PROVIDER=aws AWS_ACCESS_KEY_ID=... ${RUN} prowler` },
-  { service: "syft", match: ["syft"], type: "Dependency", targetKind: "repository", description: "SBOM generation — a full dependency inventory of every component (CycloneDX/SPDX-grade supply-chain baseline).", icon: ScrollText, command: `${TARGET} ${RUN} syft` },
-  { service: "checkov", match: ["checkov"], type: "Sast", targetKind: "repository", description: "IaC misconfiguration scanning with a large ruleset — Terraform, CloudFormation, Kubernetes, Helm, Dockerfile, ARM.", icon: ShieldCheck, command: `${TARGET} ${RUN} checkov` },
-  { service: "guarddog", match: ["guarddog"], type: "Sast", targetKind: "repository", description: "Malicious-package detection in dependency manifests — typosquatting, suspicious install scripts, obfuscation, exfiltration.", icon: Bug, command: `${TARGET} ${RUN} guarddog` },
-  { service: "deepsec", match: ["deepsec"], type: "Sast", targetKind: "repository", description: "AI-agent deep SAST (vercel-labs) — coding agents trace data flow to find logic vulns pattern scanners miss. Uses Warden's AI config; budget-capped.", icon: Sparkles, command: `${TARGET} ${RUN} deepsec` },
-  { service: "codeql", match: ["codeql"], type: "Sast", targetKind: "repository", description: "Semantic SAST (GitHub CodeQL) — data-flow/taint queries across JS/TS, Python, Java, C#, Ruby; build-mode none, no project build required.", icon: ScanSearch, command: `${TARGET} ${RUN} codeql` },
-  { service: "trivy-iac", match: ["trivy-iac", "trivy iac"], type: "Sast", targetKind: "repository", description: "IaC / misconfiguration scanning — Terraform, Kubernetes, Dockerfile.", icon: FileWarning, command: `${TARGET} ${RUN} trivy-iac` },
-  { service: "trivy-image", match: ["trivy-image", "trivy image"], type: "Container", targetKind: "image", description: "Container image vulnerability scanning for any local or remote image ref.", icon: Container, command: `SCAN_IMAGE_REF=nginx:latest ${RUN} trivy-image` },
-  { service: "zap", match: ["zap", "owasp zap"], type: "Dast", targetKind: "url", description: "DAST baseline scan against a running target (passive + spider).", icon: Globe, command: `SCAN_TARGET_URL=https://target ${RUN} zap` },
-  { service: "nuclei", match: ["nuclei"], type: "Dast", targetKind: "url", description: "Template-based vulnerability scanning against a running target.", icon: Radar, command: `SCAN_TARGET_URL=https://target ${RUN} nuclei` },
-  { service: "nikto", match: ["nikto"], type: "Dast", targetKind: "url", description: "Web server DAST — dangerous files/CGIs, outdated server software, and misconfigurations across thousands of checks.", icon: ScanSearch, command: `SCAN_TARGET_URL=https://target ${RUN} nikto` },
-  { service: "dependency-check", match: ["dependency-check", "owasp dependency-check"], type: "Dependency", targetKind: "repository", description: "SCA via CPE/NVD matching (OWASP Dependency-Check) — catches bundled libraries purl-based scanners miss. NVD API key recommended.", icon: PackageSearch, command: `NVD_API_KEY=... ${TARGET} ${RUN} dependency-check` },
-  { service: "kingfisher", match: ["kingfisher"], type: "Secret", targetKind: "repository", description: "Secret detection with live validation (MongoDB Kingfisher) — confirms whether a leaked credential is still active; validated keys are Critical.", icon: KeyRound, command: `${TARGET} ${RUN} kingfisher` },
-  { service: "augustus", match: ["augustus"], type: "Ai", targetKind: "llm", description: "LLM red-team (Praetorian Augustus) — jailbreaks, prompt injection, encoding exploits, data extraction against a model or OpenAI-compatible endpoint.", icon: Sparkles, command: `AUGUSTUS_GENERATOR=openai.OpenAI ${RUN} augustus` },
+  { service: "semgrep", match: ["semgrep"], type: "Sast", targetKind: "repository", description: "Static analysis across 30+ languages with community rulepacks.", icon: Braces },
+  { service: "gitleaks", match: ["gitleaks"], type: "Secret", targetKind: "repository", description: "Secret detection on the working tree (API keys, tokens, credentials).", icon: KeyRound },
+  { service: "trufflehog", match: ["trufflehog"], type: "Secret", targetKind: "repository", description: "Git-history secret detection — complements the gitleaks working-tree scan.", icon: History },
+  { service: "trivy", match: ["trivy"], type: "Dependency", targetKind: "repository", description: "Dependency (SCA) scanning of lockfiles and manifests.", icon: PackageSearch },
+  { service: "grype", match: ["grype"], type: "Dependency", targetKind: "repository", description: "SCA second opinion with SBOM-grade dependency resolution (Syft).", icon: Boxes },
+  { service: "osv", match: ["osv", "osv-scanner"], type: "Dependency", targetKind: "repository", description: "Supply-chain SCA across many ecosystems via Google's OSV.dev advisories.", icon: ShieldAlert },
+  { service: "cve-lite", match: ["cve-lite", "cve-lite-cli"], type: "Dependency", targetKind: "repository", description: "JS/TS lockfile SCA (OWASP CVE Lite CLI) — npm/pnpm/Yarn/Bun.", icon: PackageCheck },
+  { service: "cargo-audit", match: ["cargo-audit"], type: "Dependency", targetKind: "repository", description: "Rust/Cargo SCA (RustSec cargo-audit).", icon: PackageSearch },
+  { service: "cargo-deny", match: ["cargo-deny"], type: "Dependency", targetKind: "repository", description: "Rust advisories + OSS license policy + banned crates.", icon: ShieldCheck },
+  { service: "cargo-geiger", match: ["cargo-geiger"], type: "Sast", targetKind: "repository", description: "Rust unsafe-code usage across the dependency tree.", icon: Bug },
+  { service: "trivy-license", match: ["trivy-license"], type: "Dependency", targetKind: "repository", description: "OSS license findings by category (Forbidden/Restricted/…).", icon: ScrollText },
+  { service: "kubescape", match: ["kubescape"], type: "Sast", targetKind: "repository", description: "Kubernetes manifest posture (NSA/MITRE/CIS).", icon: Container },
+  { service: "prowler", match: ["prowler"], type: "Cloud", targetKind: "cloud", description: "Cloud security posture (AWS/Azure/GCP).", icon: ShieldAlert },
+  { service: "syft", match: ["syft"], type: "Dependency", targetKind: "repository", description: "SBOM generation — full dependency inventory.", icon: ScrollText },
+  { service: "checkov", match: ["checkov"], type: "Sast", targetKind: "repository", description: "IaC misconfiguration — Terraform, K8s, Dockerfile, ARM.", icon: ShieldCheck },
+  { service: "guarddog", match: ["guarddog"], type: "Sast", targetKind: "repository", description: "Malicious-package detection in dependency manifests.", icon: Bug },
+  { service: "deepsec", match: ["deepsec"], type: "Sast", targetKind: "repository", description: "AI-agent deep SAST — logic vulns pattern scanners miss.", icon: Sparkles },
+  { service: "codeql", match: ["codeql"], type: "Sast", targetKind: "repository", description: "Semantic SAST (GitHub CodeQL) data-flow/taint queries.", icon: ScanSearch },
+  { service: "trivy-iac", match: ["trivy-iac", "trivy iac"], type: "Sast", targetKind: "repository", description: "IaC / misconfiguration scanning.", icon: FileWarning },
+  { service: "trivy-image", match: ["trivy-image", "trivy image"], type: "Container", targetKind: "image", description: "Container image vulnerability scanning.", icon: Container },
+  { service: "zap", match: ["zap", "owasp zap"], type: "Dast", targetKind: "url", description: "DAST baseline scan against a running target.", icon: Globe },
+  { service: "nuclei", match: ["nuclei"], type: "Dast", targetKind: "url", description: "Template-based vulnerability scanning.", icon: Radar },
+  { service: "nikto", match: ["nikto"], type: "Dast", targetKind: "url", description: "Web server DAST — dangerous files and misconfigs.", icon: ScanSearch },
+  { service: "dependency-check", match: ["dependency-check", "owasp dependency-check"], type: "Dependency", targetKind: "repository", description: "SCA via CPE/NVD matching (OWASP Dependency-Check).", icon: PackageSearch },
+  { service: "kingfisher", match: ["kingfisher"], type: "Secret", targetKind: "repository", description: "Secret detection with live credential validation.", icon: KeyRound },
+  { service: "augustus", match: ["augustus"], type: "Ai", targetKind: "llm", description: "LLM red-team — jailbreaks, prompt injection, extraction.", icon: Sparkles },
 ];
 
-const TARGET_FIELD: Record<TargetKind, { label: string; placeholder: string }> = {
+const TARGET_FIELD: Record<TargetKind, { label: string; placeholder: string; hint: string }> = {
   repository: {
-    label: "Repository — git URL or host path",
-    placeholder: "https://github.com/org/repo.git  ·  or  /home/me/projects/my-repo",
+    label: "Git repository URL",
+    placeholder: "https://github.com/org/repo.git",
+    hint: "Warden clones the repo and runs the scanner. Private repos need SCAN_GIT_TOKEN.",
   },
-  image: { label: "Image reference", placeholder: "nginx:1.27" },
-  url: { label: "Target URL", placeholder: "https://staging.example.com" },
-  llm: { label: "LLM generator / endpoint", placeholder: "openai.OpenAI  ·  or  rest.Rest (set AUGUSTUS_CONFIG)" },
-  cloud: { label: "Cloud provider", placeholder: "aws  ·  azure  ·  gcp (credentials via env)" },
+  image: {
+    label: "Image reference",
+    placeholder: "nginx:1.27",
+    hint: "Any local or remote image the Docker host can pull.",
+  },
+  url: {
+    label: "Target URL",
+    placeholder: "https://staging.example.com",
+    hint: "Live HTTP(S) endpoint reachable from the scanner network.",
+  },
+  llm: {
+    label: "LLM generator / endpoint",
+    placeholder: "openai.OpenAI",
+    hint: "Configured generator name for Augustus red-team runs.",
+  },
+  cloud: {
+    label: "Cloud provider",
+    placeholder: "aws",
+    hint: "aws · azure · gcp — credentials via env on the runner.",
+  },
 };
 
 // ---- helpers / dialogs ----------------------------------------------------
 
-function CommandSnippet({ command }: { command: string }) {
-  const [copied, setCopied] = useState(false);
+function formatElapsed(ms: number) {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  return `${m}m ${s % 60}s`;
+}
+
+function PipelineStep({
+  label,
+  state,
+}: {
+  label: string;
+  state: "done" | "active" | "pending" | "error";
+}) {
   return (
-    <div className="flex items-center gap-1 rounded-md border bg-muted/50 pl-3">
-      <code className="flex-1 truncate py-2 font-mono text-xs text-muted-foreground">{command}</code>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="size-8 shrink-0"
-        aria-label="Copy command"
-        onClick={async () => {
-          await navigator.clipboard.writeText(command);
-          setCopied(true);
-          toast.success("Command copied");
-          setTimeout(() => setCopied(false), 1500);
-        }}
+    <div className="flex flex-1 flex-col items-center gap-1.5">
+      <div
+        className={cn(
+          "flex size-7 items-center justify-center border font-mono text-[10px]",
+          state === "done" && "border-primary/50 bg-primary/15 text-primary",
+          state === "active" && "border-primary bg-primary/20 text-primary",
+          state === "pending" && "border-border/60 text-muted-foreground",
+          state === "error" && "border-critical/50 bg-critical/15 text-critical",
+        )}
       >
-        {copied ? <Check className="size-3.5 text-primary" /> : <Copy className="size-3.5" />}
-      </Button>
+        {state === "done" && <CheckCircle2 className="size-3.5" />}
+        {state === "active" && <Loader2 className="size-3.5 animate-spin" />}
+        {state === "pending" && <span className="size-1.5 bg-current opacity-40" />}
+        {state === "error" && <XCircle className="size-3.5" />}
+      </div>
+      <span
+        className={cn(
+          "font-mono text-[9px] uppercase tracking-wider",
+          state === "active" && "text-primary",
+          state === "done" && "text-foreground",
+          state === "pending" && "text-muted-foreground",
+          state === "error" && "text-critical",
+        )}
+      >
+        {label}
+      </span>
     </div>
   );
 }
 
-function RunDialog({ scanner, onClose }: { scanner: FleetScanner; onClose: () => void }) {
+/**
+ * Run popup: configure → launch → stay open with live pipeline + logs.
+ * Status/log truth comes from polling GET /api/scan-job/{id} (always works).
+ * SSE stream is optional live boost for mid-run lines.
+ */
+function RunDialog({
+  scanner,
+  onClose,
+  onQueued,
+  runnerReady,
+}: {
+  scanner: FleetScanner;
+  onClose: () => void;
+  onQueued?: (jobId: string) => void;
+  runnerReady: boolean;
+}) {
   const queryClient = useQueryClient();
   const [target, setTarget] = useState("");
   const [repoName, setRepoName] = useState("");
   const [branch, setBranch] = useState("");
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [phase, setPhase] = useState<"form" | "live">("form");
+  const [tick, setTick] = useState(0);
+  const [polledStatus, setPolledStatus] = useState<ScanJobStatus | null>(null);
+  const [polledLog, setPolledLog] = useState("");
   const field = TARGET_FIELD[scanner.targetKind];
+  const logRef = useRef<HTMLDivElement>(null);
+  const liveStartedAt = useRef<number | null>(null);
+
+  const { connected, transport, focusedLines, focusedJob, upsertJob, applyJobSnapshot } =
+    useScanStream({
+      focusJobId: jobId,
+      enabled: phase === "live",
+    });
+
+  // Poll job while live — authoritative status + full log (stream often misses fast jobs)
+  useEffect(() => {
+    if (phase !== "live" || !jobId) return;
+    let cancelled = false;
+
+    const poll = async () => {
+      try {
+        const res = await getScanJob({
+          path: { scanJobId: jobId },
+          throwOnError: false,
+        });
+        if (cancelled || !res.data) return;
+        const job = res.data;
+        setPolledStatus(job.status);
+        if (job.log) setPolledLog(job.log);
+        applyJobSnapshot({
+          id: job.id,
+          status: job.status,
+          scanner: job.scanner ?? undefined,
+          target: job.target ?? undefined,
+          log: job.log,
+          startedAt: job.startedAt,
+          completedAt: job.completedAt,
+        });
+        if (job.status === "Succeeded" || job.status === "Failed") {
+          queryClient.invalidateQueries({ queryKey: ["scan-jobs"] });
+          queryClient.invalidateQueries({ queryKey: ["scanners"] });
+          queryClient.invalidateQueries({ queryKey: ["findings"] });
+        }
+      } catch {
+        /* keep polling */
+      }
+    };
+
+    void poll();
+    const id = setInterval(poll, 1000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [phase, jobId, applyJobSnapshot, queryClient]);
+
+  const status =
+    polledStatus ??
+    (focusedJob?.status as ScanJobStatus | undefined) ??
+    (phase === "live" ? ("Queued" as ScanJobStatus) : null);
+  const isTerminal = status === "Succeeded" || status === "Failed";
+
+  // Console lines: stream first, fall back to polled full log
+  const consoleLines = useMemo(() => {
+    if (focusedLines.length > 0) return focusedLines.map((l) => l.text);
+    if (polledLog) return polledLog.split("\n").filter((t) => t.length > 0);
+    return [] as string[];
+  }, [focusedLines, polledLog]);
+
+  useEffect(() => {
+    if (phase !== "live") return;
+    if (isTerminal) return;
+    const id = setInterval(() => setTick((t) => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [phase, isTerminal]);
+
+  useEffect(() => {
+    logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" });
+  }, [consoleLines.length]);
+
+  if (phase === "live" && liveStartedAt.current == null) liveStartedAt.current = Date.now();
+  if (phase === "form") liveStartedAt.current = null;
+
+  const elapsedMs = useMemo(() => {
+    void tick;
+    if (phase !== "live") return 0;
+    const start = focusedJob?.startedAt ?? liveStartedAt.current ?? Date.now();
+    const end = focusedJob?.endedAt ?? (isTerminal ? Date.now() : Date.now());
+    return Math.max(0, end - start);
+  }, [focusedJob, phase, tick, isTerminal]);
+
+  const pipeline = useMemo(() => {
+    const s = status ?? "Queued";
+    if (s === "Failed") {
+      return { queued: "done" as const, running: "error" as const, done: "error" as const };
+    }
+    if (s === "Succeeded") {
+      return { queued: "done" as const, running: "done" as const, done: "done" as const };
+    }
+    if (s === "Running") {
+      return { queued: "done" as const, running: "active" as const, done: "pending" as const };
+    }
+    return { queued: "active" as const, running: "pending" as const, done: "pending" as const };
+  }, [status]);
 
   const run = useMutation({
-    mutationFn: async () =>
-      (
-        await createScanJob({
-          body: { scanner: scanner.service, target, repoName: repoName || undefined, branch: branch || undefined },
-          throwOnError: true,
-        })
-      ).data,
-    onSuccess: () => {
-      toast.success(`${scanner.service} scan queued`);
+    mutationFn: async () => {
+      const result = await createScanJob({
+        body: {
+          scanner: scanner.service,
+          target,
+          repoName: repoName || undefined,
+          branch: branch || undefined,
+        },
+        throwOnError: false,
+      });
+      if (result.error) {
+        const err = result.error as { message?: string } | string;
+        const msg =
+          typeof err === "string"
+            ? err
+            : err?.message || `Failed to queue scan (${result.response?.status ?? "?"})`;
+        throw new Error(msg);
+      }
+      if (!result.data) throw new Error("No job returned");
+      return result.data;
+    },
+    onSuccess: (job) => {
+      const id = job.id!;
+      setJobId(id);
+      setPolledStatus("Queued");
+      setPolledLog("");
+      setPhase("live");
+      liveStartedAt.current = Date.now();
+      upsertJob({
+        jobId: id,
+        scanner: scanner.service,
+        status: "Queued",
+        target,
+        lineCount: 0,
+      });
       queryClient.invalidateQueries({ queryKey: ["scan-jobs"] });
-      onClose();
+      onQueued?.(id);
+      toast.success(`${scanner.service} launched`);
     },
     onError: (e: Error) => toast.error(e.message || "Failed to queue scan"),
   });
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
+      <DialogContent
+        className={cn(
+          "flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0",
+          phase === "live" ? "sm:max-w-3xl" : "sm:max-w-lg",
+        )}
+      >
+        <DialogHeader className="shrink-0 space-y-1 border-b border-border/50 px-6 py-4">
           <DialogTitle className="flex items-center gap-2 font-mono">
-            <scanner.icon className="size-4" /> Run {scanner.service}
+            <scanner.icon className="size-4 text-primary" />
+            {phase === "form" ? `Run ${scanner.service}` : `${scanner.service} — live`}
+            {status && phase === "live" && <StatusBadge status={status} />}
           </DialogTitle>
-          <DialogDescription>{scanner.description}</DialogDescription>
+          <DialogDescription className="truncate font-mono text-xs">
+            {phase === "form" ? scanner.description : target}
+          </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="scan-target">{field.label}</Label>
-            <Input id="scan-target" value={target} onChange={(e) => setTarget(e.target.value)} placeholder={field.placeholder} autoFocus />
-          </div>
-          {scanner.targetKind === "repository" && (
-            <div className="grid grid-cols-2 gap-4">
+
+        {phase === "form" ? (
+          <>
+            <div className="flex flex-col gap-4 overflow-auto px-6 py-4">
+              {!runnerReady && (
+                <div className="flex items-start gap-2 border border-critical/40 bg-critical/10 px-3 py-2 text-xs text-critical">
+                  <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+                  Runner is not ready. Fix capability issues before launching.
+                </div>
+              )}
               <div className="flex flex-col gap-2">
-                <Label htmlFor="scan-repo">Project name (optional)</Label>
-                <Input id="scan-repo" value={repoName} onChange={(e) => setRepoName(e.target.value)} placeholder="my-repo" />
+                <Label htmlFor="scan-target">{field.label}</Label>
+                <Input
+                  id="scan-target"
+                  value={target}
+                  onChange={(e) => setTarget(e.target.value)}
+                  placeholder={field.placeholder}
+                  autoFocus
+                  className="font-mono text-sm"
+                />
+                <p className="text-[11px] leading-relaxed text-muted-foreground">{field.hint}</p>
               </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="scan-branch">Branch (optional)</Label>
-                <Input id="scan-branch" value={branch} onChange={(e) => setBranch(e.target.value)} placeholder="main" />
+              {scanner.targetKind === "repository" && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="scan-repo">Project name (optional)</Label>
+                    <Input
+                      id="scan-repo"
+                      value={repoName}
+                      onChange={(e) => setRepoName(e.target.value)}
+                      placeholder="my-repo"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="scan-branch">Branch (optional)</Label>
+                    <Input
+                      id="scan-branch"
+                      value={branch}
+                      onChange={(e) => setBranch(e.target.value)}
+                      placeholder="main"
+                    />
+                  </div>
+                </div>
+              )}
+              <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                Live console opens here — status, timer, and full scanner output
+              </p>
+            </div>
+            <DialogFooter className="shrink-0 border-t border-border/50 px-6 py-4">
+              <Button variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => run.mutate()}
+                disabled={!target.trim() || run.isPending || !runnerReady}
+                className="gap-2"
+              >
+                {run.isPending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Play className="size-4" />
+                )}
+                Launch scan
+              </Button>
+            </DialogFooter>
+          </>
+        ) : (
+          <>
+            <div className="shrink-0 space-y-4 border-b border-border/50 px-6 py-4">
+              <div className="flex items-start gap-1">
+                <PipelineStep label="Queued" state={pipeline.queued} />
+                <div className="mt-3.5 h-px flex-1 bg-border/60" />
+                <PipelineStep label="Running" state={pipeline.running} />
+                <div className="mt-3.5 h-px flex-1 bg-border/60" />
+                <PipelineStep
+                  label={status === "Failed" ? "Failed" : "Done"}
+                  state={pipeline.done}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div className="border border-border/50 bg-muted/20 px-3 py-2">
+                  <div className="flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                    <Radio className={cn("size-3", connected && "animate-pulse text-primary")} />
+                    Feed
+                  </div>
+                  <p className="mt-1 font-mono text-sm">
+                    {connected ? transport.toUpperCase() : "POLL"}
+                  </p>
+                </div>
+                <div className="border border-border/50 bg-muted/20 px-3 py-2">
+                  <div className="flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                    <Clock3 className="size-3" />
+                    Elapsed
+                  </div>
+                  <p className="mt-1 font-mono text-sm tabular-nums">
+                    {formatElapsed(elapsedMs || 0)}
+                  </p>
+                </div>
+                <div className="border border-border/50 bg-muted/20 px-3 py-2">
+                  <div className="flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                    <Terminal className="size-3" />
+                    Log lines
+                  </div>
+                  <p className="mt-1 font-mono text-sm tabular-nums">{consoleLines.length}</p>
+                </div>
+                <div className="border border-border/50 bg-muted/20 px-3 py-2">
+                  <div className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                    Job
+                  </div>
+                  <p className="mt-1 truncate font-mono text-sm" title={jobId ?? ""}>
+                    {jobId?.slice(0, 8)}…
+                  </p>
+                </div>
               </div>
             </div>
-          )}
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={() => run.mutate()} disabled={!target.trim() || run.isPending} className="gap-2">
-            {run.isPending ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
-            Run scan
-          </Button>
-        </DialogFooter>
+
+            <div
+              ref={logRef}
+              className="min-h-[240px] flex-1 overflow-auto bg-[var(--black-2,#0a0a0a)] px-4 py-3 font-mono text-[11px] leading-relaxed text-[var(--black-20,#e8e8e8)] dark:bg-black/70"
+            >
+              {consoleLines.length === 0 ? (
+                <p className="flex items-center gap-2 text-muted-foreground/70">
+                  <Loader2 className="size-3.5 animate-spin" />
+                  {status === "Queued"
+                    ? "Queued — waiting for worker…"
+                    : status === "Running"
+                      ? "Scanner running — collecting output…"
+                      : "Loading job output…"}
+                </p>
+              ) : (
+                consoleLines.map((text, i) => (
+                  <div key={`${i}-${text.slice(0, 24)}`} className="whitespace-pre-wrap break-all">
+                    <span className="select-none text-primary/40">› </span>
+                    {text}
+                  </div>
+                ))
+              )}
+            </div>
+
+            <DialogFooter className="shrink-0 border-t border-border/50 px-6 py-3 sm:justify-between">
+              <p className="hidden font-mono text-[10px] text-muted-foreground sm:block">
+                {isTerminal
+                  ? status === "Succeeded"
+                    ? "Done — findings are under Findings / Registered scanners."
+                    : "Failed — see log above."
+                  : "Live updates every second. Close anytime — job keeps running."}
+              </p>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={onClose}>
+                  {isTerminal ? "Close" : "Close"}
+                </Button>
+                {isTerminal && status === "Failed" && (
+                  <Button
+                    className="gap-2"
+                    onClick={() => {
+                      setPhase("form");
+                      setJobId(null);
+                      setPolledStatus(null);
+                      setPolledLog("");
+                    }}
+                  >
+                    <Play className="size-3.5" />
+                    Run again
+                  </Button>
+                )}
+              </div>
+            </DialogFooter>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -246,14 +587,66 @@ function LogDialog({ job, onClose }: { job: ScanJobInfo; onClose: () => void }) 
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle className="font-mono">{job.scanner} — {job.status}</DialogTitle>
-          <DialogDescription className="truncate">{job.target}</DialogDescription>
+          <DialogTitle className="font-mono">
+            {job.scanner} — {job.status}
+          </DialogTitle>
+          <DialogDescription className="truncate font-mono text-xs">{job.target}</DialogDescription>
         </DialogHeader>
-        <pre className="max-h-96 overflow-auto rounded-md border bg-muted/50 p-3 font-mono text-xs whitespace-pre-wrap">
+        <pre className="max-h-96 overflow-auto border border-border/60 bg-black/90 p-3 font-mono text-xs text-primary/90 whitespace-pre-wrap dark:bg-black/60">
           {job.log || "No output captured."}
         </pre>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function RunnerBanner() {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["scan-capability"],
+    queryFn: fetchScanCapability,
+    refetchInterval: 30_000,
+    retry: 1,
+  });
+
+  if (isLoading) {
+    return <Skeleton className="h-12 w-full" />;
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="flex items-start gap-2 border border-border/60 bg-muted/30 px-3 py-2.5 text-xs text-muted-foreground">
+        <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+        Could not reach scan runner capability endpoint.
+      </div>
+    );
+  }
+
+  const ok = data.available;
+  return (
+    <div
+      className={cn(
+        "flex flex-wrap items-start gap-3 border px-3 py-2.5 text-xs",
+        ok
+          ? "border-primary/30 bg-primary/5 text-foreground"
+          : "border-critical/40 bg-critical/10 text-critical",
+      )}
+    >
+      <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider">
+        <span
+          className={cn("size-1.5", ok ? "bg-primary" : "bg-critical")}
+          aria-hidden
+        />
+        {data.backend}
+        {ok ? " ready" : " blocked"}
+      </div>
+      <p className={cn("min-w-0 flex-1 leading-relaxed", ok && "text-muted-foreground")}>
+        {data.message}
+      </p>
+      <div className="flex flex-wrap gap-1.5 font-mono text-[10px] text-muted-foreground">
+        <span>socket {data.socketPresent ? "✓" : "✗"}</span>
+        <span>token {data.tokenConfigured ? "✓" : "✗"}</span>
+      </div>
+    </div>
   );
 }
 
@@ -278,17 +671,40 @@ function useScanJobs() {
     queryKey: ["scan-jobs"],
     queryFn: async () => (await getScanJobs({ body: {}, throwOnError: true })).data,
     refetchInterval: (query) =>
-      query.state.data?.some((j) => j.status === "Queued" || j.status === "Running") ? 3000 : 15000,
+      query.state.data?.some((j) => j.status === "Queued" || j.status === "Running")
+        ? 4000
+        : 20000,
   });
 }
 
-/** Single-screen page shell: fixed header + contained-scroll body. */
-function Shell({ title, desc, children }: { title: string; desc: string; children: React.ReactNode }) {
+function useCapability() {
+  return useQuery({
+    queryKey: ["scan-capability"],
+    queryFn: fetchScanCapability,
+    refetchInterval: 30_000,
+    retry: 1,
+  });
+}
+
+function Shell({
+  title,
+  desc,
+  actions,
+  children,
+}: {
+  title: string;
+  desc: string;
+  actions?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <div className="flex min-h-[calc(100dvh-5.5rem)] flex-col gap-4 lg:h-[calc(100dvh-5.5rem)] lg:min-h-0">
-      <div className="shrink-0 px-2">
-        <h1 className="text-xl font-bold tracking-tight">{title}</h1>
-        <p className="text-sm text-muted-foreground">{desc}</p>
+      <div className="flex shrink-0 items-start justify-between gap-4 px-2">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight">{title}</h1>
+          <p className="text-sm text-muted-foreground">{desc}</p>
+        </div>
+        {actions}
       </div>
       <div className="min-h-0 flex-1 overflow-auto px-2">{children}</div>
     </div>
@@ -300,18 +716,28 @@ function Shell({ title, desc, children }: { title: string; desc: string; childre
 export function RegisteredScannersSection() {
   const { data: scanners, isLoading } = useScanners();
   return (
-    <Shell title="Registered Scanners" desc="Scanners that have reported results to this Warden instance">
+    <Shell
+      title="Registered Scanners"
+      desc="Scanners that have reported results to this Warden instance"
+    >
       <Card className="bg-card">
         <CardContent className="flex flex-wrap gap-2 pt-6">
-          {isLoading && Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-8 w-36 rounded-md" />)}
+          {isLoading &&
+            Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} className="h-8 w-36" />
+            ))}
           {!isLoading && (scanners ?? []).length === 0 && (
             <p className="text-sm text-muted-foreground">
-              No scanners yet — run one from the Fleet or wire a CI pipeline with a Warden access token.
+              No scanners yet — launch one from the Fleet. Findings appear here after the first
+              successful report.
             </p>
           )}
           {(scanners ?? []).map((s) => (
-            <div key={s.id ?? s.name} className="flex items-center gap-2 rounded-md border border-border/60 bg-card px-3 py-1.5 ">
-              <span className="size-1.5 rounded-full bg-primary" />
+            <div
+              key={s.id ?? s.name}
+              className="flex items-center gap-2 border border-border/60 bg-card px-3 py-1.5"
+            >
+              <span className="size-1.5 bg-primary" />
               <span className="text-sm font-medium">{s.name}</span>
               <TypeBadge type={s.type} />
             </div>
@@ -325,12 +751,33 @@ export function RegisteredScannersSection() {
 export function ScanRunsSection() {
   const { data: jobs } = useScanJobs();
   const [logJob, setLogJob] = useState<ScanJobInfo | null>(null);
+  const liveCount =
+    (jobs ?? []).filter((j) => j.status === "Queued" || j.status === "Running").length;
+
   return (
-    <Shell title="Scan Runs" desc="On-demand scans executed by Warden — newest first">
+    <Shell
+      title="Scan Runs"
+      desc="Jobs launched from the UI — live stream + history"
+      actions={
+        liveCount > 0 ? (
+          <Badge variant="outline" className="gap-1.5 border-primary/40 font-mono text-primary">
+            <Loader2 className="size-3 animate-spin" />
+            {liveCount} active
+          </Badge>
+        ) : null
+      }
+    >
+      <div className="mb-4">
+        <RunnerBanner />
+      </div>
       <Card className="bg-card">
         <CardContent className="pt-6">
           {(jobs ?? []).length === 0 ? (
-            <p className="text-sm text-muted-foreground">No runs yet — hit <span className="font-medium">Run</span> on a scanner in the Fleet.</p>
+            <p className="text-sm text-muted-foreground">
+              No runs yet — open{" "}
+              <span className="font-medium text-foreground">Scanner Fleet</span> and hit{" "}
+              <span className="font-medium text-primary">Run</span>.
+            </p>
           ) : (
             <Table>
               <TableHeader>
@@ -345,14 +792,32 @@ export function ScanRunsSection() {
               </TableHeader>
               <TableBody>
                 {(jobs ?? []).map((job) => (
-                  <TableRow key={job.id}>
+                  <TableRow
+                    key={job.id}
+                    className={cn(
+                      (job.status === "Running" || job.status === "Queued") &&
+                        "bg-primary/[0.03]",
+                    )}
+                  >
                     <TableCell className="font-mono">{job.scanner}</TableCell>
-                    <TableCell className="max-w-64 truncate font-mono text-xs text-muted-foreground">{job.target}</TableCell>
-                    <TableCell><StatusBadge status={job.status} /></TableCell>
-                    <TableCell className="text-muted-foreground">{formatDistanceToNow(parseISO(job.createdAt), { addSuffix: true })}</TableCell>
+                    <TableCell className="max-w-64 truncate font-mono text-xs text-muted-foreground">
+                      {job.target}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={job.status} />
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {formatDistanceToNow(parseISO(job.createdAt), { addSuffix: true })}
+                    </TableCell>
                     <TableCell className="tabular-nums">{duration(job)}</TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="icon" className="size-8" aria-label="View log" onClick={() => setLogJob(job)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8"
+                        aria-label="View log"
+                        onClick={() => setLogJob(job)}
+                      >
                         <FileText className="size-3.5" />
                       </Button>
                     </TableCell>
@@ -370,42 +835,165 @@ export function ScanRunsSection() {
 
 export function FleetSection() {
   const { data: scanners } = useScanners();
+  const { data: jobs } = useScanJobs();
+  const { data: capability } = useCapability();
   const [runScanner, setRunScanner] = useState<FleetScanner | null>(null);
+  const [typeFilter, setTypeFilter] = useState<ScannerType | "All">("All");
+  const [search, setSearch] = useState("");
+
+  const runnerReady = capability?.available === true;
+  const imageMap = capability?.images ?? {};
+
   const isRegistered = useMemo(
-    () => (fleet: FleetScanner) => (scanners ?? []).some((s) => fleet.match.some((m) => (s.name ?? "").toLowerCase().includes(m))),
+    () => (fleet: FleetScanner) =>
+      (scanners ?? []).some((s) =>
+        fleet.match.some((m) => (s.name ?? "").toLowerCase().includes(m)),
+      ),
     [scanners],
   );
+
+  const activeJobs = useMemo(
+    () => (jobs ?? []).filter((j) => j.status === "Queued" || j.status === "Running"),
+    [jobs],
+  );
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return FLEET.filter((f) => {
+      if (typeFilter !== "All" && f.type !== typeFilter) return false;
+      if (!q) return true;
+      return (
+        f.service.includes(q) ||
+        f.description.toLowerCase().includes(q) ||
+        f.type.toLowerCase().includes(q)
+      );
+    });
+  }, [search, typeFilter]);
+
+  const types = useMemo(() => {
+    const set = new Set<ScannerType>();
+    FLEET.forEach((f) => set.add(f.type));
+    return Array.from(set);
+  }, []);
+
   return (
     <Shell
-      title="On-Demand Scan Fleet"
-      desc="Run from here (Warden launches the scanner container) or copy the CLI command — needs WARDEN_TOKEN in .env"
+      title="Scanner Fleet"
+      desc="Click Run — live status and logs open in the popup. No CLI."
+      actions={
+        activeJobs.length > 0 ? (
+          <Badge variant="outline" className="gap-1.5 border-primary/40 font-mono text-primary">
+            <Loader2 className="size-3 animate-spin" />
+            {activeJobs.length} running
+          </Badge>
+        ) : null
+      }
     >
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {FLEET.map((f) => (
-          <Card key={f.service} className="gap-3 bg-card">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div className="flex items-center gap-2">
-                <f.icon className="size-4 text-muted-foreground" />
-                <CardTitle className="font-mono text-sm">{f.service}</CardTitle>
-                <TypeBadge type={f.type} />
-              </div>
-              {isRegistered(f) && (
-                <Badge variant="outline" className="border-primary/40 text-primary">
-                  <ScanSearch className="size-3" /> Active
-                </Badge>
-              )}
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              <p className="text-sm text-muted-foreground">{f.description}</p>
-              <CommandSnippet command={f.command} />
-              <Button size="sm" variant="secondary" className="w-fit gap-2" onClick={() => setRunScanner(f)}>
-                <Play className="size-3.5" /> Run
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="mb-4">
+        <RunnerBanner />
       </div>
-      {runScanner && <RunDialog scanner={runScanner} onClose={() => setRunScanner(null)} />}
+
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search scanners…"
+            className="max-w-xs font-mono text-sm"
+          />
+          <div className="flex flex-wrap gap-1.5">
+            <Button
+              size="sm"
+              variant={typeFilter === "All" ? "default" : "outline"}
+              className="h-8 font-mono text-[11px]"
+              onClick={() => setTypeFilter("All")}
+            >
+              All
+            </Button>
+            {types.map((t) => (
+              <Button
+                key={t}
+                size="sm"
+                variant={typeFilter === t ? "default" : "outline"}
+                className="h-8 font-mono text-[11px]"
+                onClick={() => setTypeFilter(t)}
+              >
+                {t === "Dependency" ? "SCA" : t}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          {filtered.map((f) => {
+            const imageReady = imageMap[f.service];
+            const hasImageInfo = Object.keys(imageMap).length > 0;
+            return (
+              <Card
+                key={f.service}
+                className="group flex flex-col gap-0 overflow-hidden border-border/70 bg-card transition-colors hover:border-primary/40"
+              >
+                <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0 pb-2">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <div className="flex size-8 shrink-0 items-center justify-center border border-border/60 bg-muted/40 text-muted-foreground transition-colors group-hover:border-primary/40 group-hover:text-primary">
+                      <f.icon className="size-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <CardTitle className="truncate font-mono text-sm">{f.service}</CardTitle>
+                      <div className="mt-0.5 flex flex-wrap gap-1">
+                        <TypeBadge type={f.type} />
+                        {hasImageInfo && imageReady === false && (
+                          <Badge
+                            variant="outline"
+                            className="border-transparent bg-muted font-mono text-[9px] text-muted-foreground"
+                          >
+                            no image
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {isRegistered(f) && (
+                    <Badge
+                      variant="outline"
+                      className="shrink-0 border-primary/40 font-mono text-[10px] text-primary"
+                    >
+                      Active
+                    </Badge>
+                  )}
+                </CardHeader>
+                <CardContent className="flex flex-1 flex-col gap-3 pt-0">
+                  <p className="line-clamp-2 flex-1 text-xs leading-relaxed text-muted-foreground">
+                    {f.description}
+                  </p>
+                  <Button
+                    size="sm"
+                    className="w-full gap-2 font-mono text-xs uppercase tracking-wider"
+                    onClick={() => setRunScanner(f)}
+                    disabled={!runnerReady}
+                  >
+                    <Play className="size-3.5" />
+                    Run
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+        {filtered.length === 0 && (
+          <p className="py-8 text-center text-sm text-muted-foreground">
+            No scanners match your filter.
+          </p>
+        )}
+      </div>
+
+      {runScanner && (
+        <RunDialog
+          scanner={runScanner}
+          onClose={() => setRunScanner(null)}
+          runnerReady={runnerReady}
+        />
+      )}
     </Shell>
   );
 }
