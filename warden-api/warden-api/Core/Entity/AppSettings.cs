@@ -17,5 +17,7 @@ public class AppSettings
     public string? JiraWebhookSetting { get; set; }
     public string? RedmineSetting { get; set; }
     public string? GitHubSetting { get; set; }
+    /// <summary>JSON-serialized GitLab PAT settings (SCM discovery + clone auth).</summary>
+    public string? GitLabSetting { get; set; }
     public string? AiSetting { get; set; }
 }

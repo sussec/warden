@@ -69,6 +69,9 @@ namespace Warden.Migrations
                     b.Property<string>("GitHubSetting")
                         .HasColumnType("text");
 
+                    b.Property<string>("GitLabSetting")
+                        .HasColumnType("text");
+
                     b.Property<string>("JiraSetting")
                         .HasColumnType("text");
 

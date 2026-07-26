@@ -92,13 +92,18 @@ public class GitHubClient : IGitHubClient
             {
                 var result = new List<GitHubRepository>();
                 var page = 1;
+                // affiliation: personal + collab + org (production PAT / fine-grained).
+                // visibility=all includes private repos the token can read.
                 while (true)
                 {
-                    var response =
-                        await httpClient.GetAsync($"user/repos?per_page=100&page={page}&sort=full_name");
+                    var response = await httpClient.GetAsync(
+                        $"user/repos?per_page=100&page={page}&sort=full_name" +
+                        "&affiliation=owner,collaborator,organization_member&visibility=all");
                     if (!response.IsSuccessStatusCode)
                     {
-                        return Result.Fail($"GitHub responded with status {(int)response.StatusCode}");
+                        var err = await response.Content.ReadAsStringAsync();
+                        return Result.Fail(
+                            $"GitHub responded with status {(int)response.StatusCode}: {err}");
                     }
 
                     var items = await response.Content.ReadFromJsonAsync<List<JsonElement>>() ?? [];
@@ -122,15 +127,37 @@ public class GitHubClient : IGitHubClient
                             owner = loginProperty.GetString() ?? string.Empty;
                         }
 
+                        var cloneUrl = item.TryGetProperty("clone_url", out var cloneProp)
+                            ? cloneProp.GetString() ?? string.Empty
+                            : string.Empty;
+                        if (string.IsNullOrEmpty(cloneUrl) && !string.IsNullOrEmpty(fullName))
+                            cloneUrl = $"https://github.com/{fullName}.git";
+
+                        var htmlUrl = item.TryGetProperty("html_url", out var htmlProp)
+                            ? htmlProp.GetString() ?? string.Empty
+                            : string.Empty;
+                        var defaultBranch = item.TryGetProperty("default_branch", out var branchProp)
+                            ? branchProp.GetString() ?? "main"
+                            : "main";
+                        var isPrivate = item.TryGetProperty("private", out var privProp) &&
+                                        privProp.ValueKind == JsonValueKind.True;
+                        var id = item.TryGetProperty("id", out var idProp) ? idProp.GetInt64() : 0L;
+
                         result.Add(new GitHubRepository
                         {
                             Owner = owner,
                             Name = name,
-                            FullName = fullName
+                            FullName = fullName,
+                            CloneUrl = cloneUrl,
+                            HtmlUrl = htmlUrl,
+                            DefaultBranch = defaultBranch,
+                            Private = isPrivate,
+                            Id = id
                         });
                     }
 
                     page++;
+                    if (page > 50) break; // hard cap ~5k repos
                 }
 
                 repositories = result;

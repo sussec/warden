@@ -1,8 +1,10 @@
 using Warden.Application.Module.Integration.GitHub;
+using Warden.Application.Module.Integration.GitLab;
 using Warden.Application.Module.Integration.Jira;
 using Warden.Application.Module.Integration.JiraWebhook;
 using Warden.Application.Module.Integration.Mail;
 using Warden.Application.Module.Integration.Redmine;
+using Warden.Application.Module.Integration.Scm;
 using Warden.Application.Module.Integration.Teams;
 using Warden.Application.Services;
 using Warden.Core;
@@ -41,7 +43,7 @@ public class IntegrationModule : IModule
         // redmine
         builder.AddScoped<IRedmineSettingService, RedmineSettingService>();
         builder.AddScoped<RedmineTicketTracker>();
-        // github
+        // github (PAT issues — no GitHub App)
         builder.AddScoped<IGitHubSettingService, GitHubSettingService>();
         builder.AddScoped<GitHubTicketTracker>();
         builder.AddScoped<GitHubSetting>(sp =>
@@ -49,6 +51,10 @@ public class IntegrationModule : IModule
             var context = sp.GetRequiredService<AppDbContext>();
             return context.GetGitHubSettingAsync().Result;
         });
+        // gitlab (PAT issues — CodeRabbit-style, no OAuth App)
+        builder.AddScoped<GitLabTicketTracker>();
+        // scm bulk import (github + gitlab repo discovery → projects + scan jobs)
+        builder.AddScoped<IScmImportService, ScmImportService>();
         //
         builder.AddScoped<ITicketTrackerManager, TicketTrackerManager>();
         builder.AddScoped<IGlobalAlertManager, GlobalAlertManager>();
