@@ -28,23 +28,22 @@ export function Providers({ children }: { children: React.ReactNode }) {
         gap={10}
         offset={20}
         toastOptions={{
-          // Mirror the app's Card surface (rounded-xl, bg-card, shadow-sm) and
-          // the Outfit body font so toasts feel native to the warm-editorial UI.
+          // Odyssey: sharp mono panels, chatak red accents.
           classNames: {
             toast:
-              "group !font-sans gap-2.5 !rounded-xl !border-border !bg-card !text-card-foreground !shadow-sm p-4",
+              "group !font-mono gap-2.5 !rounded-none !border-border !bg-card !text-card-foreground !shadow-none p-4 tracking-wide",
             icon: "[&>svg]:size-4.5",
-            title: "text-sm font-semibold tracking-tight",
+            title: "text-sm font-medium tracking-tight",
             description: "!text-muted-foreground text-[13px] leading-relaxed",
             actionButton:
-              "!rounded-md !bg-primary !text-primary-foreground text-xs font-medium",
+              "!rounded-none !bg-primary !text-primary-foreground text-xs font-medium",
             cancelButton:
-              "!rounded-md !bg-muted !text-muted-foreground text-xs font-medium",
+              "!rounded-none !bg-muted !text-muted-foreground text-xs font-medium",
             closeButton:
-              "!border-border !bg-card !text-muted-foreground hover:!text-foreground hover:!bg-muted",
-            success: "[&_[data-icon]>svg]:text-emerald-600",
-            error: "[&_[data-icon]>svg]:text-red-600",
-            warning: "[&_[data-icon]>svg]:text-amber-600",
+              "!border-border !bg-card !text-muted-foreground hover:!text-foreground hover:!bg-muted !rounded-none",
+            success: "[&_[data-icon]>svg]:text-red-17",
+            error: "[&_[data-icon]>svg]:text-primary",
+            warning: "[&_[data-icon]>svg]:text-red-15",
             info: "[&_[data-icon]>svg]:text-primary",
           },
         }}
