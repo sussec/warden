@@ -1,10 +1,10 @@
 # Installation
 
-Techanv Warden ships as container images and is deployed with Docker Compose. A deployment consists of three services: the web application (`web`), the backend API (`warden`), and PostgreSQL (`db`).
+Techanv Warden ships as container images and is deployed with **Docker Compose** or **Helm on Kubernetes**. A full deployment includes the web UI (`web`), backend API (`warden`), optional OSV enrichment (`osv-api`), and PostgreSQL with pgvector (`db`).
 
 ## Requirements
 
-- Docker Engine 24 or later with the Compose plugin
+- Docker Engine 24 or later with the Compose plugin **or** Kubernetes 1.25+ with Helm 3.12+
 - 2 vCPU / 4 GB RAM minimum for an evaluation deployment
 - A PostgreSQL volume with regular backups for production use
 
@@ -22,6 +22,40 @@ Techanv Warden ships as container images and is deployed with Docker Compose. A 
 | `TRUSTED_PROXIES` | no | Comma-separated IPs or CIDR blocks of reverse proxies whose forwarded headers should be trusted. |
 | `WARDEN_TOKEN` | no | CI access token (**Setting → Access Token**) used by UI-triggered scans to ingest results. Required only for the [Scanner page](usage/scanners.md) run buttons. |
 | `DOCKER_GID` | no | Group ID of the host Docker socket, granting the non-root API user access for UI-triggered scans. See [UI-triggered scans](#ui-triggered-scans). |
+
+## Kubernetes (Helm)
+
+An umbrella chart under [`charts/warden`](https://github.com/sussec/warden/tree/main/charts/warden) deploys API, web, OSV, and PostgreSQL (pgvector) end to end.
+
+```bash
+helm upgrade --install warden ./charts/warden \
+  --namespace warden --create-namespace \
+  --set secrets.systemPassword='YourStrongSystemPass!' \
+  --set secrets.accessTokenKey="$(openssl rand -hex 16)" \
+  --set secrets.refreshTokenKey="$(openssl rand -hex 16)" \
+  --set secrets.postgresPassword="$(openssl rand -hex 16)"
+
+kubectl -n warden port-forward svc/warden-web 8080:3000
+# open http://localhost:8080 — user system / YourStrongSystemPass!
+```
+
+Production example with Ingress:
+
+```bash
+helm upgrade --install warden ./charts/warden \
+  --namespace warden --create-namespace \
+  -f charts/warden/values-production.yaml \
+  --set secrets.systemPassword='...' \
+  --set secrets.accessTokenKey='...' \
+  --set secrets.refreshTokenKey='...' \
+  --set secrets.postgresPassword='...' \
+  --set api.env.frontendUrl='https://warden.example.com'
+```
+
+Stock web images proxy the API at the Kubernetes Service named **`warden`** (compose-compatible). Full options: [charts/warden/README.md](https://github.com/sussec/warden/blob/main/charts/warden/README.md).
+
+!!! note "UI-triggered scans on Kubernetes"
+    Mounting the host Docker socket is off by default. Prefer CI scanner pipelines with `WARDEN_TOKEN`. See the chart README for `api.dockerSocket` (dev only) and the planned K8s Job backend.
 
 ## Docker Compose
 

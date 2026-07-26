@@ -1,0 +1,51 @@
+Warden has been deployed.
+
+Release:   {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+
+Components:
+  {{- if .Values.postgresql.enabled }}
+  - PostgreSQL (pgvector): {{ include "warden.dbHost" . }}:{{ include "warden.dbPort" . }}
+  {{- end }}
+  {{- if .Values.api.enabled }}
+  - API:  Service {{ include "warden.apiServiceName" . }}:{{ .Values.api.service.port }}
+  {{- end }}
+  {{- if .Values.web.enabled }}
+  - Web:  Service {{ include "warden.fullname" . }}-web:{{ .Values.web.service.port }}
+  {{- end }}
+  {{- if .Values.osv.enabled }}
+  - OSV:  Service {{ include "warden.osvServiceName" . }}:{{ .Values.osv.service.port }}
+  {{- end }}
+
+Login:
+  Username: system
+  Password: value of secrets.systemPassword (default ChangeMe_L0cal! — change it)
+
+{{- if .Values.ingress.enabled }}
+
+Ingress hosts:
+{{- range .Values.ingress.hosts }}
+  - http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
+{{- end }}
+{{- else }}
+
+Port-forward the UI:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "warden.fullname" . }}-web 8080:{{ .Values.web.service.port }}
+
+Then open http://localhost:8080
+{{- end }}
+
+{{- if and .Values.api.enabled (not .Values.api.dockerSocket.enabled) }}
+
+UI-triggered scan fleet:
+  Docker socket is disabled (recommended on Kubernetes). Jobs that need sibling
+  containers will not run until you enable api.dockerSocket or ship a K8s Job backend.
+  CI scanners still work via WARDEN_TOKEN / pipeline images.
+{{- end }}
+
+Next steps:
+  1. Create a CI access token in Settings → Access Token
+  2. Set secrets.wardenToken to that value and helm upgrade
+  3. Point pipelines at the API URL with WARDEN_TOKEN
+
+Docs: charts/warden/README.md

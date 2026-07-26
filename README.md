@@ -12,7 +12,7 @@
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)](warden-web)
 [![Bun](https://img.shields.io/badge/Bun-1.x-000000?logo=bun&logoColor=white)](warden-web)
 
-[Documentation](https://sussec.github.io/warden) · [Quick Start](#quick-start) · [CI/CD Integration](#cicd-integration) · [Support](#support)
+[Documentation](https://sussec.github.io/warden) · [Quick Start](#quick-start) · [Helm / Kubernetes](#kubernetes-helm) · [CI/CD Integration](#cicd-integration) · [Support](#support)
 
 </div>
 
@@ -109,6 +109,23 @@ docker compose up -d
 ```
 
 Then open `http://localhost:8080` and sign in as `system` with the password you configured. To build from source instead, clone the repository, copy `.env.example` to `.env`, and run `docker compose up -d --build`. Full installation guide: [sussec.github.io/warden](https://sussec.github.io/warden).
+
+## Kubernetes (Helm)
+
+Deploy the full stack (API, web, OSV, PostgreSQL+pgvector) with the chart in [`charts/warden`](charts/warden):
+
+```bash
+helm upgrade --install warden ./charts/warden \
+  --namespace warden --create-namespace \
+  --set secrets.systemPassword='YourStrongSystemPass!' \
+  --set secrets.accessTokenKey="$(openssl rand -hex 16)" \
+  --set secrets.refreshTokenKey="$(openssl rand -hex 16)" \
+  --set secrets.postgresPassword="$(openssl rand -hex 16)"
+
+kubectl -n warden port-forward svc/warden-web 8080:3000
+```
+
+Production Ingress example: `charts/warden/values-production.yaml`. Chart details: [charts/warden/README.md](charts/warden/README.md).
 
 ## CI/CD Integration
 
