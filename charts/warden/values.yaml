@@ -165,22 +165,22 @@ api:
     httpGet:
       path: /healthz
       port: http
-    initialDelaySeconds: 40
+    initialDelaySeconds: 20
     periodSeconds: 20
-    timeoutSeconds: 5
+    timeoutSeconds: 3
     failureThreshold: 6
   readinessProbe:
     httpGet:
-      path: /healthz
+      path: /readyz
       port: http
-    initialDelaySeconds: 15
+    initialDelaySeconds: 10
     periodSeconds: 10
     timeoutSeconds: 5
     failureThreshold: 6
   startupProbe:
     enabled: true
     httpGet:
-      path: /healthz
+      path: /readyz
       port: http
     periodSeconds: 5
     failureThreshold: 36

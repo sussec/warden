@@ -80,17 +80,31 @@ public static class ApiServer
         {
             options.MultipartBodyLengthLimit = 26843545; // 25MB
         });
-        builder.Services.AddHealthChecks().AddDbContextCheck<AppDbContext>();
+        // Liveness = process up (no DB). Readiness = DB reachable.
+        // Keeps k8s probes and /healthz under a few ms even under load.
+        builder.Services.AddHealthChecks()
+            .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy(),
+                tags: ["live"])
+            .AddDbContextCheck<AppDbContext>("db", tags: ["ready"]);
         builder.WebHost.ConfigureKestrel(k =>
         {
             k.Limits.MaxConcurrentConnections = 10_000;
             k.Limits.MaxConcurrentUpgradedConnections = 10_000;
             k.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(2);
             k.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(30);
+            k.AddServerHeader = false;
         });
         var app = builder.Build();
         app.UseResponseCompression();
-        app.MapHealthChecks("/healthz");
+        // Map before heavy middleware so probes stay cheap
+        app.MapHealthChecks("/healthz", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+        {
+            Predicate = r => r.Tags.Contains("live")
+        });
+        app.MapHealthChecks("/readyz", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+        {
+            Predicate = r => r.Tags.Contains("ready")
+        });
         app.InitApp();
         // Configure the HTTP request pipeline.
         // OpenAPI spec drives the typed client in warden-web (`bun run gen-api`).
@@ -115,7 +129,10 @@ public static class ApiServer
             else
                 x.AllowAnyMethod().AllowAnyHeader().SetIsOriginAllowed(_ => true).AllowCredentials();
         });
-        app.UseHttpsRedirection();
+        // Behind reverse proxy / pure HTTP (k3s, compose) HTTPS redirect only wastes cycles.
+        var urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "";
+        if (urls.Contains("https://", StringComparison.OrdinalIgnoreCase))
+            app.UseHttpsRedirection();
         app.UseRouting();
         app.UseForwardedHeaders();
         app.UseWebSockets(new WebSocketOptions

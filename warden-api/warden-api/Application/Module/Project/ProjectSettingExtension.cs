@@ -92,23 +92,23 @@ public static class ProjectSettingExtension
         return redmineSetting;
     }
 
+    /// <summary>
+    /// Project GitHub issue target. Does NOT inherit global Owner/Repo — that caused every
+    /// project to open issues on the global default (e.g. anubhavg-icpl/anthropic).
+    /// Active still follows the global integration switch.
+    /// </summary>
     public static GitHubProjectSetting GetGitHubSetting(this ProjectSettings setting, GitHubSetting globalSetting)
     {
-        var gitHubSetting = JSONSerializer.DeserializeOrDefault(setting.GitHubSetting, new GitHubProjectSetting());
-        if (string.IsNullOrEmpty(gitHubSetting.Owner))
-        {
-            gitHubSetting.Owner = globalSetting.Owner;
-        }
-
-        if (string.IsNullOrEmpty(gitHubSetting.Repo))
-        {
-            gitHubSetting.Repo = globalSetting.Repo;
-        }
-
+        var gitHubSetting = setting.GetGitHubSettingRaw();
         gitHubSetting.Active = globalSetting.Active;
         return gitHubSetting;
     }
 
+    /// <summary>Raw project JSON only — no global Owner/Repo fill.</summary>
+    public static GitHubProjectSetting GetGitHubSettingRaw(this ProjectSettings setting)
+    {
+        return JSONSerializer.DeserializeOrDefault(setting.GitHubSetting, new GitHubProjectSetting());
+    }
 
     public static ThresholdSetting GetSastSetting(this ProjectSettings setting)
     {
@@ -120,14 +120,12 @@ public static class ProjectSettingExtension
         return JSONSerializer.DeserializeOrDefault(setting.ScaSetting, new ThresholdSetting());
     }
 
+    /// <summary>
+    /// Configured default branches for CI/scans. Empty = optional (use remote default).
+    /// Do not invent "main" — many repos use master/develop/trunk.
+    /// </summary>
     public static HashSet<string> GetDefaultBranches(this ProjectSettings setting)
     {
-        var branches = JSONSerializer.DeserializeOrDefault(setting.DefaultBranch, new HashSet<string>());
-        if (branches.Count == 0)
-        {
-            branches = ["main"];
-        }
-
-        return branches;
+        return JSONSerializer.DeserializeOrDefault(setting.DefaultBranch, new HashSet<string>());
     }
 }

@@ -74,7 +74,13 @@ export function TicketMenu({ findingId, ticket }: TicketMenuProps) {
       }
       void queryClient.invalidateQueries({ queryKey: ["finding", findingId] });
     },
-    onError: () => toast.error("Failed to create ticket"),
+    onError: (err: unknown) => {
+      const detail =
+        (err as { errors?: string[] })?.errors?.[0] ||
+        (err as Error)?.message ||
+        "Failed to create ticket";
+      toast.error(detail, { duration: 8000 });
+    },
   });
 
   const remove = useMutation({

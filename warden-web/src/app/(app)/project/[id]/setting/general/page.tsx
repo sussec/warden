@@ -140,11 +140,10 @@ function ProjectRunScanSection({
     retry: 1,
   });
 
-  // Prefer first default branch once data lands.
+  // Branch is optional — do not auto-force a branch (repos may use main/master/develop).
+  // Only prefill when the project explicitly configured default branches.
   useEffect(() => {
-    if (defaultBranches.length > 0) {
-      setBranch((prev) => prev || defaultBranches[0] || "");
-    }
+    // leave empty by default so clone uses remote HEAD; user can pick if listed
   }, [defaultBranches]);
 
   const target = (repoUrl ?? "").trim();
@@ -251,39 +250,35 @@ function ProjectRunScanSection({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="scan-branch" className="text-[11px] text-muted-foreground">
-                Branch (optional)
+                Branch (optional — empty = remote default)
               </Label>
-              {defaultBranches.length > 0 ? (
-                <Select value={branch || undefined} onValueChange={setBranch}>
+              {defaultBranches.length > 0 && (
+                <Select
+                  value={branch || "__default__"}
+                  onValueChange={(v) => setBranch(v === "__default__" ? "" : v)}
+                >
                   <SelectTrigger id="scan-branch" className="w-full font-mono text-xs">
-                    <SelectValue placeholder="Default remote branch" />
+                    <SelectValue placeholder="Remote default (recommended)" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="__default__" className="font-mono text-xs">
+                      Remote default (no branch flag)
+                    </SelectItem>
                     {defaultBranches.map((b) => (
                       <SelectItem key={b} value={b} className="font-mono text-xs">
                         {b}
                       </SelectItem>
                     ))}
-                    {/* allow free branch via clear + type: also offer custom input below */}
                   </SelectContent>
                 </Select>
-              ) : (
-                <Input
-                  id="scan-branch"
-                  className="font-mono text-xs"
-                  placeholder="main"
-                  value={branch}
-                  onChange={(e) => setBranch(e.target.value)}
-                />
               )}
-              {defaultBranches.length > 0 && (
-                <Input
-                  className="mt-1.5 font-mono text-xs"
-                  placeholder="Or type another branch…"
-                  value={branch}
-                  onChange={(e) => setBranch(e.target.value)}
-                />
-              )}
+              <Input
+                id="scan-branch"
+                className={cn("font-mono text-xs", defaultBranches.length > 0 && "mt-1.5")}
+                placeholder="Leave empty for remote default, or type e.g. main"
+                value={branch}
+                onChange={(e) => setBranch(e.target.value)}
+              />
             </div>
             <div className="space-y-1.5">
               <Label className="text-[11px] text-muted-foreground">Selected</Label>

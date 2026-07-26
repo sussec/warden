@@ -1,7 +1,9 @@
+using Warden.Application.Helpers;
 using Warden.Application.Module.Integration.GitHub;
 using Warden.Core.Utils;
 using FluentResults;
 using FluentResults.Extensions;
+using Microsoft.EntityFrameworkCore;
 
 namespace Warden.Application.Module.Project.Integration.GitHub;
 
@@ -21,6 +23,20 @@ public class GitHubProjectIntegrationSetting(AppDbContext context) : IGitHubProj
             {
                 var globalSetting = await context.GetGitHubSettingAsync();
                 var setting = projectSetting.GetGitHubSetting(globalSetting);
+                // Prefill owner/repo from the project's own RepoUrl when unset
+                // (never from the global default repo — that was the anthropic bug).
+                if (string.IsNullOrWhiteSpace(setting.Owner) || string.IsNullOrWhiteSpace(setting.Repo))
+                {
+                    var project = await context.Projects.AsNoTracking()
+                        .FirstOrDefaultAsync(p => p.Id == projectId);
+                    if (project != null &&
+                        GitRepoHelpers.TryParseGitHubOwnerRepo(project.RepoUrl, out var o, out var r))
+                    {
+                        if (string.IsNullOrWhiteSpace(setting.Owner)) setting.Owner = o;
+                        if (string.IsNullOrWhiteSpace(setting.Repo)) setting.Repo = r;
+                    }
+                }
+
                 return Result.Ok(new GitHubProjectSetting
                 {
                     Active = setting.Active,

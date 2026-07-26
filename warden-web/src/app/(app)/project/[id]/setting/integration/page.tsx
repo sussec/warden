@@ -188,14 +188,28 @@ function GitHubDialog({
   }
 
   const mut = useMutation({
-    mutationFn: async () =>
-      (await updateGitHubIntegrationProject({ path: { projectId }, body: form, throwOnError: true })).data,
+    mutationFn: async () => {
+      if (!(form.owner ?? "").trim() || !(form.repo ?? "").trim()) {
+        throw new Error("Owner and repository are required for GitHub issues.");
+      }
+      return (
+        await updateGitHubIntegrationProject({
+          path: { projectId },
+          body: {
+            ...form,
+            owner: (form.owner ?? "").trim(),
+            repo: (form.repo ?? "").trim(),
+          },
+          throwOnError: true,
+        })
+      ).data;
+    },
     onSuccess: () => {
       toast.success("GitHub settings saved.");
       onSaved();
       onClose();
     },
-    onError: () => toast.error("Could not save GitHub settings."),
+    onError: (e: Error) => toast.error(e.message || "Could not save GitHub settings."),
   });
 
   return (
@@ -203,7 +217,10 @@ function GitHubDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>GitHub Issues</DialogTitle>
-          <DialogDescription>Owner/repo for this project (credentials come from global settings).</DialogDescription>
+          <DialogDescription className="text-xs leading-relaxed">
+            Issues open on <strong>this project&apos;s</strong> owner/repo (from its clone URL).
+            Global PAT is used for auth only — not the global default repo. Labels are optional.
+          </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
@@ -215,19 +232,33 @@ function GitHubDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label>Owner</Label>
-            <Input value={form.owner ?? ""} onChange={(e) => setForm({ ...form, owner: e.target.value })} />
+            <Label>Owner <span className="text-critical">*</span></Label>
+            <Input
+              value={form.owner ?? ""}
+              placeholder="org-or-user"
+              onChange={(e) => setForm({ ...form, owner: e.target.value })}
+              autoComplete="off"
+            />
           </div>
           <div className="space-y-2">
-            <Label>Repository</Label>
-            <Input value={form.repo ?? ""} onChange={(e) => setForm({ ...form, repo: e.target.value })} />
+            <Label>Repository <span className="text-critical">*</span></Label>
+            <Input
+              value={form.repo ?? ""}
+              placeholder="repo-name"
+              onChange={(e) => setForm({ ...form, repo: e.target.value })}
+              autoComplete="off"
+            />
           </div>
           <div className="space-y-2">
-            <Label>Labels (comma-separated)</Label>
+            <Label>Labels (optional, comma-separated)</Label>
             <Input
               value={(form.labels ?? []).join(", ")}
+              placeholder="security, warden"
               onChange={(e) =>
-                setForm({ ...form, labels: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })
+                setForm({
+                  ...form,
+                  labels: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
+                })
               }
             />
           </div>
