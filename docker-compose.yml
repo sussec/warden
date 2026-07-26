@@ -12,7 +12,7 @@ services:
     environment:
       API_INTERNAL_URL: http://warden:8080
     ports:
-      - "8080:3000" # main entry point
+      - "8081:3000" # main entry point (8080 often taken on this host)
 
   warden:
     image: ghcr.io/sussec/warden:latest
