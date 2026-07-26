@@ -47,6 +47,14 @@ public static class AuthenticationExtensions
                 // when no Authorization header is present (CI/MCP keep using Bearer).
                 OnMessageReceived = context =>
                 {
+                    // WebSocket clients may pass ?access_token= (cookie not always available on upgrade)
+                    if (string.IsNullOrEmpty(context.Token) &&
+                        context.Request.Query.TryGetValue("access_token", out var q) &&
+                        !string.IsNullOrEmpty(q))
+                    {
+                        context.Token = q;
+                    }
+                    // Web app session: httpOnly access-token cookie (same-origin UI)
                     if (string.IsNullOrEmpty(context.Token) &&
                         !context.Request.Headers.ContainsKey("Authorization") &&
                         context.Request.Cookies.TryGetValue("warden_access", out var cookieToken))

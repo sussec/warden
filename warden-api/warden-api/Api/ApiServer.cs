@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using Warden.Api.Scan;
 using Warden.Application;
 using Warden.Application.Module.Mcp;
 using Warden.Application.Schedulers;
@@ -93,10 +94,15 @@ public static class ApiServer
         app.UseHttpsRedirection();
         app.UseRouting();
         app.UseForwardedHeaders();
+        app.UseWebSockets(new WebSocketOptions
+        {
+            KeepAliveInterval = TimeSpan.FromSeconds(30)
+        });
         app.UseAuthentication();
         app.UseAuthorization();
 
         app.MapControllers();
+        app.MapScanJobStreams();
         app.MapWardenMcp();
         app.LoadAuthenticationProviders();
         app.Run();
